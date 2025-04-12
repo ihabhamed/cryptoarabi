@@ -2,11 +2,11 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu } from 'lucide-react';
 import AdminMobileMenu from './AdminMobileMenu';
 
 interface AdminHeaderProps {
-  handleSignOut: () => void;
+  handleSignOut: () => Promise<void>;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -23,7 +23,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ handleSignOut, open, setOpen 
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="bg-crypto-darkBlue border-white/10 p-0 w-[280px] text-white">
-              <AdminMobileMenu setOpen={setOpen} handleSignOut={handleSignOut} />
+              <AdminMobileMenu open={open} setOpen={setOpen} handleSignOut={handleSignOut} />
             </SheetContent>
           </Sheet>
           <LayoutDashboard className="h-6 w-6 text-crypto-orange" />
@@ -32,7 +32,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ handleSignOut, open, setOpen 
         <div className="flex items-center">
           <Button
             variant="ghost"
-            onClick={handleSignOut}
+            onClick={() => handleSignOut()}
             className="text-white hover:text-crypto-orange"
           >
             <LogOut className="h-5 w-5 ml-2" />
