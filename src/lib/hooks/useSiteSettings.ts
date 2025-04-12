@@ -68,6 +68,7 @@ export const useUpdateSiteSettings = () => {
       toast({
         title: "تم التحديث",
         description: "تم تحديث إعدادات الموقع بنجاح",
+        // Removed duration property which was causing TypeScript error
       });
     },
     onError: (error) => {
@@ -75,6 +76,7 @@ export const useUpdateSiteSettings = () => {
         variant: "destructive",
         title: "حدث خطأ",
         description: `فشل في تحديث إعدادات الموقع: ${error.message}`,
+        // Removed duration property which was causing TypeScript error
       });
     },
   });
