@@ -67,22 +67,26 @@ export const useSiteSettings = () => {
         throw error;
       }
 
+      // Create a new object with the processed data
+      const processedData: SiteSettings = {
+        ...data as SiteSettingsDB,
+        // Process about_features field (convert from string to array)
+        about_features: []
+      };
+
       // Process about_features field
       if (data && typeof data.about_features === 'string') {
         try {
           // Parse the JSON string to get the array
-          data.about_features = JSON.parse(data.about_features);
+          processedData.about_features = JSON.parse(data.about_features);
         } catch (e) {
           // If parsing fails, set to empty array
           console.error('Error parsing about_features:', e);
-          data.about_features = [];
+          processedData.about_features = [];
         }
-      } else if (data && !data.about_features) {
-        // Default to empty array if not present
-        data.about_features = [];
       }
       
-      return data as SiteSettings;
+      return processedData;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 2, // Retry failed requests twice
@@ -102,27 +106,15 @@ export const useUpdateSiteSettings = () => {
       // Clone the settings to avoid modifying the original object
       const dataToStore: Partial<SiteSettingsDB> = { ...updatedSettings };
       
-      // Prepare about_features for storage
-      if (dataToStore.about_features !== undefined) {
-        // Convert array to JSON string for database storage
-        if (Array.isArray(dataToStore.about_features)) {
-          dataToStore.about_features = JSON.stringify(dataToStore.about_features);
-        } else if (typeof dataToStore.about_features === 'string') {
-          // If it's already a string, make sure it's a valid JSON string
-          try {
-            // Test if it's a valid JSON string
-            JSON.parse(dataToStore.about_features);
-          } catch (e) {
-            // If not valid JSON, wrap it in quotes and brackets
-            dataToStore.about_features = JSON.stringify([dataToStore.about_features]);
-          }
-        }
+      // Prepare about_features for storage (convert from array to string)
+      if (updatedSettings.about_features !== undefined) {
+        dataToStore.about_features = JSON.stringify(updatedSettings.about_features);
       }
 
       // Update site settings in Supabase
       const { data, error } = await supabase
         .from('site_settings')
-        .update(dataToStore as any)
+        .update(dataToStore)
         .eq('id', updatedSettings.id)
         .select()
         .single();
@@ -132,22 +124,26 @@ export const useUpdateSiteSettings = () => {
         throw error;
       }
 
+      // Create a new object with the processed data
+      const processedResponse: SiteSettings = {
+        ...data as SiteSettingsDB,
+        // Default to empty array for about_features
+        about_features: []
+      };
+
       // Process about_features in the response
       if (data && typeof data.about_features === 'string') {
         try {
           // Parse the JSON string to get the array
-          data.about_features = JSON.parse(data.about_features);
+          processedResponse.about_features = JSON.parse(data.about_features);
         } catch (e) {
           console.error('Error parsing about_features in response:', e);
           // Default to empty array on parsing error
-          data.about_features = [];
+          processedResponse.about_features = [];
         }
-      } else if (data && !data.about_features) {
-        // Default to empty array if not present
-        data.about_features = [];
       }
 
-      return data as SiteSettings;
+      return processedResponse;
     },
     onSuccess: () => {
       // Invalidate cached data to trigger refetch
