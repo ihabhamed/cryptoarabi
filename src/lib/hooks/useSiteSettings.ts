@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/utils/toast-utils";
@@ -17,6 +16,10 @@ export interface SiteSettings {
   about_title: string;
   about_content: string;
   about_image_url: string;
+  about_features: string | string[]; // Can be stored as a JSON string in the database
+  about_year_founded: string;
+  about_button_text: string;
+  about_button_url: string;
   footer_description: string;
   privacy_policy: string | null;
   terms_conditions: string | null;
@@ -38,6 +41,20 @@ export const useSiteSettings = () => {
         throw error;
       }
 
+      // Parse about_features if it exists and is a string
+      if (data && typeof data.about_features === 'string') {
+        try {
+          data.about_features = JSON.parse(data.about_features);
+        } catch (e) {
+          // If parsing fails, keep it as a string or set as empty array
+          console.error('Error parsing about_features:', e);
+          data.about_features = data.about_features || [];
+        }
+      } else if (data && !data.about_features) {
+        // Ensure about_features is at least an empty array if not present
+        data.about_features = [];
+      }
+      
       return data as SiteSettings;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -51,9 +68,16 @@ export const useUpdateSiteSettings = () => {
   
   return useMutation({
     mutationFn: async (updatedSettings: Partial<SiteSettings>) => {
+      // Prepare data for storage - stringify about_features if it's an array
+      const dataToStore = { ...updatedSettings };
+      
+      if (dataToStore.about_features && Array.isArray(dataToStore.about_features)) {
+        dataToStore.about_features = JSON.stringify(dataToStore.about_features);
+      }
+
       const { data, error } = await supabase
         .from('site_settings')
-        .update(updatedSettings)
+        .update(dataToStore)
         .eq('id', updatedSettings.id)
         .select()
         .single();
@@ -61,6 +85,16 @@ export const useUpdateSiteSettings = () => {
       if (error) {
         console.error('Error updating site settings:', error);
         throw error;
+      }
+
+      // Parse about_features in the returned data
+      if (data && typeof data.about_features === 'string') {
+        try {
+          data.about_features = JSON.parse(data.about_features);
+        } catch (e) {
+          console.error('Error parsing about_features in response:', e);
+          data.about_features = data.about_features || [];
+        }
       }
 
       return data as SiteSettings;
