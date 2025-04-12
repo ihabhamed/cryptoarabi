@@ -38,7 +38,41 @@ const AdminAuth = () => {
       }
 
       if (data?.user) {
-        console.log("AdminAuth: User logged in successfully, checking if admin...", data.user.id);
+        console.log("AdminAuth: User logged in successfully:", data.user.id);
+        console.log("AdminAuth: Full user data:", data.user);
+        console.log("AdminAuth: Now checking if admin...");
+        
+        // First, try a direct database check as a reliable fallback
+        try {
+          console.log('AdminAuth: Direct database check for user_id:', data.user.id);
+          const { data: rolesData, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', data.user.id)
+            .eq('role', 'admin');
+            
+          if (rolesError) {
+            console.error('AdminAuth: Error checking user_roles directly:', rolesError);
+          } else {
+            console.log('AdminAuth: Direct user_roles check result:', rolesData);
+            const hasAdminRole = rolesData && rolesData.length > 0;
+            console.log('AdminAuth: User has admin role (direct check):', hasAdminRole);
+            
+            if (hasAdminRole) {
+              console.log('AdminAuth: Direct check successful, user is admin');
+              toast({
+                title: "تم تسجيل الدخول بنجاح",
+                description: "مرحبا بك في لوحة التحكم",
+              });
+              navigate('/admin');
+              return;
+            } else {
+              console.log('AdminAuth: User is not admin based on direct database check');
+            }
+          }
+        } catch (directError) {
+          console.error('AdminAuth: Error during direct check:', directError);
+        }
         
         // Check if the user is an admin with retry logic
         let isAdminUser = false;
@@ -69,7 +103,8 @@ const AdminAuth = () => {
           });
           navigate('/admin');
         } else {
-          console.log('AdminAuth: User is not admin after all retries');
+          console.log('AdminAuth: User is not admin after all retries, checking user_roles table again');
+          
           // Try one more direct check against the database
           const { data: rolesData, error: rolesError } = await supabase
             .from('user_roles')
@@ -89,6 +124,19 @@ const AdminAuth = () => {
               });
               navigate('/admin');
               return;
+            } else {
+              console.log('User does not have admin role in database');
+              
+              // Check the role format in the database
+              const { data: allRoles, error: allRolesError } = await supabase
+                .from('user_roles')
+                .select('*');
+                
+              if (allRolesError) {
+                console.error('Error fetching all roles:', allRolesError);
+              } else {
+                console.log('All roles in database:', allRoles);
+              }
             }
           }
           

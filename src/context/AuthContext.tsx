@@ -28,35 +28,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       console.log('Checking admin status for user:', user.id);
-      // Call the is_admin function we created in Supabase
+      
+      // First check directly through the user_roles table
+      console.log('Direct check: Querying user_roles table for user_id:', user.id);
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('role', 'admin');
+      
+      if (rolesError) {
+        console.error('Error checking user_roles directly:', rolesError);
+      } else {
+        console.log('Direct user_roles check result:', rolesData);
+        const hasAdminRole = rolesData && rolesData.length > 0;
+        console.log('User has admin role (direct check):', hasAdminRole);
+        
+        if (hasAdminRole) {
+          setIsAdmin(true);
+          return true;
+        }
+      }
+      
+      // Then try the RPC function as a backup
+      console.log('RPC check: Calling is_admin function');
       const { data, error } = await supabase.rpc('is_admin');
       
       if (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Error checking admin status via RPC:', error);
         return false;
       }
       
       console.log('Admin check result from RPC:', data);
-      
-      // If RPC fails, let's also check directly from the user_roles table as fallback
-      if (data === null || data === false) {
-        console.log('RPC returned false, checking user_roles table directly');
-        const { data: rolesData, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('role', 'admin');
-          
-        if (rolesError) {
-          console.error('Error checking user_roles directly:', rolesError);
-        } else {
-          console.log('Direct user_roles check result:', rolesData);
-          const hasAdminRole = rolesData && rolesData.length > 0;
-          console.log('User has admin role (direct check):', hasAdminRole);
-          setIsAdmin(hasAdminRole);
-          return hasAdminRole;
-        }
-      }
       
       setIsAdmin(!!data);
       return !!data;

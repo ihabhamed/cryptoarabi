@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,11 +21,40 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         setIsVerifying(true);
         try {
           console.log('ProtectedRoute: Starting admin verification');
+          console.log('Current user ID:', user.id);
+          
           // Try to check admin status up to 5 times with increasing delays
           let isUserAdmin = false;
           let retries = 5;
           let delay = 500;
           
+          // First, try a direct database check as a reliable fallback
+          try {
+            console.log('ProtectedRoute: Direct database check for user_id:', user.id);
+            const { data: rolesData, error: rolesError } = await supabase
+              .from('user_roles')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('role', 'admin');
+              
+            if (rolesError) {
+              console.error('ProtectedRoute: Error checking user_roles directly:', rolesError);
+            } else {
+              console.log('ProtectedRoute: Direct user_roles check result:', rolesData);
+              isUserAdmin = rolesData && rolesData.length > 0;
+              console.log('ProtectedRoute: User has admin role (direct check):', isUserAdmin);
+              
+              if (isUserAdmin) {
+                console.log('ProtectedRoute: Direct check successful, user is admin');
+                setIsVerifying(false);
+                return;
+              }
+            }
+          } catch (directError) {
+            console.error('ProtectedRoute: Error during direct check:', directError);
+          }
+          
+          // If direct check fails, continue with retry mechanism
           while (retries > 0 && !isUserAdmin) {
             console.log(`ProtectedRoute: Admin check attempt ${6-retries} for user ${user.id}`);
             isUserAdmin = await checkIsAdmin();
