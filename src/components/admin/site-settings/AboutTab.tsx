@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Trash2, Plus } from 'lucide-react';
 
 interface AboutTabProps {
   formData: any;
@@ -13,6 +14,68 @@ interface AboutTabProps {
 }
 
 const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps) => {
+  const [features, setFeatures] = useState<string[]>(
+    formData.about_features && Array.isArray(formData.about_features) 
+      ? formData.about_features 
+      : [
+          "فريق من الخبراء المتخصصين في البلوكتشين والعملات المشفرة",
+          "أكثر من 5 سنوات من الخبرة في مجال الويب 3.0",
+          "استشارات مخصصة لاحتياجات عملك الفريدة",
+          "دعم فني على مدار الساعة طوال أيام الأسبوع"
+        ]
+  );
+
+  const handleFeatureChange = (index: number, value: string) => {
+    const updatedFeatures = [...features];
+    updatedFeatures[index] = value;
+    setFeatures(updatedFeatures);
+    
+    // Update the form data
+    const updatedFormData = { ...formData, about_features: updatedFeatures };
+    const syntheticEvent = {
+      target: {
+        name: 'about_features',
+        value: updatedFeatures
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+  };
+
+  const addFeature = () => {
+    const updatedFeatures = [...features, ""];
+    setFeatures(updatedFeatures);
+    
+    // Update the form data
+    const updatedFormData = { ...formData, about_features: updatedFeatures };
+    const syntheticEvent = {
+      target: {
+        name: 'about_features',
+        value: updatedFeatures
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+  };
+
+  const removeFeature = (index: number) => {
+    if (features.length <= 1) return; // Keep at least one feature
+    
+    const updatedFeatures = features.filter((_, i) => i !== index);
+    setFeatures(updatedFeatures);
+    
+    // Update the form data
+    const updatedFormData = { ...formData, about_features: updatedFeatures };
+    const syntheticEvent = {
+      target: {
+        name: 'about_features',
+        value: updatedFeatures
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+  };
+
   return (
     <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
       <CardHeader>
@@ -31,6 +94,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
         </div>
+        
         <div className="space-y-2">
           <Label htmlFor="about_content" className="text-white">محتوى قسم من نحن</Label>
           <Textarea 
@@ -43,6 +107,55 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
         </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="about_year_founded" className="text-white">سنة التأسيس</Label>
+          <Input 
+            id="about_year_founded" 
+            name="about_year_founded"
+            value={formData.about_year_founded || '2018'} 
+            onChange={handleInputChange}
+            placeholder="2018" 
+            className="bg-crypto-darkBlue/30 border-white/10 text-white"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center mb-2">
+            <Label className="text-white">مميزات الشركة</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={addFeature}
+              className="border-crypto-orange text-crypto-orange hover:bg-crypto-orange/20"
+            >
+              <Plus className="h-4 w-4 mr-1" /> إضافة ميزة
+            </Button>
+          </div>
+          
+          {features.map((feature, index) => (
+            <div key={index} className="flex items-center gap-2 mb-2">
+              <Input 
+                value={feature}
+                onChange={(e) => handleFeatureChange(index, e.target.value)}
+                placeholder="أدخل ميزة"
+                className="bg-crypto-darkBlue/30 border-white/10 text-white"
+              />
+              <Button 
+                type="button" 
+                variant="destructive" 
+                size="icon" 
+                onClick={() => removeFeature(index)}
+                className="flex-shrink-0"
+                disabled={features.length <= 1}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="about_image_url" className="text-white">رابط صورة قسم من نحن</Label>
           <Input 
@@ -51,6 +164,30 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
             value={formData.about_image_url || ''} 
             onChange={handleInputChange}
             placeholder="https://example.com/image.jpg" 
+            className="bg-crypto-darkBlue/30 border-white/10 text-white"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="about_button_text" className="text-white">نص زر قسم من نحن</Label>
+          <Input 
+            id="about_button_text" 
+            name="about_button_text"
+            value={formData.about_button_text || 'اعرف المزيد عنا'} 
+            onChange={handleInputChange}
+            placeholder="اعرف المزيد عنا" 
+            className="bg-crypto-darkBlue/30 border-white/10 text-white"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="about_button_url" className="text-white">رابط زر قسم من نحن</Label>
+          <Input 
+            id="about_button_url" 
+            name="about_button_url"
+            value={formData.about_button_url || '/about'} 
+            onChange={handleInputChange}
+            placeholder="/about" 
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
         </div>
