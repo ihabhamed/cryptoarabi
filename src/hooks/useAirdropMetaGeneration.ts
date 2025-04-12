@@ -6,7 +6,7 @@ import { toast } from "@/lib/utils/toast-utils";
 interface UseAirdropMetaGenerationProps {
   formData: {
     title: string;
-    description: string;
+    description?: string; // Changed to optional to match NewAirdrop type
     meta_title?: string;
     meta_description?: string;
     hashtags?: string;
