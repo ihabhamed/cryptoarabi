@@ -14,6 +14,19 @@ export interface Airdrop {
   updated_at: string;
 }
 
+// Define a type specifically for inserting new airdrops
+export interface NewAirdrop {
+  title: string;
+  description?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  publish_date?: string;
+  status: string;
+  twitter_link?: string | null;
+  youtube_link?: string | null;
+  claim_url?: string | null;
+}
+
 export interface BlogPost {
   id: string;
   title: string;

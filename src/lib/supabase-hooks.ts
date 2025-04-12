@@ -1,7 +1,6 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Airdrop, BlogPost, Service } from '@/types/supabase';
+import { Airdrop, BlogPost, Service, NewAirdrop } from '@/types/supabase';
 
 // Airdrops
 export function useAirdrops() {
@@ -41,11 +40,10 @@ export function useAddAirdrop() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (newAirdrop: Partial<Airdrop>): Promise<Airdrop> => {
-      // Ensure we're sending a single object, not an array
+    mutationFn: async (newAirdrop: NewAirdrop): Promise<Airdrop> => {
       const { data, error } = await supabase
         .from('airdrops')
-        .insert(newAirdrop) // Remove the array brackets
+        .insert(newAirdrop)
         .select()
         .maybeSingle();
       
