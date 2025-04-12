@@ -132,6 +132,25 @@ export function useBlogPost(slug: string | undefined) {
   });
 }
 
+export function useDeleteBlogPost() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string): Promise<string> => {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog_posts'] });
+    },
+  });
+}
+
 // Services
 export function useServices() {
   return useQuery({
@@ -144,6 +163,43 @@ export function useServices() {
       
       if (error) throw error;
       return data || [];
+    },
+  });
+}
+
+export function useService(id: string | undefined) {
+  return useQuery({
+    queryKey: ['services', id],
+    queryFn: async (): Promise<Service | null> => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string): Promise<string> => {
+      const { error } = await supabase
+        .from('services')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
     },
   });
 }

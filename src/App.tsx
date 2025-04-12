@@ -12,6 +12,9 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
+import AdminAirdropForm from "./pages/AdminAirdropForm";
+import AdminBlogForm from "./pages/AdminBlogForm";
+import AdminServiceForm from "./pages/AdminServiceForm";
 import NotFound from "./pages/NotFound";
 import React from "react";
 import { AuthProvider } from "./context/AuthContext";
@@ -38,10 +41,58 @@ const App: React.FC = () => {
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route 
-                path="/admin/*" 
+                path="/admin" 
                 element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/airdrops/new" 
+                element={
+                  <ProtectedRoute>
+                    <AdminAirdropForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/airdrops/edit/:id" 
+                element={
+                  <ProtectedRoute>
+                    <AdminAirdropForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/blog/new" 
+                element={
+                  <ProtectedRoute>
+                    <AdminBlogForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/blog/edit/:id" 
+                element={
+                  <ProtectedRoute>
+                    <AdminBlogForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/services/new" 
+                element={
+                  <ProtectedRoute>
+                    <AdminServiceForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/services/edit/:id" 
+                element={
+                  <ProtectedRoute>
+                    <AdminServiceForm />
                   </ProtectedRoute>
                 } 
               />

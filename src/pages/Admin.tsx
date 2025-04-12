@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { useAirdrops, useBlogPosts, useServices, useDeleteAirdrop } from '@/lib/supabase-hooks';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useAirdrops, useBlogPosts, useServices, useDeleteAirdrop, useDeleteBlogPost, useDeleteService } from '@/lib/supabase-hooks';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +17,10 @@ import {
   Trash2, 
   RefreshCcw, 
   AlertCircle,
-  Eye
+  Eye,
+  Calendar,
+  DollarSign,
+  Clock
 } from "lucide-react";
 
 const Admin = () => {
@@ -28,6 +31,8 @@ const Admin = () => {
   const { toast } = useToast();
   const { signOut } = useAuth();
   const deleteAirdrop = useDeleteAirdrop();
+  const deleteBlogPost = useDeleteBlogPost();
+  const deleteService = useDeleteService();
   
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [deleteType, setDeleteType] = useState<'airdrop' | 'blog' | 'service' | null>(null);
@@ -51,8 +56,19 @@ const Admin = () => {
           title: "تم الحذف بنجاح",
           description: "تم حذف الإيردروب بنجاح",
         });
+      } else if (deleteType === 'blog') {
+        await deleteBlogPost.mutateAsync(itemToDelete);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف المنشور بنجاح",
+        });
+      } else if (deleteType === 'service') {
+        await deleteService.mutateAsync(itemToDelete);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الخدمة بنجاح",
+        });
       }
-      // Add other delete handlers as they become available
       
       setIsDeleteDialogOpen(false);
     } catch (error: any) {
@@ -71,13 +87,15 @@ const Admin = () => {
   };
 
   const handleAddNew = (type: string) => {
-    // Navigate to the appropriate form page
     navigate(`/admin/${type}/new`);
   };
 
   const handleEdit = (id: string, type: string) => {
-    // Navigate to the appropriate edit page
     navigate(`/admin/${type}/edit/${id}`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ar-SA');
   };
 
   return (
@@ -86,7 +104,7 @@ const Admin = () => {
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <LayoutDashboard className="h-6 w-6 text-crypto-orange" />
-            <h1 className="text-xl font-bold text-white">لوحة تحكم المشرف</h1>
+            <h1 className="text-xl font-bold text-white">كريبتو بالعربي</h1>
           </div>
           <Button 
             variant="ghost" 
@@ -174,7 +192,9 @@ const Admin = () => {
                                   <div className="space-y-2">
                                     <p><strong>العنوان:</strong> {airdrop.title}</p>
                                     <p><strong>الوصف:</strong> {airdrop.description || 'لا يوجد وصف'}</p>
-                                    <p><strong>تاريخ النشر:</strong> {new Date(airdrop.publish_date).toLocaleDateString('ar-SA')}</p>
+                                    <p><strong>تاريخ النشر:</strong> {formatDate(airdrop.publish_date)}</p>
+                                    <p><strong>تاريخ البداية:</strong> {airdrop.start_date ? formatDate(airdrop.start_date) : 'غير محدد'}</p>
+                                    <p><strong>تاريخ النهاية:</strong> {airdrop.end_date ? formatDate(airdrop.end_date) : 'غير محدد'}</p>
                                     <p><strong>الحالة:</strong> {airdrop.status}</p>
                                   </div>
                                 </HoverCardContent>
@@ -240,9 +260,18 @@ const Admin = () => {
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="font-medium text-white">{post.title}</h4>
-                              <p className="text-sm text-white/60 mt-1">
-                                بواسطة: {post.author || 'غير معروف'} - {new Date(post.publish_date).toLocaleDateString('ar-SA')}
-                              </p>
+                              <div className="flex items-center gap-2 text-sm text-white/60 mt-1">
+                                <span>{post.author || 'غير معروف'}</span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {formatDate(post.publish_date)}
+                                </span>
+                                {post.category && (
+                                  <span className="bg-crypto-darkBlue/50 px-2 py-0.5 rounded-full text-xs">
+                                    {post.category}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <div className="flex gap-2">
                               <HoverCard>
@@ -260,7 +289,9 @@ const Admin = () => {
                                     <p><strong>العنوان:</strong> {post.title}</p>
                                     <p><strong>الكاتب:</strong> {post.author || 'غير معروف'}</p>
                                     <p><strong>المستخلص:</strong> {post.excerpt || 'لا يوجد مستخلص'}</p>
-                                    <p><strong>تاريخ النشر:</strong> {new Date(post.publish_date).toLocaleDateString('ar-SA')}</p>
+                                    <p><strong>تاريخ النشر:</strong> {formatDate(post.publish_date)}</p>
+                                    <p><strong>التصنيف:</strong> {post.category || 'غير مصنف'}</p>
+                                    <p><strong>الرابط الثابت:</strong> {post.slug || 'غير محدد'}</p>
                                   </div>
                                 </HoverCardContent>
                               </HoverCard>
@@ -325,10 +356,20 @@ const Admin = () => {
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="font-medium text-white">{service.title}</h4>
-                              <p className="text-sm text-white/60 mt-1">
-                                {service.price ? `السعر: ${service.price}` : 'السعر غير محدد'}
-                                {service.duration && ` - المدة: ${service.duration}`}
-                              </p>
+                              <div className="flex items-center gap-3 text-sm text-white/60 mt-1">
+                                {service.price && (
+                                  <span className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    {service.price}
+                                  </span>
+                                )}
+                                {service.duration && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {service.duration}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <div className="flex gap-2">
                               <HoverCard>
@@ -347,6 +388,9 @@ const Admin = () => {
                                     <p><strong>الوصف:</strong> {service.description || 'لا يوجد وصف'}</p>
                                     <p><strong>السعر:</strong> {service.price || 'غير محدد'}</p>
                                     <p><strong>المدة:</strong> {service.duration || 'غير محددة'}</p>
+                                    {service.image_url && (
+                                      <p><strong>صورة:</strong> متوفرة</p>
+                                    )}
                                   </div>
                                 </HoverCardContent>
                               </HoverCard>
