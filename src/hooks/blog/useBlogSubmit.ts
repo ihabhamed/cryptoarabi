@@ -1,3 +1,4 @@
+
 import { useState, FormEvent } from 'react';
 import { BlogPost } from '@/types/supabase';
 import { useBlogApi } from './useBlogApi';
@@ -80,13 +81,26 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         }
       }
       
-      // Ensure hashtags is a string or null, not an array
+      // Process hashtags - ensure it's a properly formatted string
       if (finalFormData.hashtags) {
+        // If hashtags is an array, join it into a comma-separated string
         if (Array.isArray(finalFormData.hashtags)) {
           finalFormData.hashtags = finalFormData.hashtags.join(', ');
-        } else if (typeof finalFormData.hashtags !== 'string') {
-          // Otherwise convert to string or null
-          finalFormData.hashtags = String(finalFormData.hashtags) || null;
+        } 
+        // Ensure hashtags is a trimmed string with no empty elements
+        else if (typeof finalFormData.hashtags === 'string') {
+          // Clean up hashtags - split by comma, trim each tag, filter out empty ones, join back
+          const cleanedTags = finalFormData.hashtags
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean)
+            .join(', ');
+          
+          finalFormData.hashtags = cleanedTags || null;
+        } 
+        // If it's neither a string nor array, set to null
+        else {
+          finalFormData.hashtags = null;
         }
       }
       

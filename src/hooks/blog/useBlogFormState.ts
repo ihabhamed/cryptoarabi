@@ -20,6 +20,9 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     category: '',
     slug: '',
     image_url: '',
+    meta_title: '',
+    meta_description: '',
+    hashtags: '',
     publish_date: new Date().toISOString()
   });
 
@@ -60,6 +63,7 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
   useEffect(() => {
     // Only save if there's actual data
     if (formData.title || formData.content) {
+      console.log("Saving form data to localStorage:", formData);
       saveFormData(storageKey, {
         ...formData,
         id: id

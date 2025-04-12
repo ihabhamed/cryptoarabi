@@ -27,20 +27,30 @@ const TagsSection: React.FC<TagsSectionProps> = ({
   // Initialize hashtags from formData
   useEffect(() => {
     if (formData.hashtags) {
-      setHashtags(formData.hashtags.split(',').map(tag => tag.trim()).filter(Boolean));
+      const tagArray = typeof formData.hashtags === 'string' 
+        ? formData.hashtags.split(',').map(tag => tag.trim()).filter(Boolean)
+        : [];
+      setHashtags(tagArray);
+    } else {
+      setHashtags([]);
     }
   }, [formData.hashtags]);
   
   // Update parent component's formData when hashtags change
   const updateHashtags = (newHashtags: string[]) => {
+    const hashtagsString = newHashtags.join(', ');
+    
+    // Create a synthetic event to use with handleChange
     const event = {
       target: {
         name: 'hashtags',
-        value: newHashtags.join(', ')
+        value: hashtagsString
       }
     } as React.ChangeEvent<HTMLInputElement>;
     
     handleChange(event);
+    
+    // Update local state
     setHashtags(newHashtags);
     
     // Save to localStorage to ensure persistence
@@ -50,9 +60,11 @@ const TagsSection: React.FC<TagsSectionProps> = ({
       const parsedData = JSON.parse(savedData);
       localStorage.setItem(storageKey, JSON.stringify({
         ...parsedData,
-        hashtags: newHashtags.join(', ')
+        hashtags: hashtagsString
       }));
     }
+    
+    console.log("Updated hashtags:", hashtagsString);
   };
   
   // Add a hashtag

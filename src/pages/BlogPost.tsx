@@ -1,10 +1,12 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { ArrowLeft, Calendar, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronLeft, Hash } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useBlogPost } from '@/lib/hooks';
+import { BlogPostTags } from '@/components/blog/BlogPostTags';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -98,6 +100,9 @@ const BlogPost = () => {
           <article className="prose prose-invert prose-lg max-w-none">
             <div dangerouslySetInnerHTML={{ __html: post.content }} className="text-gray-300 leading-relaxed space-y-4" />
           </article>
+
+          {/* Hashtags Section */}
+          {post.hashtags && <BlogPostTags hashtags={post.hashtags} />}
 
           {/* Share Section */}
           <div className="mt-12 pt-8 border-t border-white/10">
