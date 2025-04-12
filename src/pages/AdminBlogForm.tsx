@@ -71,16 +71,19 @@ const AdminBlogForm = () => {
                 generateSlug={generateSlug}
               />
               
-              <ImageUploader 
-                previewUrl={previewUrl}
-                onImageChange={handleImageChange}
-                onImageUrlChange={(url) => handleChange({ 
-                  target: { name: 'image_url', value: url }
-                } as React.ChangeEvent<HTMLInputElement>)}
-                onRemoveImage={handleRemoveImage}
-                imageUrl={formData.image_url || ''}
-                isUploading={uploadingImage}
-              />
+              <div className="mt-6 border-t border-white/10 pt-6">
+                <h3 className="text-lg font-medium text-white mb-4">صورة المنشور</h3>
+                <ImageUploader 
+                  previewUrl={previewUrl}
+                  onImageChange={handleImageChange}
+                  onImageUrlChange={(url) => handleChange({ 
+                    target: { name: 'image_url', value: url }
+                  } as React.ChangeEvent<HTMLInputElement>)}
+                  onRemoveImage={handleRemoveImage}
+                  imageUrl={formData.image_url || ''}
+                  isUploading={uploadingImage}
+                />
+              </div>
             </form>
           </CardContent>
           <CardFooter className="border-t border-white/10 pt-4 flex justify-end gap-3">

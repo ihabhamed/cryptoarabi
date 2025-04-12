@@ -74,14 +74,17 @@ const AdminAirdropForm = () => {
                 handleSelectChange={handleSelectChange}
               />
               
-              <ImageUploader 
-                previewUrl={previewUrl}
-                onImageChange={handleImageChange}
-                onImageUrlChange={handleImageUrlChange}
-                onRemoveImage={handleRemoveImage}
-                imageUrl={formData.image_url || ''}
-                isUploading={uploadingImage}
-              />
+              <div className="mt-6 border-t border-white/10 pt-6">
+                <h3 className="text-lg font-medium text-white mb-4">صورة الإيردروب</h3>
+                <ImageUploader 
+                  previewUrl={previewUrl}
+                  onImageChange={handleImageChange}
+                  onImageUrlChange={handleImageUrlChange}
+                  onRemoveImage={handleRemoveImage}
+                  imageUrl={formData.image_url || ''}
+                  isUploading={uploadingImage}
+                />
+              </div>
 
               {isEditMode && id && (
                 <div className="mt-4 p-4 bg-crypto-darkBlue/30 rounded-md">
