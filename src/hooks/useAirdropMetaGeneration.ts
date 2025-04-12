@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { generateMetaTags, generateHashtags } from '@/lib/utils/geminiApi';
 import { toast } from "@/lib/utils/toast-utils";
@@ -58,6 +57,7 @@ export function useAirdropMetaGeneration({ formData, setFormData }: UseAirdropMe
     }
   };
 
+  // Keeping the hashtags generation separate from meta generation
   const generateHashtagsContent = async () => {
     if (!formData.title) {
       toast({
