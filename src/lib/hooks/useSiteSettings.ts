@@ -36,6 +36,8 @@ export interface SiteSettings {
   privacy_policy: string | null;
   terms_conditions: string | null;
   updated_at: string;
+  show_about_section: boolean;
+  show_testimonials_section: boolean;
 }
 
 /**

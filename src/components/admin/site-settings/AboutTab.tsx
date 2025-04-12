@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { SiteSettings } from '@/lib/hooks/useSiteSettings';
 import FeaturesList from './FeaturesList';
 import ButtonSettings from './ButtonSettings';
@@ -56,6 +57,18 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     handleInputChange(customEvent);
   }, [features, handleInputChange]);
 
+  // Handle toggle switch changes
+  const handleSwitchChange = (checked: boolean, fieldName: string) => {
+    const customEvent = {
+      target: {
+        name: fieldName,
+        value: checked
+      }
+    } as any;
+    
+    handleInputChange(customEvent);
+  };
+
   return (
     <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
       <CardHeader>
@@ -63,6 +76,20 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
         <CardDescription className="text-gray-400">قم بتعديل محتوى قسم من نحن</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Section visibility toggle */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="show_about_section" className="text-white">إظهار قسم "من نحن"</Label>
+            <p className="text-xs text-gray-400">عند تفعيل هذا الخيار، سيظهر قسم "من نحن" في الصفحة الرئيسية</p>
+          </div>
+          <Switch 
+            id="show_about_section"
+            checked={formData.show_about_section !== false} // Default to true if undefined
+            onCheckedChange={(checked) => handleSwitchChange(checked, 'show_about_section')}
+            className="data-[state=checked]:bg-crypto-orange"
+          />
+        </div>
+        
         {/* About title field */}
         <div className="space-y-2">
           <Label htmlFor="about_title" className="text-white">عنوان قسم من نحن</Label>

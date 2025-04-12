@@ -2,13 +2,14 @@
 import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Globe, Home, Book, FileText, Settings, Footprints
+  Globe, Home, Book, FileText, Settings, Footprints, MessageSquareQuote
 } from "lucide-react";
 import GeneralTab from './GeneralTab';
 import HomeTab from './HomeTab';
 import AboutTab from './AboutTab';
 import FooterTab from './FooterTab';
 import LegalTab from './LegalTab';
+import TestimonialsTab from './TestimonialsTab';
 
 interface SettingsTabsProps {
   formData: any;
@@ -44,6 +45,10 @@ const SettingsTabs = ({ formData, handleInputChange, updateSettings, handleSubmi
           <Book size={16} />
           <span>من نحن</span>
         </TabsTrigger>
+        <TabsTrigger value="testimonials" className="flex items-center gap-2 data-[state=active]:bg-crypto-orange data-[state=active]:text-white">
+          <MessageSquareQuote size={16} />
+          <span>آراء العملاء</span>
+        </TabsTrigger>
         <TabsTrigger value="footer" className="flex items-center gap-2 data-[state=active]:bg-crypto-orange data-[state=active]:text-white">
           <Footprints size={16} />
           <span>التذييل</span>
@@ -73,6 +78,14 @@ const SettingsTabs = ({ formData, handleInputChange, updateSettings, handleSubmi
         
         <TabsContent value="about">
           <AboutTab 
+            formData={formData} 
+            handleInputChange={handleInputChange} 
+            updateSettings={updateSettings}
+          />
+        </TabsContent>
+        
+        <TabsContent value="testimonials">
+          <TestimonialsTab 
             formData={formData} 
             handleInputChange={handleInputChange} 
             updateSettings={updateSettings}

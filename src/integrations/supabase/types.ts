@@ -176,6 +176,8 @@ export type Database = {
           hero_title: string
           id: string
           privacy_policy: string | null
+          show_about_section: boolean | null
+          show_testimonials_section: boolean | null
           site_name: string
           successful_projects_count: string
           support_hours: string
@@ -198,6 +200,8 @@ export type Database = {
           hero_title?: string
           id?: string
           privacy_policy?: string | null
+          show_about_section?: boolean | null
+          show_testimonials_section?: boolean | null
           site_name?: string
           successful_projects_count?: string
           support_hours?: string
@@ -220,6 +224,8 @@ export type Database = {
           hero_title?: string
           id?: string
           privacy_policy?: string | null
+          show_about_section?: boolean | null
+          show_testimonials_section?: boolean | null
           site_name?: string
           successful_projects_count?: string
           support_hours?: string
