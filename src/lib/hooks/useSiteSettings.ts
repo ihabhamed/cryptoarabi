@@ -18,9 +18,9 @@ export interface SiteSettings {
   about_content: string;
   about_image_url: string;
   about_features: string[] | string; // Can be stored as a JSON string in the database
-  about_year_founded: string;
-  about_button_text: string;
-  about_button_url: string;
+  about_year_founded: string | null;
+  about_button_text: string | null;
+  about_button_url: string | null;
   footer_description: string;
   privacy_policy: string | null;
   terms_conditions: string | null;
@@ -49,7 +49,7 @@ export const useSiteSettings = () => {
         } catch (e) {
           // If parsing fails, keep it as a string or set as empty array
           console.error('Error parsing about_features:', e);
-          data.about_features = data.about_features || [];
+          data.about_features = [];
         }
       } else if (data && !data.about_features) {
         // Ensure about_features is at least an empty array if not present
@@ -70,10 +70,13 @@ export const useUpdateSiteSettings = () => {
   return useMutation({
     mutationFn: async (updatedSettings: Partial<SiteSettings>) => {
       // Prepare data for storage - stringify about_features if it's an array
-      const dataToStore = { ...updatedSettings };
+      const dataToStore: any = { ...updatedSettings };
       
-      if (dataToStore.about_features && Array.isArray(dataToStore.about_features)) {
-        dataToStore.about_features = JSON.stringify(dataToStore.about_features);
+      if (dataToStore.about_features) {
+        // Ensure about_features is stored as a JSON string in the database
+        if (Array.isArray(dataToStore.about_features)) {
+          dataToStore.about_features = JSON.stringify(dataToStore.about_features);
+        }
       }
 
       const { data, error } = await supabase
@@ -94,8 +97,10 @@ export const useUpdateSiteSettings = () => {
           data.about_features = JSON.parse(data.about_features);
         } catch (e) {
           console.error('Error parsing about_features in response:', e);
-          data.about_features = data.about_features || [];
+          data.about_features = [];
         }
+      } else if (data && !data.about_features) {
+        data.about_features = [];
       }
 
       return data as SiteSettings;

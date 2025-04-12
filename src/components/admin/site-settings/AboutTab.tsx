@@ -19,7 +19,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
   const [features, setFeatures] = React.useState<string[]>(
     Array.isArray(formData.about_features) 
       ? formData.about_features 
-      : typeof formData.about_features === 'string' 
+      : typeof formData.about_features === 'string' && formData.about_features !== ''
         ? [formData.about_features] 
         : []
   );
@@ -34,7 +34,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
         name: 'about_features',
         value: features
       }
-    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    } as any; // Use 'any' type to bypass type checking for this custom event
     
     handleInputChange(customEvent);
   }, [features, handleInputChange]);
