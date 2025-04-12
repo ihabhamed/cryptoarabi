@@ -14,12 +14,11 @@ export function useAirdrops() {
       
       if (error) throw error;
       
-      // Make sure we cast the data to match our Airdrop interface
-      // This ensures image_url is included even if null
+      // Cast the data to match our Airdrop interface
       const typedData: Airdrop[] = data?.map(item => ({
         ...item,
-        // Add image_url if it doesn't exist in the returned data
-        image_url: item.image_url ?? null
+        // Explicitly cast to include image_url since it might be missing from DB
+        image_url: null
       })) || [];
       
       return typedData;
@@ -44,8 +43,8 @@ export function useAirdrop(id: string | undefined) {
       if (data) {
         const typedData: Airdrop = {
           ...data,
-          // Add image_url if it doesn't exist in the returned data
-          image_url: data.image_url ?? null
+          // Explicitly add image_url since it might be missing from DB
+          image_url: null
         };
         return typedData;
       }
@@ -66,9 +65,12 @@ export function useAddAirdrop() {
         throw new Error('Title and status are required');
       }
       
+      // Remove image_url from the data being sent to Supabase if it exists
+      const { image_url, ...dataToInsert } = newAirdrop;
+      
       const { data, error } = await supabase
         .from('airdrops')
-        .insert(newAirdrop)
+        .insert(dataToInsert)
         .select()
         .maybeSingle();
       
@@ -77,8 +79,8 @@ export function useAddAirdrop() {
       // Ensure the returned data conforms to our Airdrop interface
       const typedData: Airdrop = {
         ...data,
-        // Add image_url if it doesn't exist in the returned data
-        image_url: data.image_url ?? null
+        // Explicitly add image_url since it's missing from DB but required in our interface
+        image_url: image_url || null
       };
       
       return typedData;
@@ -94,9 +96,12 @@ export function useUpdateAirdrop() {
   
   return useMutation({
     mutationFn: async ({ id, ...updatedAirdrop }: { id: string } & Partial<Airdrop>): Promise<Airdrop> => {
+      // Remove image_url from the data being sent to Supabase if it exists
+      const { image_url, ...dataToUpdate } = updatedAirdrop;
+      
       const { data, error } = await supabase
         .from('airdrops')
-        .update(updatedAirdrop)
+        .update(dataToUpdate)
         .eq('id', id)
         .select()
         .maybeSingle();
@@ -106,8 +111,8 @@ export function useUpdateAirdrop() {
       // Ensure the returned data conforms to our Airdrop interface
       const typedData: Airdrop = {
         ...data,
-        // Add image_url if it doesn't exist in the returned data
-        image_url: data.image_url ?? null
+        // Explicitly add image_url since it's missing from DB but required in our interface
+        image_url: image_url || null
       };
       
       return typedData;
