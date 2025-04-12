@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,27 +140,7 @@ const Admin = () => {
       <main className="container mx-auto py-8 px-4">
         <Card className="mb-8 bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
           <CardHeader className="border-b border-white/10 pb-4">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl font-bold text-crypto-orange">لوحة التحكم</CardTitle>
-              <div className="flex space-x-2">
-                <Button
-                  variant="default"
-                  className="bg-crypto-orange hover:bg-crypto-orange/80 text-white mr-2"
-                  onClick={() => navigate('/admin/site-settings')}
-                >
-                  <Settings className="h-4 w-4 ml-2" />
-                  إعدادات الموقع
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-white border-white/20 hover:bg-white/10"
-                  onClick={() => navigate('/admin/links')}
-                >
-                  <Link2 className="h-4 w-4 ml-2" />
-                  إدارة الروابط
-                </Button>
-              </div>
-            </div>
+            <CardTitle className="text-2xl font-bold text-crypto-orange">لوحة التحكم</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <Tabs defaultValue="airdrops" className="w-full">
