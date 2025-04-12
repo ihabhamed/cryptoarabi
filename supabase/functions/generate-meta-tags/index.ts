@@ -14,25 +14,76 @@ serve(async (req) => {
 
   try {
     const { title, content } = await req.json();
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
-    // In a real implementation, you would call the Gemini API here
-    // This is a placeholder implementation that does basic processing
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not found');
+    }
+
+    // Call the Gemini API for meta tag generation
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': geminiApiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Generate two things:
+                1. A meta title (60-70 characters) based on this title: "${title}"
+                2. A meta description (150-160 characters) that summarizes this content: "${content}"
+                
+                Format your response as JSON with 'metaTitle' and 'metaDescription' fields.`
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Gemini API error: ${JSON.stringify(errorData)}`);
+    }
+
+    const geminiResponse = await response.json();
     
-    // Generate meta title - use the title as is
-    const metaTitle = title;
+    // Parse the response text to extract the JSON
+    const responseText = geminiResponse.candidates[0].content.parts[0].text;
     
-    // Generate meta description - truncate the content to 157 chars and add ellipsis
-    let metaDescription = '';
-    if (content) {
-      // Simple summarization: take the first 157 characters and add ellipsis
-      metaDescription = content.substring(0, 157) + '...';
+    // Extract JSON from the response (handling potential markdown formatting)
+    let jsonStr = responseText;
+    if (responseText.includes('```json')) {
+      jsonStr = responseText.split('```json')[1].split('```')[0].trim();
+    } else if (responseText.includes('```')) {
+      jsonStr = responseText.split('```')[1].split('```')[0].trim();
+    }
+    
+    let metaData;
+    try {
+      metaData = JSON.parse(jsonStr);
+    } catch (e) {
+      // Fallback to regex parsing if JSON parsing fails
+      const metaTitleMatch = responseText.match(/"metaTitle"\s*:\s*"([^"]+)"/);
+      const metaDescMatch = responseText.match(/"metaDescription"\s*:\s*"([^"]+)"/);
+      
+      metaData = {
+        metaTitle: metaTitleMatch ? metaTitleMatch[1] : title,
+        metaDescription: metaDescMatch ? metaDescMatch[1] : content.substring(0, 157) + '...'
+      };
     }
     
     return new Response(
-      JSON.stringify({
-        metaTitle,
-        metaDescription
-      }),
+      JSON.stringify(metaData),
       { 
         headers: { 
           ...corsHeaders, 
