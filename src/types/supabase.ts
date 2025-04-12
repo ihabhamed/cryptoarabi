@@ -1,5 +1,4 @@
 
-
 export interface Airdrop {
   id: string;
   title: string;
@@ -63,4 +62,3 @@ export interface Service {
   created_at: string;
   updated_at: string;
 }
-
