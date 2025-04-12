@@ -47,9 +47,9 @@ export interface BlogPost {
   category: string | null;
   created_at: string;
   updated_at: string;
-  meta_title?: string | null;
-  meta_description?: string | null;
-  hashtags?: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  hashtags: string | null;
 }
 
 export interface Service {

@@ -81,11 +81,10 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       }
       
       // Ensure hashtags is a string or null, not an array
-      if (finalFormData.hashtags && typeof finalFormData.hashtags !== 'string') {
-        // If it's already an array, join it
+      if (finalFormData.hashtags) {
         if (Array.isArray(finalFormData.hashtags)) {
           finalFormData.hashtags = finalFormData.hashtags.join(', ');
-        } else {
+        } else if (typeof finalFormData.hashtags !== 'string') {
           // Otherwise convert to string or null
           finalFormData.hashtags = String(finalFormData.hashtags) || null;
         }
