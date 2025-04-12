@@ -37,14 +37,13 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     updatedFeatures[index] = value;
     setFeatures(updatedFeatures);
     
-    // Update the form data by calling the parent handler
-    // Cast to any to avoid type errors with the synthetic event
+    // Update the form data by calling the parent handler with a custom event object
     handleInputChange({
       target: {
         name: 'about_features',
         value: updatedFeatures
       }
-    } as any);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   const addFeature = () => {
@@ -57,7 +56,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
         name: 'about_features',
         value: updatedFeatures
       }
-    } as any);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   const removeFeature = (index: number) => {
@@ -72,7 +71,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
         name: 'about_features',
         value: updatedFeatures
       }
-    } as any);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   return (
