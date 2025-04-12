@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,6 +6,7 @@ import { CalendarIcon, Twitter } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { useAddAirdrop } from '@/lib/supabase-hooks';
+import { Airdrop } from '@/types/supabase';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,9 +56,9 @@ const AirdropFormSection = () => {
     const currentDate = new Date();
     
     // Add start_date and set status
-    const airdropData = {
+    const airdropData: Partial<Airdrop> = {
       ...data,
-      start_date: currentDate,
+      start_date: currentDate.toISOString(),
       status: 'active',
     };
     

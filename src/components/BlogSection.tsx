@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useBlogPosts } from '@/lib/supabase-hooks';
+import { BlogPost } from '@/types/supabase';
 
 const BlogSection = () => {
-  const { data: blogPosts, isLoading, error } = useBlogPosts();
+  const { data: blogPosts = [], isLoading, error } = useBlogPosts();
   
   // Show only 3 latest blog posts for homepage
-  const latestPosts = blogPosts?.slice(0, 3) || [];
+  const latestPosts = blogPosts.slice(0, 3);
 
   if (isLoading) {
     return (
@@ -86,7 +87,7 @@ const BlogSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestPosts.length > 0 ? (
-            latestPosts.map((post) => (
+            latestPosts.map((post: BlogPost) => (
               <article key={post.id} className="crypto-card hover:translate-y-[-8px]">
                 <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
                   <img 

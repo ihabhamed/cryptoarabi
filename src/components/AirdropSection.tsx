@@ -6,12 +6,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ExternalLink } from "lucide-react";
 import { useAirdrops } from '@/lib/supabase-hooks';
+import { Airdrop } from '@/types/supabase';
 
 const AirdropSection = () => {
-  const { data: airdrops, isLoading, error } = useAirdrops();
+  const { data: airdrops = [], isLoading, error } = useAirdrops();
   
   // Show only 4 latest airdrops for homepage
-  const latestAirdrops = airdrops?.slice(0, 4) || [];
+  const latestAirdrops = airdrops.slice(0, 4);
 
   if (isLoading) {
     return (
@@ -71,7 +72,7 @@ const AirdropSection = () => {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {latestAirdrops.length > 0 ? (
-            latestAirdrops.map((airdrop) => (
+            latestAirdrops.map((airdrop: Airdrop) => (
               <Card 
                 key={airdrop.id} 
                 className="bg-crypto-darkGray border-white/10 transition-all duration-300 hover:border-crypto-orange/50 hover:translate-y-[-5px]"

@@ -1,19 +1,20 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Airdrop, BlogPost, Service } from '@/types/supabase';
 
 // Airdrops
 export function useAirdrops() {
   return useQuery({
     queryKey: ['airdrops'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Airdrop[]> => {
       const { data, error } = await supabase
         .from('airdrops')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 }
@@ -21,7 +22,7 @@ export function useAirdrops() {
 export function useAirdrop(id: string | undefined) {
   return useQuery({
     queryKey: ['airdrops', id],
-    queryFn: async () => {
+    queryFn: async (): Promise<Airdrop | null> => {
       if (!id) return null;
       const { data, error } = await supabase
         .from('airdrops')
@@ -40,7 +41,7 @@ export function useAddAirdrop() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (newAirdrop: any) => {
+    mutationFn: async (newAirdrop: Partial<Airdrop>): Promise<Airdrop> => {
       const { data, error } = await supabase
         .from('airdrops')
         .insert([newAirdrop])
@@ -60,7 +61,7 @@ export function useUpdateAirdrop() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, ...updatedAirdrop }: { id: string, [key: string]: any }) => {
+    mutationFn: async ({ id, ...updatedAirdrop }: { id: string } & Partial<Airdrop>): Promise<Airdrop> => {
       const { data, error } = await supabase
         .from('airdrops')
         .update(updatedAirdrop)
@@ -82,7 +83,7 @@ export function useDeleteAirdrop() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: string): Promise<string> => {
       const { error } = await supabase
         .from('airdrops')
         .delete()
@@ -101,14 +102,14 @@ export function useDeleteAirdrop() {
 export function useBlogPosts() {
   return useQuery({
     queryKey: ['blog_posts'],
-    queryFn: async () => {
+    queryFn: async (): Promise<BlogPost[]> => {
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .order('publish_date', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 }
@@ -116,7 +117,7 @@ export function useBlogPosts() {
 export function useBlogPost(slug: string | undefined) {
   return useQuery({
     queryKey: ['blog_posts', slug],
-    queryFn: async () => {
+    queryFn: async (): Promise<BlogPost | null> => {
       if (!slug) return null;
       const { data, error } = await supabase
         .from('blog_posts')
@@ -135,14 +136,14 @@ export function useBlogPost(slug: string | undefined) {
 export function useServices() {
   return useQuery({
     queryKey: ['services'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Service[]> => {
       const { data, error } = await supabase
         .from('services')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 }

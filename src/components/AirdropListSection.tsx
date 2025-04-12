@@ -19,11 +19,12 @@ import {
 } from "@/components/ui/collapsible";
 import { Link } from 'react-router-dom';
 import { useAirdrops } from '@/lib/supabase-hooks';
+import { Airdrop } from '@/types/supabase';
 
 const AirdropListSection = () => {
   // State to track which airdrop is expanded
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { data: airdrops, isLoading, error } = useAirdrops();
+  const { data: airdrops = [], isLoading, error } = useAirdrops();
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -93,7 +94,7 @@ const AirdropListSection = () => {
       </div>
       
       <div className="grid grid-cols-1 gap-6">
-        {airdrops.map((airdrop) => (
+        {airdrops.map((airdrop: Airdrop) => (
           <Collapsible 
             key={airdrop.id} 
             open={expandedId === airdrop.id}
