@@ -1,3 +1,4 @@
+
 // Utility functions for Google Gemini API
 
 export async function generateMetaTags(title: string, content: string) {
@@ -43,8 +44,8 @@ export async function generateHashtags(title: string, content: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // Send as Authorization header
-        'apikey': SUPABASE_ANON_KEY // Also send as apikey header for redundancy
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({ title, content })
     });

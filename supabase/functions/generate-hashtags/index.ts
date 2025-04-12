@@ -20,12 +20,18 @@ serve(async (req) => {
   }
 
   try {
-    // Log all headers for debugging (don't log sensitive values)
-    console.log("Request headers received");
+    // Log request info for debugging
+    console.log(`Request method: ${req.method}`);
+    console.log("Request headers received:", Array.from(req.headers.entries())
+      .filter(([key]) => !['authorization', 'apikey'].includes(key.toLowerCase()))
+      .map(([key]) => key));
     
     // Extract and validate token from headers
     const authHeader = req.headers.get('Authorization');
     const apiKeyHeader = req.headers.get('apikey');
+    
+    console.log("Auth header present:", Boolean(authHeader));
+    console.log("API key header present:", Boolean(apiKeyHeader));
     
     // Check for authorization header or apikey (use either)
     let isAuthenticated = false;
