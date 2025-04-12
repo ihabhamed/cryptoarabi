@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/utils/toast-utils";
@@ -49,11 +48,12 @@ export const useSiteSettings = () => {
         } catch (e) {
           // If parsing fails, keep it as a string or set as empty array
           console.error('Error parsing about_features:', e);
-          data.about_features = [] as string[]; // Type assertion to string[]
+          // Keep about_features as a string when parsing fails
+          data.about_features = '[]';
         }
       } else if (data && !data.about_features) {
-        // Ensure about_features is at least an empty array if not present
-        data.about_features = [] as string[]; // Type assertion to string[]
+        // Ensure about_features is at least an empty string if not present
+        data.about_features = '[]';
       }
       
       return data as SiteSettings;
@@ -97,10 +97,11 @@ export const useUpdateSiteSettings = () => {
           data.about_features = JSON.parse(data.about_features);
         } catch (e) {
           console.error('Error parsing about_features in response:', e);
-          data.about_features = [] as string[]; // Type assertion to string[]
+          // Keep about_features as a string when parsing fails
+          data.about_features = '[]';
         }
       } else if (data && !data.about_features) {
-        data.about_features = [] as string[]; // Type assertion to string[]
+        data.about_features = '[]';
       }
 
       return data as SiteSettings;
