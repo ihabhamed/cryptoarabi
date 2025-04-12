@@ -32,7 +32,10 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
           category: data.category || '',
           slug: data.slug || '',
           image_url: data.image_url || '',
-          publish_date: data.publish_date
+          publish_date: data.publish_date,
+          meta_title: data.meta_title || '',
+          meta_description: data.meta_description || '',
+          hashtags: data.hashtags || ''
         };
       }
       
@@ -59,43 +62,47 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         return false;
       }
       
+      // Create a clean data object with only the fields that exist in the database
+      const cleanData = {
+        title: blogData.title,
+        content: blogData.content,
+        excerpt: blogData.excerpt || null,
+        author: blogData.author || null,
+        category: blogData.category || null,
+        slug: blogData.slug || null,
+        image_url: blogData.image_url || null,
+        publish_date: blogData.publish_date || new Date().toISOString(),
+        meta_title: blogData.meta_title || null,
+        meta_description: blogData.meta_description || null,
+        hashtags: blogData.hashtags || null
+      };
+      
+      console.log("Saving blog post with data:", cleanData);
+      
       if (isEditMode && id) {
-        // Ensure required fields are present in the update
-        const updateData = {
-          ...blogData,
-          title: blogData.title as string,
-          content: blogData.content as string
-        };
-        
         const { error } = await supabase
           .from('blog_posts')
-          .update(updateData)
+          .update(cleanData)
           .eq('id', id);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase update error:", error);
+          throw error;
+        }
         
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث المنشور بنجاح",
         });
       } else {
-        // For insertion, explicitly provide required fields
-        const newPost = {
-          title: blogData.title as string,
-          content: blogData.content as string,
-          excerpt: blogData.excerpt,
-          author: blogData.author,
-          category: blogData.category,
-          slug: blogData.slug,
-          image_url: blogData.image_url,
-          publish_date: blogData.publish_date
-        };
-        
         const { error } = await supabase
           .from('blog_posts')
-          .insert(newPost);
+          .insert(cleanData);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase insert error:", error);
+          throw error;
+        }
         
         toast({
           title: "تمت الإضافة بنجاح",

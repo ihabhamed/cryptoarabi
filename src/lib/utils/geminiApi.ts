@@ -3,7 +3,7 @@
 
 export async function generateMetaTags(title: string, content: string) {
   try {
-    console.log("Generating meta tags for:", { title, content });
+    console.log("Generating meta tags for:", { title, content: content?.substring(0, 50) + "..." });
     
     // Use the hardcoded API key for now
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRscGlxa2Jpd2NkeXpwcXF6c2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjE4MzgsImV4cCI6MjA1OTk5NzgzOH0.5KKw0L7Uo-lsFK0ovvhZXh-_LKYGPE9qq2SIE90acvg";
@@ -87,21 +87,27 @@ export async function generateHashtags(title: string, content: string) {
       console.error("Hashtags API error:", response.status, errorData);
       
       // Provide fallback Arabic hashtags if API fails
-      return ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+      const fallbackHashtags = ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+      console.log("Using fallback hashtags due to API error:", fallbackHashtags);
+      return fallbackHashtags;
     }
     
     const data = await response.json();
-    console.log("Hashtags generated:", data);
     
     if (!data || !data.hashtags || !Array.isArray(data.hashtags) || data.hashtags.length === 0) {
       // Return fallback Arabic hashtags if response is invalid
-      return ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+      const fallbackHashtags = ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+      console.log("Using fallback hashtags due to invalid response:", fallbackHashtags);
+      return fallbackHashtags;
     }
     
+    console.log("Hashtags generated:", data);
     return data.hashtags;
   } catch (error) {
     console.error('Error generating hashtags:', error);
     // Return fallback Arabic hashtags on error
-    return ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+    const fallbackHashtags = ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+    console.log("Using fallback hashtags due to error:", fallbackHashtags);
+    return fallbackHashtags;
   }
 }
