@@ -3,18 +3,17 @@ import React from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon, Twitter, Youtube } from "lucide-react";
+import { CalendarIcon, Twitter } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,18 +26,12 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  title: z.string().min(5, { message: "العنوان يجب أن يكون على الأقل 5 أحرف" }),
-  description: z.string().min(20, { message: "الوصف يجب أن يكون على الأقل 20 حرف" }),
-  startDate: z.date({ required_error: "يرجى اختيار تاريخ البدء" }),
-  endDate: z.date({ required_error: "يرجى اختيار تاريخ الانتهاء" }).optional(),
-  twitterLink: z.string().url({ message: "يرجى إدخال رابط صحيح" }),
-  youtubeLink: z.string().url({ message: "يرجى إدخال رابط صحيح" }).optional(),
-  termsAccepted: z.boolean().refine(val => val === true, {
-    message: "يجب الموافقة على الشروط والأحكام",
-  }),
+  name: z.string().min(3, { message: "يجب أن يكون اسم الإيردروب 3 أحرف على الأقل" }),
+  description: z.string().optional(),
+  twitterLink: z.string().url({ message: "يرجى إدخال رابط تويتر صحيح" }),
+  expiryDate: z.date().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -48,11 +41,9 @@ const AirdropFormSection = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      name: "",
       description: "",
       twitterLink: "",
-      youtubeLink: "",
-      termsAccepted: false,
     },
   });
 
@@ -68,20 +59,19 @@ const AirdropFormSection = () => {
   return (
     <Card className="bg-crypto-darkGray border-white/10 h-fit sticky top-24">
       <CardHeader>
-        <CardTitle className="text-white text-2xl">إضافة إيردروب جديد</CardTitle>
-        <CardDescription className="text-white/70">أدخل تفاصيل الإيردروب للمشاركة</CardDescription>
+        <CardTitle className="text-white text-2xl">شرح الإيردروب</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="title"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">عنوان الإيردروب</FormLabel>
+                  <FormLabel className="text-white">اسم الإيردروب</FormLabel>
                   <FormControl>
-                    <Input placeholder="أدخل عنوان الإيردروب" {...field} className="bg-background/5 border-white/10 text-white" />
+                    <Input placeholder="أدخل اسم الإيردروب" {...field} className="bg-background/5 border-white/10 text-white" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -93,10 +83,10 @@ const AirdropFormSection = () => {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">وصف الإيردروب</FormLabel>
+                  <FormLabel className="text-white">وصف الإيردروب (اختياري)</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="أدخل وصفاً مفصلاً للإيردروب" 
+                      placeholder="أدخل وصفاً للإيردروب" 
                       {...field} 
                       className="bg-background/5 border-white/10 text-white min-h-[80px]" 
                     />
@@ -105,84 +95,6 @@ const AirdropFormSection = () => {
                 </FormItem>
               )}
             />
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-white">تاريخ البدء</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="w-full flex justify-between items-center bg-background/5 border-white/10 text-white hover:bg-background/10"
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP", { locale: ar })
-                            ) : (
-                              <span>اختر تاريخاً</span>
-                            )}
-                            <CalendarIcon className="ml-2 h-4 w-4" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          locale={ar}
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="rounded-md border"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="text-white">تاريخ الانتهاء (اختياري)</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="w-full flex justify-between items-center bg-background/5 border-white/10 text-white hover:bg-background/10"
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP", { locale: ar })
-                            ) : (
-                              <span>اختر تاريخاً</span>
-                            )}
-                            <CalendarIcon className="ml-2 h-4 w-4" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          locale={ar}
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="rounded-md border"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             
             <FormField
               control={form.control}
@@ -193,7 +105,7 @@ const AirdropFormSection = () => {
                   <FormControl>
                     <div className="relative">
                       <Input 
-                        placeholder="أدخل رابط سلسلة تويتر" 
+                        placeholder="أدخل رابط تويتر المشروع" 
                         {...field} 
                         className="pl-10 bg-background/5 border-white/10 text-white" 
                       />
@@ -207,43 +119,38 @@ const AirdropFormSection = () => {
             
             <FormField
               control={form.control}
-              name="youtubeLink"
+              name="expiryDate"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">رابط يوتيوب (اختياري)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        placeholder="أدخل رابط فيديو يوتيوب" 
-                        {...field} 
-                        className="pl-10 bg-background/5 border-white/10 text-white" 
+                <FormItem className="flex flex-col">
+                  <FormLabel className="text-white">تاريخ انتهاء الإيردروب (اختياري)</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className="w-full flex justify-between items-center bg-background/5 border-white/10 text-white hover:bg-background/10"
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP", { locale: ar })
+                          ) : (
+                            <span>اختر تاريخاً</span>
+                          )}
+                          <CalendarIcon className="ml-2 h-4 w-4" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                      <Calendar
+                        mode="single"
+                        locale={ar}
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                        className="rounded-md border pointer-events-auto"
                       />
-                      <Youtube className="absolute right-3 top-2.5 h-5 w-5 text-white/50" />
-                    </div>
-                  </FormControl>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="termsAccepted"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-0 space-x-reverse space-y-0 rounded-md p-4 bg-background/5">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="ml-2 data-[state=checked]:bg-crypto-orange data-[state=checked]:border-crypto-orange"
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-white text-sm">
-                      أوافق على الشروط والأحكام وسياسة الخصوصية
-                    </FormLabel>
-                    <FormMessage />
-                  </div>
                 </FormItem>
               )}
             />
@@ -252,7 +159,7 @@ const AirdropFormSection = () => {
               type="submit" 
               className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white mt-4"
             >
-              إضافة الإيردروب
+              تقديم الإيردروب
             </Button>
           </form>
         </Form>
