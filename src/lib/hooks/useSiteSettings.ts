@@ -81,7 +81,7 @@ export const useUpdateSiteSettings = () => {
       const processedSettings = { ...updatedSettings };
       
       if (processedSettings.about_features && Array.isArray(processedSettings.about_features)) {
-        processedSettings.about_features = JSON.stringify(processedSettings.about_features) as unknown as string[];
+        processedSettings.about_features = JSON.stringify(processedSettings.about_features) as any;
       }
       
       const { data, error } = await supabase
