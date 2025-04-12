@@ -44,6 +44,32 @@ const AboutSection = () => {
   const aboutButtonText = settings?.about_button_text || 'اعرف المزيد عنا';
   const aboutButtonUrl = settings?.about_button_url || '#';
 
+  // Function to render the button with correct behavior based on URL type
+  const renderButton = () => {
+    // Check if the URL is external (starts with http/https)
+    if (aboutButtonUrl && aboutButtonUrl.match(/^https?:\/\//)) {
+      return (
+        <Button 
+          className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
+          onClick={() => window.open(aboutButtonUrl, '_blank')}
+        >
+          {aboutButtonText}
+        </Button>
+      );
+    } 
+    // If it's an internal link or anchor
+    else {
+      return (
+        <Button 
+          className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
+          asChild
+        >
+          <Link to={aboutButtonUrl || '#'}>{aboutButtonText}</Link>
+        </Button>
+      );
+    }
+  };
+
   return (
     <section id="about" className="section-padding bg-crypto-darkBlue relative overflow-hidden">
       {/* Background elements */}
@@ -88,21 +114,7 @@ const AboutSection = () => {
               ))}
             </ul>
 
-            {aboutButtonUrl.startsWith('http') ? (
-              <Button 
-                className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
-                onClick={() => window.open(aboutButtonUrl, '_blank')}
-              >
-                {aboutButtonText}
-              </Button>
-            ) : (
-              <Button 
-                className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
-                asChild
-              >
-                <Link to={aboutButtonUrl}>{aboutButtonText}</Link>
-              </Button>
-            )}
+            {renderButton()}
           </div>
         </div>
       </div>

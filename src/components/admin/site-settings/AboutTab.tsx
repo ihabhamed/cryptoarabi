@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, X } from "lucide-react";
+import { PlusCircle, X, LinkIcon } from "lucide-react";
 import { SiteSettings } from '@/lib/hooks/useSiteSettings';
 
 interface AboutTabProps {
@@ -84,6 +84,11 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
       e.preventDefault();
       addFeature();
     }
+  };
+
+  // Helper function to check if URL is external
+  const isExternalUrl = (url: string): boolean => {
+    return url?.match(/^https?:\/\//) !== null;
   };
 
   return (
@@ -196,30 +201,43 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
           </div>
         </div>
         
-        {/* About button text field */}
-        <div className="space-y-2">
-          <Label htmlFor="about_button_text" className="text-white">نص زر من نحن</Label>
-          <Input 
-            id="about_button_text" 
-            name="about_button_text"
-            value={formData.about_button_text || ''} 
-            onChange={handleInputChange}
-            placeholder="اعرف المزيد عنا" 
-            className="bg-crypto-darkBlue/30 border-white/10 text-white"
-          />
-        </div>
-        
-        {/* About button URL field */}
-        <div className="space-y-2">
-          <Label htmlFor="about_button_url" className="text-white">رابط زر من نحن</Label>
-          <Input 
-            id="about_button_url" 
-            name="about_button_url"
-            value={formData.about_button_url || ''} 
-            onChange={handleInputChange}
-            placeholder="/about" 
-            className="bg-crypto-darkBlue/30 border-white/10 text-white"
-          />
+        {/* About button section */}
+        <div className="space-y-4 border border-white/10 rounded-md p-4 bg-crypto-darkBlue/20">
+          <div className="flex items-center gap-2 mb-2">
+            <LinkIcon className="h-5 w-5 text-crypto-orange" />
+            <h3 className="text-lg font-medium text-white">إعدادات زر القسم</h3>
+          </div>
+          
+          {/* About button text field */}
+          <div className="space-y-2">
+            <Label htmlFor="about_button_text" className="text-white">نص زر من نحن</Label>
+            <Input 
+              id="about_button_text" 
+              name="about_button_text"
+              value={formData.about_button_text || ''} 
+              onChange={handleInputChange}
+              placeholder="اعرف المزيد عنا" 
+              className="bg-crypto-darkBlue/30 border-white/10 text-white"
+            />
+          </div>
+          
+          {/* About button URL field */}
+          <div className="space-y-2">
+            <Label htmlFor="about_button_url" className="text-white">رابط زر من نحن</Label>
+            <Input 
+              id="about_button_url" 
+              name="about_button_url"
+              value={formData.about_button_url || ''} 
+              onChange={handleInputChange}
+              placeholder="/about" 
+              className="bg-crypto-darkBlue/30 border-white/10 text-white"
+            />
+            <p className="text-sm text-gray-400">
+              {isExternalUrl(formData.about_button_url || '') 
+                ? 'سيتم فتح هذا الرابط في نافذة جديدة (رابط خارجي)' 
+                : 'سيتم توجيه المستخدم داخل الموقع (رابط داخلي)'}
+            </p>
+          </div>
         </div>
       </CardContent>
       <CardFooter>

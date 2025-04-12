@@ -88,6 +88,7 @@ const SiteSettings = () => {
       ...formData
     };
     
+    console.log('Submitting settings update:', updatedSettings);
     updateSettings.mutate(updatedSettings);
   };
   

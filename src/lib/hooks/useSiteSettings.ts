@@ -86,6 +86,7 @@ export const useSiteSettings = () => {
         }
       }
       
+      console.log('Processed site settings:', processedData);
       return processedData;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -103,6 +104,8 @@ export const useUpdateSiteSettings = () => {
   
   return useMutation({
     mutationFn: async (updatedSettings: Partial<SiteSettings>) => {
+      console.log('Updating site settings with:', updatedSettings);
+      
       // Create a new object of type Partial<SiteSettingsDB>
       // Need to be explicit about the type and handle about_features conversion
       const dataToStore: Partial<SiteSettingsDB> = { 
@@ -119,6 +122,8 @@ export const useUpdateSiteSettings = () => {
       if (updatedSettings.about_features !== undefined) {
         dataToStore.about_features = JSON.stringify(updatedSettings.about_features);
       }
+
+      console.log('Data being stored in database:', dataToStore);
 
       // Update site settings in Supabase
       const { data, error } = await supabase
@@ -152,6 +157,7 @@ export const useUpdateSiteSettings = () => {
         }
       }
 
+      console.log('Updated site settings response:', processedResponse);
       return processedResponse;
     },
     onSuccess: () => {
