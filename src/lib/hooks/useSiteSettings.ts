@@ -68,7 +68,6 @@ export const useUpdateSiteSettings = () => {
       toast({
         title: "تم التحديث",
         description: "تم تحديث إعدادات الموقع بنجاح",
-        duration: 3000, // Auto-dismiss after 3 seconds
       });
     },
     onError: (error) => {
@@ -76,7 +75,6 @@ export const useUpdateSiteSettings = () => {
         variant: "destructive",
         title: "حدث خطأ",
         description: `فشل في تحديث إعدادات الموقع: ${error.message}`,
-        duration: 5000, // Give more time for error messages
       });
     },
   });
