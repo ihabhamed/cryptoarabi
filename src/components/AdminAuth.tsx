@@ -25,6 +25,8 @@ const AdminAuth = () => {
     setError(null);
 
     try {
+      console.log('AdminAuth: Attempting login with email:', email);
+      
       // Log in with credentials
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
@@ -36,31 +38,60 @@ const AdminAuth = () => {
       }
 
       if (data?.user) {
-        console.log("User logged in successfully, checking if admin...");
+        console.log("AdminAuth: User logged in successfully, checking if admin...", data.user.id);
         
         // Check if the user is an admin with retry logic
         let isAdminUser = false;
-        let retries = 3;
+        let retries = 5;
+        let delay = 500;
         
         while (retries > 0 && !isAdminUser) {
+          console.log(`AdminAuth: Admin check attempt ${6-retries} for user ${data.user.id}`);
           isAdminUser = await checkIsAdmin();
-          console.log(`Admin check (retry ${4-retries}):`, isAdminUser);
-          if (!isAdminUser) {
-            // Wait a bit before retrying
-            await new Promise(resolve => setTimeout(resolve, 500));
-            retries--;
+          console.log(`AdminAuth: Admin check result (retry ${6-retries}):`, isAdminUser);
+          
+          if (!isAdminUser && retries > 1) {
+            console.log(`Waiting ${delay}ms before retry...`);
+            // Wait with increasing delay before retrying
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay = Math.min(delay * 1.5, 2000); // Increase delay but cap at 2 seconds
           } else {
             break;
           }
+          retries--;
         }
         
         if (isAdminUser) {
+          console.log('AdminAuth: User verified as admin, redirecting to admin panel');
           toast({
             title: "تم تسجيل الدخول بنجاح",
             description: "مرحبا بك في لوحة التحكم",
           });
           navigate('/admin');
         } else {
+          console.log('AdminAuth: User is not admin after all retries');
+          // Try one more direct check against the database
+          const { data: rolesData, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', data.user.id)
+            .eq('role', 'admin');
+            
+          if (rolesError) {
+            console.error('Error checking user_roles directly:', rolesError);
+          } else {
+            console.log('Direct user_roles check result:', rolesData);
+            if (rolesData && rolesData.length > 0) {
+              console.log('User has admin role (direct check), redirecting to admin panel');
+              toast({
+                title: "تم تسجيل الدخول بنجاح",
+                description: "مرحبا بك في لوحة التحكم",
+              });
+              navigate('/admin');
+              return;
+            }
+          }
+          
           // Sign out if not admin
           await supabase.auth.signOut();
           throw new Error('ليس لديك صلاحية الوصول إلى لوحة التحكم');
