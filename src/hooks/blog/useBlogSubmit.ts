@@ -4,6 +4,8 @@ import { BlogPost } from '@/types/supabase';
 import { useBlogApi } from './useBlogApi';
 import { useBlogImage } from './useBlogImage';
 import { useBlogFormState } from './useBlogFormState';
+import { generateMetaTags } from '@/lib/utils/geminiApi';
+import { toast } from '@/lib/utils/toast-utils';
 
 interface UseBlogSubmitProps {
   id?: string;
@@ -25,9 +27,30 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         generateSlug();
       }
       
-      // Upload image if selected
-      let finalFormData: Partial<BlogPost> = { ...formData };
+      // Generate meta title and description if not provided
+      let finalFormData: Partial<BlogPost & { meta_title?: string; meta_description?: string }> = { ...formData };
       
+      if ((!finalFormData.meta_title || !finalFormData.meta_description) && finalFormData.title && finalFormData.content) {
+        try {
+          const { metaTitle, metaDescription } = await generateMetaTags(
+            finalFormData.title,
+            finalFormData.content
+          );
+          
+          if (!finalFormData.meta_title) {
+            finalFormData.meta_title = metaTitle;
+          }
+          
+          if (!finalFormData.meta_description) {
+            finalFormData.meta_description = metaDescription;
+          }
+        } catch (error) {
+          console.error("Error generating meta tags:", error);
+          // Continue with submission even if meta generation fails
+        }
+      }
+      
+      // Upload image if selected
       if (selectedImage) {
         const imageUrl = await uploadBlogImage();
         

@@ -72,7 +72,7 @@ const SeoSection: React.FC<SeoSectionProps> = ({
   };
 
   return (
-    <div className="border-t border-white/10 pt-6 mt-6">
+    <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium text-white">تحسين محركات البحث (SEO)</h3>
         <Button
@@ -93,7 +93,7 @@ const SeoSection: React.FC<SeoSectionProps> = ({
             name="meta_title"
             value={formData.meta_title || ''}
             onChange={handleChange}
-            placeholder="عنوان للمتصفح وصفحات البحث"
+            placeholder="سيتم توليده تلقائياً عند الحفظ إذا تُرك فارغاً"
             className="bg-crypto-darkBlue/50 border-white/20 text-white"
           />
           <p className="text-xs text-gray-400 mt-1">
@@ -107,7 +107,7 @@ const SeoSection: React.FC<SeoSectionProps> = ({
             name="meta_description"
             value={formData.meta_description || ''}
             onChange={handleChange}
-            placeholder="وصف مختصر للمحتوى"
+            placeholder="سيتم توليده تلقائياً عند الحفظ إذا تُرك فارغاً"
             className="bg-crypto-darkBlue/50 border-white/20 text-white min-h-[80px]"
           />
           <p className="text-xs text-gray-400 mt-1">

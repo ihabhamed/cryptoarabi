@@ -2,7 +2,7 @@
 import React from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import BlogTab from '@/components/admin/dashboard/BlogTab';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const AdminBlog = () => {
   return (
@@ -16,6 +16,9 @@ const AdminBlog = () => {
         <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
           <CardHeader>
             <CardTitle className="text-crypto-orange">مقالات المدونة</CardTitle>
+            <CardDescription className="text-gray-300">
+              يتم توليد عنوان ووصف الميتا تلقائيًا باستخدام Google Gemini API. يمكنك تعديلها يدويًا إذا رغبت في ذلك.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <BlogTab />

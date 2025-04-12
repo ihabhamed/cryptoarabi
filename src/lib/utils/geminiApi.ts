@@ -22,7 +22,7 @@ export async function generateMetaTags(title: string, content: string) {
     // Fallback to simple summarization if API call fails
     return {
       metaTitle: title,
-      metaDescription: content ? content.substring(0, 157) + '...' : ''
+      metaDescription: content.length > 160 ? content.substring(0, 157) + '...' : content
     };
   }
 }

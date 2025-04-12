@@ -34,7 +34,7 @@ serve(async (req) => {
               {
                 text: `Generate two things:
                 1. A meta title (60-70 characters) based on this title: "${title}"
-                2. A meta description (150-160 characters) that summarizes this content: "${content}"
+                2. A meta description (EXACTLY 160 characters or less) that summarizes this content: "${content}"
                 
                 Format your response as JSON with 'metaTitle' and 'metaDescription' fields.`
               }
@@ -80,6 +80,11 @@ serve(async (req) => {
         metaTitle: metaTitleMatch ? metaTitleMatch[1] : title,
         metaDescription: metaDescMatch ? metaDescMatch[1] : content.substring(0, 157) + '...'
       };
+    }
+    
+    // Ensure meta description is no more than 160 characters
+    if (metaData.metaDescription && metaData.metaDescription.length > 160) {
+      metaData.metaDescription = metaData.metaDescription.substring(0, 157) + '...';
     }
     
     return new Response(

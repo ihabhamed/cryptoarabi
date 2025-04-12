@@ -26,16 +26,20 @@ const BlogFormFields: React.FC<BlogFormFieldsProps> = ({
       />
       
       {/* SEO Section */}
-      <SeoSection 
-        formData={formData}
-        handleChange={handleChange}
-      />
+      <div className="border-t border-white/10 pt-6 mt-6">
+        <SeoSection 
+          formData={formData}
+          handleChange={handleChange}
+        />
+      </div>
       
       {/* Tags Section */}
-      <TagsSection 
-        formData={formData}
-        handleChange={handleChange}
-      />
+      <div className="border-t border-white/10 pt-6 mt-6">
+        <TagsSection 
+          formData={formData}
+          handleChange={handleChange}
+        />
+      </div>
     </div>
   );
 };
