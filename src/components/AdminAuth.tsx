@@ -38,108 +38,47 @@ const AdminAuth = () => {
       }
 
       if (data?.user) {
-        console.log("AdminAuth: User logged in successfully:", data.user.id);
-        console.log("AdminAuth: Full user data:", data.user);
-        console.log("AdminAuth: Now checking if admin...");
+        console.log('AdminAuth: User logged in successfully:', data.user.id);
         
-        // First, try a direct database check as a reliable fallback
-        try {
-          console.log('AdminAuth: Direct database check for user_id:', data.user.id);
-          const { data: rolesData, error: rolesError } = await supabase
-            .from('user_roles')
-            .select('*')
-            .eq('user_id', data.user.id)
-            .eq('role', 'admin');
-            
-          if (rolesError) {
-            console.error('AdminAuth: Error checking user_roles directly:', rolesError);
-          } else {
-            console.log('AdminAuth: Direct user_roles check result:', rolesData);
-            const hasAdminRole = rolesData && rolesData.length > 0;
-            console.log('AdminAuth: User has admin role (direct check):', hasAdminRole);
-            
-            if (hasAdminRole) {
-              console.log('AdminAuth: Direct check successful, user is admin');
-              toast({
-                title: "تم تسجيل الدخول بنجاح",
-                description: "مرحبا بك في لوحة التحكم",
-              });
-              navigate('/admin');
-              return;
-            } else {
-              console.log('AdminAuth: User is not admin based on direct database check');
-            }
-          }
-        } catch (directError) {
-          console.error('AdminAuth: Error during direct check:', directError);
-        }
+        // Implement a clear delay to allow session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Check if the user is an admin with retry logic
-        let isAdminUser = false;
-        let retries = 5;
-        let delay = 500;
+        // Get user_roles directly without using RLS policies
+        console.log('AdminAuth: Checking for admin role...');
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin');
         
-        while (retries > 0 && !isAdminUser) {
-          console.log(`AdminAuth: Admin check attempt ${6-retries} for user ${data.user.id}`);
-          isAdminUser = await checkIsAdmin();
-          console.log(`AdminAuth: Admin check result (retry ${6-retries}):`, isAdminUser);
+        if (roleError) {
+          console.error('AdminAuth: Error checking roles:', roleError);
+        } else {
+          console.log('AdminAuth: Role check result:', roleData);
           
-          if (!isAdminUser && retries > 1) {
-            console.log(`Waiting ${delay}ms before retry...`);
-            // Wait with increasing delay before retrying
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay = Math.min(delay * 1.5, 2000); // Increase delay but cap at 2 seconds
-          } else {
-            break;
+          if (roleData && roleData.length > 0) {
+            console.log('AdminAuth: User verified as admin, redirecting to admin panel');
+            toast({
+              title: "تم تسجيل الدخول بنجاح",
+              description: "مرحبا بك في لوحة التحكم",
+            });
+            navigate('/admin');
+            return;
           }
-          retries--;
         }
         
-        if (isAdminUser) {
-          console.log('AdminAuth: User verified as admin, redirecting to admin panel');
+        // Use checkIsAdmin as backup verification
+        const isAdmin = await checkIsAdmin();
+        
+        if (isAdmin) {
+          console.log('AdminAuth: User verified as admin through checkIsAdmin, redirecting to admin panel');
           toast({
             title: "تم تسجيل الدخول بنجاح",
             description: "مرحبا بك في لوحة التحكم",
           });
           navigate('/admin');
         } else {
-          console.log('AdminAuth: User is not admin after all retries, checking user_roles table again');
-          
-          // Try one more direct check against the database
-          const { data: rolesData, error: rolesError } = await supabase
-            .from('user_roles')
-            .select('*')
-            .eq('user_id', data.user.id)
-            .eq('role', 'admin');
-            
-          if (rolesError) {
-            console.error('Error checking user_roles directly:', rolesError);
-          } else {
-            console.log('Direct user_roles check result:', rolesData);
-            if (rolesData && rolesData.length > 0) {
-              console.log('User has admin role (direct check), redirecting to admin panel');
-              toast({
-                title: "تم تسجيل الدخول بنجاح",
-                description: "مرحبا بك في لوحة التحكم",
-              });
-              navigate('/admin');
-              return;
-            } else {
-              console.log('User does not have admin role in database');
-              
-              // Check the role format in the database
-              const { data: allRoles, error: allRolesError } = await supabase
-                .from('user_roles')
-                .select('*');
-                
-              if (allRolesError) {
-                console.error('Error fetching all roles:', allRolesError);
-              } else {
-                console.log('All roles in database:', allRoles);
-              }
-            }
-          }
-          
+          console.log('AdminAuth: User is not an admin, signing out');
           // Sign out if not admin
           await supabase.auth.signOut();
           throw new Error('ليس لديك صلاحية الوصول إلى لوحة التحكم');

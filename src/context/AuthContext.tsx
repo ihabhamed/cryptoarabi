@@ -29,29 +29,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Checking admin status for user:', user.id);
       
-      // First check directly through the user_roles table
-      console.log('Direct check: Querying user_roles table for user_id:', user.id);
-      const { data: rolesData, error: rolesError } = await supabase
+      // Direct check through the database using the security definer function first
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('*')
         .eq('user_id', user.id)
         .eq('role', 'admin');
       
-      if (rolesError) {
-        console.error('Error checking user_roles directly:', rolesError);
+      if (roleError) {
+        console.error('Error checking user_roles directly:', roleError);
       } else {
-        console.log('Direct user_roles check result:', rolesData);
-        const hasAdminRole = rolesData && rolesData.length > 0;
-        console.log('User has admin role (direct check):', hasAdminRole);
-        
-        if (hasAdminRole) {
+        console.log('User role check result:', roleData);
+        if (roleData && roleData.length > 0) {
+          console.log('User has admin role verified by direct check');
           setIsAdmin(true);
           return true;
         }
       }
       
-      // Then try the RPC function as a backup
-      console.log('RPC check: Calling is_admin function');
+      // Fallback to the RPC function
       const { data, error } = await supabase.rpc('is_admin');
       
       if (error) {
@@ -79,14 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       
-      // If there's a user, check admin status
-      if (session?.user) {
-        console.log('Found user on init, checking admin status');
-        await checkIsAdmin();
-      }
-      
-      setLoading(false);
-      
       // Set up auth state listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
@@ -104,6 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       );
+      
+      // If there's a user, check admin status
+      if (session?.user) {
+        await checkIsAdmin();
+      }
+      
+      setLoading(false);
       
       return () => subscription.unsubscribe();
     };

@@ -20,57 +20,33 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       if (!loading && user) {
         setIsVerifying(true);
         try {
-          console.log('ProtectedRoute: Starting admin verification');
-          console.log('Current user ID:', user.id);
+          console.log('ProtectedRoute: Starting admin verification for user', user.id);
           
-          // Try to check admin status up to 5 times with increasing delays
-          let isUserAdmin = false;
-          let retries = 5;
-          let delay = 500;
+          // Direct database check first
+          const { data: roleData, error: roleError } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('role', 'admin');
           
-          // First, try a direct database check as a reliable fallback
-          try {
-            console.log('ProtectedRoute: Direct database check for user_id:', user.id);
-            const { data: rolesData, error: rolesError } = await supabase
-              .from('user_roles')
-              .select('*')
-              .eq('user_id', user.id)
-              .eq('role', 'admin');
-              
-            if (rolesError) {
-              console.error('ProtectedRoute: Error checking user_roles directly:', rolesError);
-            } else {
-              console.log('ProtectedRoute: Direct user_roles check result:', rolesData);
-              isUserAdmin = rolesData && rolesData.length > 0;
-              console.log('ProtectedRoute: User has admin role (direct check):', isUserAdmin);
-              
-              if (isUserAdmin) {
-                console.log('ProtectedRoute: Direct check successful, user is admin');
-                setIsVerifying(false);
-                return;
-              }
-            }
-          } catch (directError) {
-            console.error('ProtectedRoute: Error during direct check:', directError);
-          }
-          
-          // If direct check fails, continue with retry mechanism
-          while (retries > 0 && !isUserAdmin) {
-            console.log(`ProtectedRoute: Admin check attempt ${6-retries} for user ${user.id}`);
-            isUserAdmin = await checkIsAdmin();
-            console.log(`ProtectedRoute: Admin check result (retry ${6-retries}):`, isUserAdmin);
+          if (roleError) {
+            console.error('ProtectedRoute: Error checking roles directly:', roleError);
+          } else {
+            console.log('ProtectedRoute: Direct role check result:', roleData);
             
-            if (!isUserAdmin && retries > 1) {
-              console.log(`Waiting ${delay}ms before retry...`);
-              // Wait with increasing delay before retrying
-              await new Promise(resolve => setTimeout(resolve, delay));
-              delay = Math.min(delay * 1.5, 2000); // Increase delay but cap at 2 seconds
+            if (roleData && roleData.length > 0) {
+              console.log('ProtectedRoute: User confirmed as admin via direct check');
+              setIsVerifying(false);
+              return;
             }
-            retries--;
           }
+          
+          // Fallback to checkIsAdmin
+          const isUserAdmin = await checkIsAdmin();
+          console.log('ProtectedRoute: Admin check via checkIsAdmin result:', isUserAdmin);
           
           if (!isUserAdmin) {
-            console.log('ProtectedRoute: User is not admin after all retries');
+            console.log('ProtectedRoute: User is not an admin, redirecting to login');
             toast({
               variant: "destructive",
               title: "خطأ في الوصول",
@@ -78,7 +54,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             });
             navigate('/admin/login');
           } else {
-            console.log('ProtectedRoute: User verified as admin');
+            console.log('ProtectedRoute: User verified as admin via checkIsAdmin');
           }
         } catch (error) {
           console.error("Error verifying admin status:", error);
