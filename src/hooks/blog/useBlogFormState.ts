@@ -34,9 +34,16 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     const loadFormData = () => {
       if (initialData && Object.keys(initialData).length > 0) {
         console.log("Loading initial data:", initialData);
+        // Ensure we have a slug in the initial data
+        const dataWithDefaultSlug = {
+          ...initialData,
+          // If the slug is missing or "null", generate a temporary one
+          slug: initialData.slug && initialData.slug !== 'null' ? initialData.slug : `post-temp-${new Date().getTime().toString().slice(-6)}`
+        };
+        
         setFormData({
           ...formData,
-          ...initialData
+          ...dataWithDefaultSlug
         });
       } else {
         // Check localStorage based on edit mode
@@ -44,9 +51,16 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
         
         if (savedData) {
           console.log("Loading data from localStorage:", savedData);
+          // Ensure we have a slug in the saved data
+          const dataWithDefaultSlug = {
+            ...savedData,
+            // If the slug is missing or "null", generate a temporary one
+            slug: savedData.slug && savedData.slug !== 'null' ? savedData.slug : `post-temp-${new Date().getTime().toString().slice(-6)}`
+          };
+          
           setFormData({
             ...formData,
-            ...savedData
+            ...dataWithDefaultSlug
           });
         }
       }
@@ -60,8 +74,18 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     // Only save if there's actual data
     if (formData.title || formData.content) {
       console.log("Saving form data to localStorage:", formData);
+      
+      // Make sure we always have a slug before saving to localStorage
+      const dataToSave = { ...formData };
+      if (!dataToSave.slug || dataToSave.slug === 'null' || dataToSave.slug.trim() === '') {
+        const timestamp = new Date().getTime().toString().slice(-6);
+        dataToSave.slug = dataToSave.title 
+          ? `${dataToSave.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').substring(0, 30)}-${timestamp}`
+          : `post-${timestamp}`;
+      }
+      
       saveFormData(storageKey, {
-        ...formData,
+        ...dataToSave,
         id: id
       });
     }
@@ -71,6 +95,11 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     const { name, value } = e.target;
     console.log(`Field changed: ${name} = ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Auto-generate slug if title changes and slug is empty
+    if (name === 'title' && (!formData.slug || formData.slug === 'null')) {
+      generateSlug();
+    }
   };
   
   // Generate slug from title - used as a fallback to the more robust method in BasicInfoSection
@@ -90,12 +119,12 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
           .toLowerCase()
           .replace(/[^\w\s-]/g, '')  // Remove special characters except hyphens
           .replace(/\s+/g, '-')      // Replace spaces with hyphens
+          .replace(/-+/g, '-')       // Replace multiple hyphens with a single one
+          .replace(/^-+|-+$/g, '')   // Remove hyphens from start and end
           .concat(`-${timestamp}`);  // Add timestamp for uniqueness
       }
       
-      // Ensure the slug doesn't have double hyphens and trim any leading/trailing hyphens
-      slug = slug.replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-      
+      console.log("Generated slug in form state:", slug);
       setFormData(prev => ({ ...prev, slug }));
     }
   };

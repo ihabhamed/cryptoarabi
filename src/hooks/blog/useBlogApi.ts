@@ -73,10 +73,10 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         return false;
       }
       
-      // Generate a valid slug if none exists
-      if (!blogData.slug) {
+      // CRITICAL: Always ensure we have a valid slug
+      if (!blogData.slug || blogData.slug === 'null' || blogData.slug.trim() === '') {
         // Generate a timestamp-based slug for uniqueness
-        const timestamp = new Date().getTime().toString().slice(-6);
+        const timestamp = new Date().getTime().toString().slice(-8);
         
         // Check if title contains Arabic characters
         if (blogData.title && /[\u0600-\u06FF]/.test(blogData.title)) {
@@ -88,6 +88,8 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
             .toLowerCase()
             .replace(/[^\w\s-]/g, '') // Remove special characters
             .replace(/\s+/g, '-')     // Replace spaces with hyphens
+            .replace(/-+/g, '-')      // Replace multiple hyphens with a single one
+            .replace(/^-+|-+$/g, '')  // Remove hyphens from start and end
             .concat(`-${timestamp}`);  // Add timestamp for uniqueness
         } else {
           // Fallback for no title
@@ -104,7 +106,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         excerpt: blogData.excerpt || null,
         author: blogData.author || null,
         category: blogData.category || null,
-        slug: blogData.slug || null,
+        slug: blogData.slug, // Now guaranteed to have a value
         image_url: blogData.image_url || null,
         publish_date: blogData.publish_date || new Date().toISOString(),
         meta_title: blogData.meta_title || null,

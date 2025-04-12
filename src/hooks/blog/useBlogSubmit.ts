@@ -36,27 +36,36 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       
       console.log("Form data before submission:", formData);
       
-      // Ensure we have a valid slug
+      // Create a working copy of the form data
       let finalFormData: Partial<BlogPost> = { ...formData };
       
-      if (!finalFormData.slug && finalFormData.title) {
+      // CRITICAL: Always ensure we have a valid slug before saving
+      if (!finalFormData.slug || finalFormData.slug.trim() === '') {
         // Generate a timestamp-based slug for uniqueness
         const timestamp = new Date().getTime().toString().slice(-6);
         
         // Check if title contains Arabic characters
-        if (/[\u0600-\u06FF]/.test(finalFormData.title)) {
+        if (finalFormData.title && /[\u0600-\u06FF]/.test(finalFormData.title)) {
           // For Arabic titles, create a generic slug with timestamp
           finalFormData.slug = `post-${timestamp}`;
-        } else {
+        } else if (finalFormData.title) {
           // For non-Arabic titles, create a slug from the title
           finalFormData.slug = finalFormData.title
             .toLowerCase()
             .replace(/[^\w\s-]/g, '') // Remove special characters
             .replace(/\s+/g, '-')     // Replace spaces with hyphens
+            .replace(/-+/g, '-')      // Replace multiple hyphens with a single one
+            .replace(/^-+|-+$/g, '')  // Remove hyphens from start and end
             .concat(`-${timestamp}`);  // Add timestamp for uniqueness
+        } else {
+          // Fallback for no title
+          finalFormData.slug = `post-${timestamp}`;
         }
         
         console.log("Generated slug for submission:", finalFormData.slug);
+        
+        // Update the form data with the new slug
+        setFormData(prev => ({ ...prev, slug: finalFormData.slug }));
       }
       
       // Generate meta title and description if not provided
@@ -135,6 +144,12 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       }
       
       console.log("Final form data before save:", finalFormData);
+      
+      // Double verify that we have a slug before saving
+      if (!finalFormData.slug || finalFormData.slug === 'null' || finalFormData.slug === '') {
+        finalFormData.slug = `post-${new Date().getTime().toString().slice(-8)}`;
+        console.log("Final fallback slug generated:", finalFormData.slug);
+      }
       
       const success = await saveBlogPost(finalFormData);
       
