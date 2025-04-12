@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Save, Copy, Link as LinkIcon } from "lucide-react";
-import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/supabase-hooks";
+import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/hooks";
 import { NewAirdrop } from '@/types/supabase';
 
 const AdminAirdropForm = () => {

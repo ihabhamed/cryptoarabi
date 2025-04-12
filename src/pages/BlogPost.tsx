@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { ArrowLeft, Calendar, ChevronLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { useBlogPost } from '@/lib/supabase-hooks';
+import { useBlogPost } from '@/lib/hooks';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();

@@ -18,7 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Link } from 'react-router-dom';
-import { useAirdrops } from '@/lib/supabase-hooks';
+import { useAirdrops } from '@/lib/hooks';
 import { Airdrop } from '@/types/supabase';
 
 const AirdropListSection = () => {

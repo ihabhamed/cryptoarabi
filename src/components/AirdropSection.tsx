@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ExternalLink } from "lucide-react";
-import { useAirdrops } from '@/lib/supabase-hooks';
+import { useAirdrops } from '@/lib/hooks';
 import { Airdrop } from '@/types/supabase';
 
 const AirdropSection = () => {

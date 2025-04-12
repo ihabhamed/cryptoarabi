@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon, Twitter } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { useAddAirdrop } from '@/lib/supabase-hooks';
+import { useAddAirdrop } from '@/lib/hooks';
 import { NewAirdrop } from '@/types/supabase';
 
 import { Button } from "@/components/ui/button";

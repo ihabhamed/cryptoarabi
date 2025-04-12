@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { useBlogPosts } from '@/lib/supabase-hooks';
+import { useBlogPosts } from '@/lib/hooks';
 import { BlogPost } from '@/types/supabase';
 
 const BlogSection = () => {

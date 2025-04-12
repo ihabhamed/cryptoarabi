@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 import { ArrowLeft, Calendar, ChevronLeft, Twitter, Youtube, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAirdrop } from '@/lib/supabase-hooks';
+import { useAirdrop } from '@/lib/hooks';
 import { Card, CardContent } from "@/components/ui/card";
 
 const AirdropDetail = () => {

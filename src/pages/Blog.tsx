@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -14,7 +13,8 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { useBlogPosts } from '@/lib/supabase-hooks';
+import { useBlogPosts } from '@/lib/hooks';
+import { BlogPost } from '@/types/supabase';
 
 const Blog = () => {
   const [currentPage, setCurrentPage] = useState(1);
