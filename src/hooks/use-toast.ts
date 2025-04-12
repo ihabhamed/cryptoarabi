@@ -1,3 +1,4 @@
+
 import { Toast, ToastActionElement, ToastProps } from "@/components/ui/toast"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -10,6 +11,8 @@ type ToasterToast = {
   description?: React.ReactNode
   action?: ToastActionElement
   variant?: "default" | "destructive"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
@@ -156,7 +159,7 @@ function toast(props: Toast) {
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
-    },
+    } as Toast, // Use type assertion to resolve the error
   })
 
   return {
