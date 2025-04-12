@@ -14,60 +14,75 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
+import { useBlogPosts } from '@/lib/supabase-hooks';
 
 const Blog = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const { data: blogPosts = [], isLoading, error } = useBlogPosts();
   
-  const blogPosts = [
-    {
-      id: 1,
-      title: "أساسيات الاستثمار في العملات المشفرة للمبتدئين",
-      excerpt: "دليل شامل لكل من يرغب في دخول عالم العملات المشفرة، من اختيار المنصة المناسبة إلى استراتيجيات التداول الأساسية.",
-      date: "١٢ أبريل ٢٠٢٥",
-      category: "أساسيات",
-      slug: "crypto-investment-basics"
-    },
-    {
-      id: 2,
-      title: "كيف تؤثر تقنية البلوكتشين على القطاع المالي في العالم العربي؟",
-      excerpt: "تحليل معمق لتأثير تقنية البلوكتشين على القطاع المالي في العالم العربي والفرص المتاحة للمؤسسات المالية.",
-      date: "٨ أبريل ٢٠٢٥",
-      category: "تكنولوجيا",
-      slug: "blockchain-impact-arabic-finance"
-    },
-    {
-      id: 3,
-      title: "دليلك الشامل للـ NFTs وكيفية الاستثمار فيها",
-      excerpt: "كل ما تحتاج معرفته عن الرموز غير القابلة للاستبدال (NFTs) وكيفية شرائها وبيعها والاستثمار فيها بنجاح.",
-      date: "١ أبريل ٢٠٢٥",
-      category: "استثمار",
-      slug: "nft-investment-guide"
-    },
-    {
-      id: 4,
-      title: "أفضل محافظ العملات المشفرة لعام ٢٠٢٥",
-      excerpt: "مراجعة شاملة لأفضل محافظ العملات المشفرة من حيث الأمان وسهولة الاستخدام والميزات المتقدمة.",
-      date: "٢٥ مارس ٢٠٢٥",
-      category: "أدوات",
-      slug: "best-crypto-wallets-2025"
-    },
-    {
-      id: 5,
-      title: "كيف تتجنب عمليات الاحتيال في سوق العملات المشفرة؟",
-      excerpt: "نصائح وإرشادات عملية لحماية استثماراتك من عمليات الاحتيال والمشاريع الوهمية في سوق العملات المشفرة.",
-      date: "١٨ مارس ٢٠٢٥",
-      category: "أمان",
-      slug: "avoid-crypto-scams"
-    },
-    {
-      id: 6,
-      title: "مستقبل التمويل اللامركزي (DeFi) في المنطقة العربية",
-      excerpt: "نظرة مستقبلية على تطور التمويل اللامركزي وتأثيره على القطاع المالي في المنطقة العربية خلال السنوات القادمة.",
-      date: "١٠ مارس ٢٠٢٥",
-      category: "تحليلات",
-      slug: "defi-future-arabic-region"
-    },
-  ];
+  const postsPerPage = 6;
+  const totalPages = Math.ceil(blogPosts.length / postsPerPage);
+  
+  // Get current posts for pagination
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = blogPosts.slice(indexOfFirstPost, indexOfLastPost);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-crypto-darkBlue">
+        <Navbar />
+        <div className="pt-24 pb-16">
+          <div className="container-custom mx-auto">
+            {/* Header Section */}
+            <div className="text-center mb-16">
+              <h1 className="text-4xl md:text-5xl font-bold text-gradient mb-6">المقالات</h1>
+              <p className="text-gray-300 max-w-3xl mx-auto">
+                اكتشف أحدث المقالات والتحليلات في عالم العملات المشفرة والبلوكتشين، من تحليلات السوق إلى الدروس التعليمية والنصائح الاستثمارية.
+              </p>
+            </div>
+
+            {/* Loading Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i} className="crypto-card bg-crypto-darkGray border border-white/10 animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-700 rounded w-1/3 mb-3"></div>
+                    <div className="h-6 bg-gray-700 rounded w-full"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-4 bg-gray-700 rounded w-full mb-2"></div>
+                    <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-700 rounded w-full"></div>
+                  </CardContent>
+                  <CardFooter>
+                    <div className="h-10 bg-gray-700 rounded w-1/3"></div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Error loading blog posts:', error);
+    return (
+      <div className="min-h-screen bg-crypto-darkBlue">
+        <Navbar />
+        <div className="pt-24 pb-16">
+          <div className="container-custom mx-auto text-center">
+            <h1 className="text-4xl font-bold text-white mb-6">حدث خطأ</h1>
+            <p className="text-gray-300 mb-6">حدث خطأ أثناء تحميل المقالات. يرجى المحاولة مرة أخرى لاحقًا.</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-crypto-darkBlue">
@@ -84,107 +99,99 @@ const Blog = () => {
 
           {/* Blog Post Listings */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post) => (
-              <Card key={post.id} className="crypto-card hover:translate-y-[-8px] bg-crypto-darkGray border border-white/10">
-                <CardHeader>
-                  <div className="flex items-center text-gray-400 text-sm mb-3">
-                    <Calendar className="h-4 w-4 ml-1" />
-                    <span>{post.date}</span>
-                    <span className="mr-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
-                      {post.category}
-                    </span>
-                  </div>
-                  <CardTitle className="text-xl font-bold hover:text-crypto-orange transition-colors">
-                    {post.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400 line-clamp-3">{post.excerpt}</p>
-                </CardContent>
-                <CardFooter>
-                  <Link to={`/blog/${post.slug}`}>
-                    <Button className="text-crypto-orange hover:text-crypto-orange/80 bg-transparent hover:bg-crypto-darkBlue border border-crypto-orange hover:border-crypto-orange/80">
-                      قراءة المزيد
-                      <ArrowLeft className="mr-2 h-4 w-4 rtl-flip" />
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
+            {currentPosts.length > 0 ? (
+              currentPosts.map((post) => (
+                <Card key={post.id} className="crypto-card hover:translate-y-[-8px] bg-crypto-darkGray border border-white/10">
+                  <CardHeader>
+                    <div className="flex items-center text-gray-400 text-sm mb-3">
+                      <Calendar className="h-4 w-4 ml-1" />
+                      <span>{new Date(post.publish_date).toLocaleDateString('ar-SA')}</span>
+                      <span className="mr-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
+                        {post.category || "عام"}
+                      </span>
+                    </div>
+                    <CardTitle className="text-xl font-bold hover:text-crypto-orange transition-colors">
+                      {post.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-400 line-clamp-3">{post.excerpt || post.content?.substring(0, 150)}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Link to={`/blog/${post.slug}`}>
+                      <Button className="text-crypto-orange hover:text-crypto-orange/80 bg-transparent hover:bg-crypto-darkBlue border border-crypto-orange hover:border-crypto-orange/80">
+                        قراءة المزيد
+                        <ArrowLeft className="mr-2 h-4 w-4 rtl-flip" />
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-white">
+                <p>لا توجد مقالات متاحة حاليًا.</p>
+              </div>
+            )}
           </div>
 
-          {/* Enhanced Pagination with Arabic labels and styling */}
-          <div className="mt-12 flex justify-center">
-            <div className="bg-crypto-darkGray rounded-xl p-4 border border-white/10 flex items-center shadow-lg">
-              <Pagination>
-                <PaginationContent className="gap-2">
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(Math.max(1, currentPage - 1));
-                      }}
-                      className="font-medium bg-crypto-darkBlue hover:bg-crypto-orange/20 border border-crypto-orange/30 text-crypto-orange hover:text-white transition-colors duration-300 flex flex-row-reverse"
-                    >
-                      <span>السابق</span>
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </PaginationPrevious>
-                  </PaginationItem>
-                  
-                  <PaginationItem>
-                    <PaginationLink 
-                      href="#" 
-                      isActive={currentPage === 1} 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(1);
-                      }}
-                      className={`font-medium transition-colors duration-300 ${
-                        currentPage === 1 
-                          ? 'bg-crypto-orange text-white border-crypto-orange' 
-                          : 'bg-transparent text-white hover:bg-crypto-orange/20 border border-crypto-orange/30'
-                      }`}
-                    >
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                  
-                  <PaginationItem>
-                    <PaginationLink 
-                      href="#" 
-                      isActive={currentPage === 2} 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(2);
-                      }}
-                      className={`font-medium transition-colors duration-300 ${
-                        currentPage === 2 
-                          ? 'bg-crypto-orange text-white border-crypto-orange' 
-                          : 'bg-transparent text-white hover:bg-crypto-orange/20 border border-crypto-orange/30'
-                      }`}
-                    >
-                      2
-                    </PaginationLink>
-                  </PaginationItem>
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(Math.min(2, currentPage + 1));
-                      }}
-                      className="font-medium bg-crypto-darkBlue hover:bg-crypto-orange/20 border border-crypto-orange/30 text-crypto-orange hover:text-white transition-colors duration-300"
-                    >
-                      <span>التالي</span>
-                      <ArrowLeft className="h-4 w-4 mr-2 rtl-flip" />
-                    </PaginationNext>
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-12 flex justify-center">
+              <div className="bg-crypto-darkGray rounded-xl p-4 border border-white/10 flex items-center shadow-lg">
+                <Pagination>
+                  <PaginationContent className="gap-2">
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(Math.max(1, currentPage - 1));
+                        }}
+                        className="font-medium bg-crypto-darkBlue hover:bg-crypto-orange/20 border border-crypto-orange/30 text-crypto-orange hover:text-white transition-colors duration-300 flex flex-row-reverse"
+                      >
+                        <span>السابق</span>
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </PaginationPrevious>
+                    </PaginationItem>
+                    
+                    {[...Array(totalPages)].map((_, index) => (
+                      <PaginationItem key={index}>
+                        <PaginationLink 
+                          href="#" 
+                          isActive={currentPage === index + 1} 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setCurrentPage(index + 1);
+                          }}
+                          className={`font-medium transition-colors duration-300 ${
+                            currentPage === index + 1 
+                              ? 'bg-crypto-orange text-white border-crypto-orange' 
+                              : 'bg-transparent text-white hover:bg-crypto-orange/20 border border-crypto-orange/30'
+                          }`}
+                        >
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(Math.min(totalPages, currentPage + 1));
+                        }}
+                        className="font-medium bg-crypto-darkBlue hover:bg-crypto-orange/20 border border-crypto-orange/30 text-crypto-orange hover:text-white transition-colors duration-300"
+                      >
+                        <span>التالي</span>
+                        <ArrowLeft className="h-4 w-4 mr-2 rtl-flip" />
+                      </PaginationNext>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       <Footer />
