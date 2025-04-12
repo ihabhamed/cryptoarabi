@@ -5,19 +5,20 @@ import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const BlogSection = () => {
+  // Using the same blog posts data as in Blog.tsx to ensure consistency
   const blogPosts = [
     {
       id: 1,
-      title: "كيف تبدأ في تداول العملات المشفرة للمبتدئين",
+      title: "أساسيات الاستثمار في العملات المشفرة للمبتدئين",
       excerpt: "دليل شامل لكل من يرغب في دخول عالم العملات المشفرة، من اختيار المنصة المناسبة إلى استراتيجيات التداول الأساسية.",
       image: "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       date: "١٢ أبريل ٢٠٢٥",
-      category: "تداول",
+      category: "أساسيات",
       slug: "crypto-investment-basics"
     },
     {
       id: 2,
-      title: "مستقبل تقنية البلوكتشين في القطاع المالي العربي",
+      title: "كيف تؤثر تقنية البلوكتشين على القطاع المالي في العالم العربي؟",
       excerpt: "تحليل معمق لتأثير تقنية البلوكتشين على القطاع المالي في العالم العربي والفرص المتاحة للمؤسسات المالية.",
       image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       date: "٨ أبريل ٢٠٢٥",
@@ -26,11 +27,11 @@ const BlogSection = () => {
     },
     {
       id: 3,
-      title: "الـ NFTs ودورها في دعم الفنانين العرب",
-      excerpt: "استكشاف كيف يمكن للفنانين العرب الاستفادة من تقنية الرموز غير القابلة للاستبدال (NFTs) لتسويق أعمالهم الفنية.",
+      title: "دليلك الشامل للـ NFTs وكيفية الاستثمار فيها",
+      excerpt: "كل ما تحتاج معرفته عن الرموز غير القابلة للاستبدال (NFTs) وكيفية شرائها وبيعها والاستثمار فيها بنجاح.",
       image: "https://images.unsplash.com/photo-1646634685252-8db8a56f08b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       date: "١ أبريل ٢٠٢٥",
-      category: "فن",
+      category: "استثمار",
       slug: "nft-investment-guide"
     }
   ];
