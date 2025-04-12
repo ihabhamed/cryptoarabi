@@ -36,6 +36,30 @@ export function useBlogPost(slug: string | undefined) {
   });
 }
 
+export function useRelatedBlogPosts(currentPostId: string | undefined, hashtags: string | undefined) {
+  return useQuery({
+    queryKey: ['related_blog_posts', currentPostId, hashtags],
+    queryFn: async (): Promise<BlogPost[]> => {
+      if (!currentPostId || !hashtags) return [];
+      
+      const hashtagsArray = hashtags.split(',').map(tag => tag.trim());
+      
+      // Fetch posts that have at least one matching hashtag
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .neq('id', currentPostId)
+        .filter('hashtags', 'ilike', `%${hashtagsArray[0]}%`)
+        .order('publish_date', { ascending: false })
+        .limit(4);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentPostId && !!hashtags,
+  });
+}
+
 export function useDeleteBlogPost() {
   const queryClient = useQueryClient();
   

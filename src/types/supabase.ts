@@ -13,6 +13,9 @@ export interface Airdrop {
   image_url: string | null;
   created_at: string;
   updated_at: string;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  hashtags?: string | null;
 }
 
 // Define a type specifically for inserting new airdrops
@@ -27,6 +30,9 @@ export interface NewAirdrop {
   youtube_link?: string | null;
   claim_url?: string | null;
   image_url?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  hashtags?: string | null;
 }
 
 export interface BlogPost {
@@ -41,6 +47,9 @@ export interface BlogPost {
   category: string | null;
   created_at: string;
   updated_at: string;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  hashtags?: string | null;
 }
 
 export interface Service {

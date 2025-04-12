@@ -29,7 +29,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     }
   };
   
-  const [formData, setFormData] = useState<NewAirdrop>({
+  const [formData, setFormData] = useState<NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string }>({
     title: '',
     description: '',
     status: 'upcoming',
@@ -39,7 +39,10 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     start_date: '',
     end_date: '',
     image_url: '',
-    publish_date: new Date().toISOString()
+    publish_date: new Date().toISOString(),
+    meta_title: '',
+    meta_description: '',
+    hashtags: ''
   });
   
   const {
@@ -65,13 +68,29 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
       if (isEditMode && existingAirdrop) {
         // For edit mode, use the data from useAirdrop hook
         const airdropData = formatAirdropData(existingAirdrop);
-        setFormData(airdropData);
+        setFormData({
+          ...airdropData,
+          meta_title: existingAirdrop.meta_title || airdropData.title,
+          meta_description: existingAirdrop.meta_description || airdropData.description,
+          hashtags: existingAirdrop.hashtags || ''
+        });
         
         // Save to localStorage in edit mode with unique key
-        saveFormData(storageKey, { ...airdropData, id });
+        saveFormData(storageKey, { 
+          ...airdropData, 
+          meta_title: existingAirdrop.meta_title || airdropData.title,
+          meta_description: existingAirdrop.meta_description || airdropData.description,
+          hashtags: existingAirdrop.hashtags || '',
+          id 
+        });
       } else if (!isEditMode) {
         // For new entry, check localStorage
-        const savedData = getFormData<NewAirdrop & { id?: string }>(storageKey);
+        const savedData = getFormData<NewAirdrop & { 
+          id?: string; 
+          meta_title?: string; 
+          meta_description?: string;
+          hashtags?: string;
+        }>(storageKey);
         
         if (savedData) {
           setFormData({
@@ -84,7 +103,10 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
             start_date: savedData.start_date || '',
             end_date: savedData.end_date || '',
             image_url: savedData.image_url || '',
-            publish_date: savedData.publish_date || new Date().toISOString()
+            publish_date: savedData.publish_date || new Date().toISOString(),
+            meta_title: savedData.meta_title || '',
+            meta_description: savedData.meta_description || '',
+            hashtags: savedData.hashtags || ''
           });
         }
       }

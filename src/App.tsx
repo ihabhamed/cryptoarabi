@@ -11,6 +11,7 @@ import AirdropDetail from "./pages/AirdropDetail";
 import Services from "./pages/Services";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import HashtagPage from "./pages/HashtagPage";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import AdminAirdropForm from "./pages/AdminAirdropForm";
@@ -57,6 +58,7 @@ const App: React.FC = () => {
               <Route path="/services" element={<Services />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/hashtag/:hashtag" element={<HashtagPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route 
                 path="/admin" 
