@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,23 +9,32 @@ import {
 } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useSiteSettings } from '@/lib/hooks';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAdmin } = useAuth();
   const location = useLocation();
+  const { data: siteSettings } = useSiteSettings();
   
   // Don't show navbar on admin pages
   if (location.pathname.includes('/admin')) {
     return null;
   }
 
+  const siteName = siteSettings?.site_name || 'كريبتوعرب';
+
   return (
     <nav className="fixed w-full z-50 bg-crypto-darkBlue/80 backdrop-blur-md border-b border-white/10">
       <div className="container-custom mx-auto flex justify-between items-center py-4">
         {/* Logo */}
         <div className="flex items-center">
-          <Link to="/" className="text-2xl font-bold text-white">كريبتو<span className="text-crypto-orange">عرب</span></Link>
+          <Link to="/" className="text-2xl font-bold text-white">
+            {siteName.split(/(\w+)/).map((part, i) => {
+              // If this part starts with a non-arabic character, color it orange
+              return i === 1 ? <span key={i} className="text-crypto-orange">{part}</span> : part;
+            })}
+          </Link>
         </div>
 
         {/* Desktop Menu */}
@@ -68,7 +77,11 @@ const Navbar = () => {
               <div className="h-full flex flex-col">
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center justify-center">
-                    <Link to="/" className="text-2xl font-bold text-white">كريبتو<span className="text-crypto-orange">عرب</span></Link>
+                    <Link to="/" className="text-2xl font-bold text-white">
+                      {siteName.split(/(\w+)/).map((part, i) => {
+                        return i === 1 ? <span key={i} className="text-crypto-orange">{part}</span> : part;
+                      })}
+                    </Link>
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto py-4">

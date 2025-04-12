@@ -23,6 +23,11 @@ import React from "react";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import WindowFocusHandler from "./components/WindowFocusHandler";
+import LegalPages from "./pages/admin/LegalPages";
+import AdminBackup from "./pages/admin/AdminBackup";
+import AdminAirdrops from "./pages/admin/AdminAirdrops";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminServices from "./pages/admin/AdminServices";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -74,6 +79,46 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <ManageLinks />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/legal" 
+                element={
+                  <ProtectedRoute>
+                    <LegalPages />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/backup" 
+                element={
+                  <ProtectedRoute>
+                    <AdminBackup />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/airdrops" 
+                element={
+                  <ProtectedRoute>
+                    <AdminAirdrops />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/blog" 
+                element={
+                  <ProtectedRoute>
+                    <AdminBlog />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/services" 
+                element={
+                  <ProtectedRoute>
+                    <AdminServices />
                   </ProtectedRoute>
                 } 
               />

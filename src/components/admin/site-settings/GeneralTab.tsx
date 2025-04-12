@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface GeneralTabProps {
   formData: any;
@@ -13,6 +13,11 @@ interface GeneralTabProps {
 }
 
 const GeneralTab = ({ formData, handleInputChange, updateSettings }: GeneralTabProps) => {
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateSettings.mutateAsync(formData);
+  };
+
   return (
     <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
       <CardHeader>
@@ -30,15 +35,22 @@ const GeneralTab = ({ formData, handleInputChange, updateSettings }: GeneralTabP
             placeholder="كريبتوعرب" 
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
+          <p className="text-sm text-gray-400">سيتم عرض هذا الاسم في شريط العنوان وفي الهيدر</p>
         </div>
       </CardContent>
       <CardFooter>
         <Button 
-          type="submit" 
+          type="button"
+          onClick={handleSaveChanges} 
           className="bg-crypto-orange hover:bg-crypto-orange/90 text-white w-full sm:w-auto"
           disabled={updateSettings.isPending}
         >
-          {updateSettings.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+          {updateSettings.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              جاري الحفظ...
+            </>
+          ) : 'حفظ التغييرات'}
         </Button>
       </CardFooter>
     </Card>

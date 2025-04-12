@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { 
   LayoutDashboard, Settings, Home, Link2, FileText, 
@@ -13,6 +13,8 @@ interface AdminMobileMenuProps {
 }
 
 const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ setOpen, handleSignOut }) => {
+  const location = useLocation();
+  
   const menuItems = [
     { icon: LayoutDashboard, label: 'لوحة التحكم', href: '/admin' },
     { icon: Settings, label: 'إعدادات الموقع', href: '/admin/site-settings' },
@@ -37,18 +39,25 @@ const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ setOpen, handleSignOu
       </div>
       <nav className="py-4">
         <ul className="space-y-1 px-2">
-          {menuItems.map((item, index) => (
-            <li key={index}>
-              <Link
-                to={item.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center px-3 py-2 text-white hover:bg-crypto-darkBlue/50 hover:text-crypto-orange rounded-md"
-              >
-                <item.icon className="h-5 w-5 ml-3" />
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          ))}
+          {menuItems.map((item, index) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <li key={index}>
+                <Link
+                  to={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center px-3 py-2 text-white rounded-md transition-colors ${
+                    isActive 
+                      ? 'bg-crypto-darkBlue/50 text-crypto-orange' 
+                      : 'hover:bg-crypto-darkBlue/50 hover:text-crypto-orange'
+                  }`}
+                >
+                  <item.icon className="h-5 w-5 ml-3" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
           <li>
             <button
               onClick={() => {

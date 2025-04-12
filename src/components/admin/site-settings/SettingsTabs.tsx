@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Globe, Home, Book, FileText, Settings, Footprints
@@ -18,8 +18,19 @@ interface SettingsTabsProps {
 }
 
 const SettingsTabs = ({ formData, handleInputChange, updateSettings, handleSubmit }: SettingsTabsProps) => {
+  // Use localStorage to remember the last active tab
+  const [activeTab, setActiveTab] = React.useState(() => {
+    const savedTab = localStorage.getItem('adminSettingsActiveTab');
+    return savedTab || 'general';
+  });
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('adminSettingsActiveTab', activeTab);
+  }, [activeTab]);
+
   return (
-    <Tabs defaultValue="general">
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-8 border border-white/10 rounded-lg p-1 bg-crypto-darkBlue/50">
         <TabsTrigger value="general" className="flex items-center gap-2 data-[state=active]:bg-crypto-orange data-[state=active]:text-white">
           <Settings size={16} />
