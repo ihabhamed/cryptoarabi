@@ -1,9 +1,9 @@
 
 import { toast as originalToast } from "@/hooks/use-toast";
-import type { Toast } from "@/components/ui/toast";
+import type { ToastProps } from "@/components/ui/toast";
 
 // Define our own ToasterToast type based on the UI component's Toast type
-export type ToasterToast = Toast & {
+export type ToasterToast = ToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
