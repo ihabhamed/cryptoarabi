@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon, Twitter } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useAddAirdrop } from '@/lib/supabase-hooks';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,32 +29,55 @@ import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  name: z.string().min(3, { message: "يجب أن يكون اسم الإيردروب 3 أحرف على الأقل" }),
+  title: z.string().min(3, { message: "يجب أن يكون اسم الإيردروب 3 أحرف على الأقل" }),
   description: z.string().optional(),
-  twitterLink: z.string().url({ message: "يرجى إدخال رابط تويتر صحيح" }),
-  expiryDate: z.date().optional(),
+  twitter_link: z.string().url({ message: "يرجى إدخال رابط تويتر صحيح" }),
+  youtube_link: z.string().url({ message: "يرجى إدخال رابط يوتيوب صحيح" }).optional().or(z.literal('')),
+  end_date: z.date().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const AirdropFormSection = () => {
   const { toast } = useToast();
+  const addAirdrop = useAddAirdrop();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      title: "",
       description: "",
-      twitterLink: "",
+      twitter_link: "",
+      youtube_link: "",
     },
   });
 
   function onSubmit(data: FormValues) {
-    console.log(data);
-    toast({
-      title: "تم تقديم الإيردروب",
-      description: "تم تقديم التفاصيل الخاصة بالإيردروب بنجاح!",
+    const currentDate = new Date();
+    
+    // Add start_date and set status
+    const airdropData = {
+      ...data,
+      start_date: currentDate,
+      status: 'active',
+    };
+    
+    addAirdrop.mutate(airdropData, {
+      onSuccess: () => {
+        toast({
+          title: "تم تقديم الإيردروب",
+          description: "تم تقديم التفاصيل الخاصة بالإيردروب بنجاح!",
+        });
+        form.reset();
+      },
+      onError: (error) => {
+        toast({
+          title: "حدث خطأ",
+          description: `لم يتم تقديم الإيردروب: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     });
-    form.reset();
   }
 
   return (
@@ -66,7 +90,7 @@ const AirdropFormSection = () => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="title"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-white">اسم الإيردروب</FormLabel>
@@ -98,7 +122,7 @@ const AirdropFormSection = () => {
             
             <FormField
               control={form.control}
-              name="twitterLink"
+              name="twitter_link"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-white">رابط تويتر</FormLabel>
@@ -119,7 +143,7 @@ const AirdropFormSection = () => {
             
             <FormField
               control={form.control}
-              name="expiryDate"
+              name="end_date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel className="text-white">تاريخ انتهاء الإيردروب (اختياري)</FormLabel>
@@ -158,8 +182,9 @@ const AirdropFormSection = () => {
             <Button 
               type="submit" 
               className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white mt-4"
+              disabled={addAirdrop.isPending}
             >
-              تقديم الإيردروب
+              {addAirdrop.isPending ? "جاري التقديم..." : "تقديم الإيردروب"}
             </Button>
           </form>
         </Form>

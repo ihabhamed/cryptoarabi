@@ -17,58 +17,69 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-
-// Mock data for airdrops
-const airdrops = [
-  {
-    id: 1,
-    title: "إيردروب بلوكتشين الهيليوم",
-    description: "احصل على رموز HNT المجانية من خلال المشاركة في مهام بسيطة على منصة الهيليوم. تعلم كيفية بناء شبكة لاسلكية واكسب المكافآت.",
-    startDate: "2025/05/01",
-    endDate: "2025/06/01",
-    twitterLink: "https://twitter.com/helium/status/1234567890",
-    youtubeLink: "https://youtube.com/watch?v=abcdefg",
-    isActive: true,
-  },
-  {
-    id: 2,
-    title: "إيردروب سولانا SOL",
-    description: "انضم إلى إيردروب سولانا الحصري وكن من أوائل المستخدمين لبروتوكول DeFi الجديد. استخدم المنصة واكسب رموز SOL.",
-    startDate: "2025/04/15",
-    endDate: "2025/05/15",
-    twitterLink: "https://twitter.com/solana/status/0987654321",
-    youtubeLink: "",
-    isActive: true,
-  },
-  {
-    id: 3,
-    title: "إيردروب أربيتروم ARB",
-    description: "احصل على رموز ARB عن طريق المشاركة في شبكة أربيتروم واستخدام تطبيقات L2. استكشف عالم Arbitrum وتعلم كيفية الاستفادة من تقنية Layer 2.",
-    startDate: "2025/03/10",
-    endDate: "2025/04/10",
-    twitterLink: "https://twitter.com/arbitrum/status/1122334455",
-    youtubeLink: "https://youtube.com/watch?v=hijklmn",
-    isActive: false,
-  },
-  {
-    id: 4,
-    title: "إيردروب أوبتيميزم OP",
-    description: "اربح رموز OP من خلال استخدام شبكة أوبتيميزم والتفاعل مع النظام البيئي. تعرف على مزايا تقنية Layer 2 واكسب المكافآت.",
-    startDate: "2025/04/01",
-    endDate: "2025/05/01",
-    twitterLink: "https://twitter.com/optimismFND/status/1122334455",
-    youtubeLink: "https://youtube.com/watch?v=opfnd",
-    isActive: true,
-  },
-];
+import { Link } from 'react-router-dom';
+import { useAirdrops } from '@/lib/supabase-hooks';
 
 const AirdropListSection = () => {
   // State to track which airdrop is expanded
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { data: airdrops, isLoading, error } = useAirdrops();
 
-  const toggleExpand = (id: number) => {
+  const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">آخر الإيردروبات</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="bg-crypto-darkGray border-white/10 animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="h-6 bg-gray-700 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-700 rounded w-1/2 mt-2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-gray-700 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+              </CardContent>
+              <CardFooter>
+                <div className="h-10 bg-gray-700 rounded w-full"></div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Error loading airdrops:', error);
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">آخر الإيردروبات</h2>
+        </div>
+        <p className="text-center text-red-500 p-4">حدث خطأ أثناء تحميل الإيردروبات. يرجى المحاولة مرة أخرى لاحقًا.</p>
+      </div>
+    );
+  }
+
+  if (!airdrops || airdrops.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">آخر الإيردروبات</h2>
+        </div>
+        <Card className="bg-crypto-darkGray border-white/10 p-8 text-center">
+          <p className="text-white/70">لا توجد إيردروبات متاحة حاليًا.</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -89,22 +100,25 @@ const AirdropListSection = () => {
             onOpenChange={() => toggleExpand(airdrop.id)}
             className="w-full"
           >
-            <Card className={`bg-crypto-darkGray border-white/10 transition-all duration-300 hover:border-crypto-orange/50 ${!airdrop.isActive ? 'opacity-80' : ''}`}>
+            <Card className={`bg-crypto-darkGray border-white/10 transition-all duration-300 hover:border-crypto-orange/50 ${airdrop.status !== 'active' ? 'opacity-80' : ''}`}>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-white text-xl">{airdrop.title}</CardTitle>
-                  {airdrop.isActive ? (
+                  {airdrop.status === 'active' ? (
                     <Badge className="bg-green-600 hover:bg-green-700">نشط</Badge>
                   ) : (
                     <Badge className="bg-gray-600 hover:bg-gray-700">منتهي</Badge>
                   )}
                 </div>
-                <div className="flex items-center text-sm text-white/70 mt-2">
-                  <Calendar className="h-4 w-4 ml-1" />
-                  <span>
-                    {airdrop.startDate} - {airdrop.endDate}
-                  </span>
-                </div>
+                {(airdrop.start_date || airdrop.end_date) && (
+                  <div className="flex items-center text-sm text-white/70 mt-2">
+                    <Calendar className="h-4 w-4 ml-1" />
+                    <span>
+                      {airdrop.start_date && new Date(airdrop.start_date).toLocaleDateString('ar-SA')}
+                      {airdrop.end_date && ` - ${new Date(airdrop.end_date).toLocaleDateString('ar-SA')}`}
+                    </span>
+                  </div>
+                )}
               </CardHeader>
               
               <CardContent>
@@ -131,9 +145,9 @@ const AirdropListSection = () => {
                 
                 <CollapsibleContent className="mt-4 space-y-3">
                   <div className="flex flex-col gap-2">
-                    {airdrop.twitterLink && (
+                    {airdrop.twitter_link && (
                       <a 
-                        href={airdrop.twitterLink} 
+                        href={airdrop.twitter_link} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-white/70 hover:text-crypto-orange flex items-center gap-2 text-sm"
@@ -144,9 +158,9 @@ const AirdropListSection = () => {
                       </a>
                     )}
                     
-                    {airdrop.youtubeLink && (
+                    {airdrop.youtube_link && (
                       <a 
-                        href={airdrop.youtubeLink} 
+                        href={airdrop.youtube_link} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-white/70 hover:text-crypto-orange flex items-center gap-2 text-sm"
@@ -161,11 +175,22 @@ const AirdropListSection = () => {
               </CardContent>
               
               <CardFooter>
-                {airdrop.isActive ? (
-                  <Button className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white">
-                    <Rocket className="h-4 w-4 ml-2" />
-                    المطالبة بالإيردروب
-                  </Button>
+                {airdrop.status === 'active' ? (
+                  airdrop.claim_url ? (
+                    <a href={airdrop.claim_url} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white">
+                        <Rocket className="h-4 w-4 ml-2" />
+                        المطالبة بالإيردروب
+                      </Button>
+                    </a>
+                  ) : (
+                    <Link to={`/airdrop/${airdrop.id}`} className="w-full">
+                      <Button className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white">
+                        <Rocket className="h-4 w-4 ml-2" />
+                        المطالبة بالإيردروب
+                      </Button>
+                    </Link>
+                  )
                 ) : (
                   <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white" disabled>
                     انتهى الإيردروب
