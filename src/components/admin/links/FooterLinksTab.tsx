@@ -1,228 +1,229 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash2, Plus } from "lucide-react";
-import { FooterLink, useFooterLinks, useAddFooterLink, useUpdateFooterLink, useDeleteFooterLink } from '@/lib/hooks/useFooterLinks';
+import { PencilIcon, PlusCircle, Trash2 } from "lucide-react";
+import { FooterLink, useAddFooterLink, useDeleteFooterLink, useFooterLinks, useUpdateFooterLink } from '@/lib/hooks/useFooterLinks';
 import FooterLinkDialog from './FooterLinkDialog';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
-const FooterLinksTab: React.FC = () => {
+const FooterLinksTab = () => {
+  // Fetch footer links data
   const { data: footerLinks, isLoading } = useFooterLinks();
   const addFooterLink = useAddFooterLink();
   const updateFooterLink = useUpdateFooterLink();
   const deleteFooterLink = useDeleteFooterLink();
   
-  const [newFooterLink, setNewFooterLink] = useState<Omit<FooterLink, 'id' | 'created_at' | 'updated_at'>>({
+  // State for dialogs
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editLink, setEditLink] = useState<FooterLink | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  
+  // New link template
+  const [newLink, setNewLink] = useState<Omit<FooterLink, 'id' | 'created_at' | 'updated_at'>>({
     title: '',
     url: '',
     category: 'quick_links',
-    sort_order: 0
+    sort_order: 1
   });
   
-  const [editFooterLink, setEditFooterLink] = useState<FooterLink | null>(null);
-  const [isFooterLinkDialogOpen, setIsFooterLinkDialogOpen] = useState(false);
-  const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Save state to localStorage when component mounts/unmounts
+  useEffect(() => {
+    // Load state from localStorage
+    const savedState = localStorage.getItem('footerLinksTabState');
+    if (savedState) {
+      try {
+        const { newLink: savedNewLink } = JSON.parse(savedState);
+        if (savedNewLink) {
+          setNewLink(savedNewLink);
+        }
+      } catch (e) {
+        console.error('Error parsing saved footer links tab state:', e);
+      }
+    }
+    
+    // Save state to localStorage when component unmounts
+    return () => {
+      const stateToSave = {
+        newLink
+      };
+      localStorage.setItem('footerLinksTabState', JSON.stringify(stateToSave));
+    };
+  }, [newLink]);
   
-  const handleFooterLinkInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle input changes for new link
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (editFooterLink) {
-      setEditFooterLink({
-        ...editFooterLink,
-        [name]: name === 'sort_order' ? parseInt(value) : value
-      });
+    if (editLink) {
+      setEditLink({ ...editLink, [name]: name === 'sort_order' ? Number(value) : value });
     } else {
-      setNewFooterLink({
-        ...newFooterLink,
-        [name]: name === 'sort_order' ? parseInt(value) : value
-      });
+      setNewLink({ ...newLink, [name]: name === 'sort_order' ? Number(value) : value });
     }
   };
   
-  const handleFooterLinkCategoryChange = (value: string) => {
-    if (editFooterLink) {
-      setEditFooterLink({
-        ...editFooterLink,
-        category: value
-      });
+  // Handle category change
+  const handleCategoryChange = (value: string) => {
+    if (editLink) {
+      setEditLink({ ...editLink, category: value });
     } else {
-      setNewFooterLink({
-        ...newFooterLink,
-        category: value
-      });
+      setNewLink({ ...newLink, category: value });
     }
   };
   
-  const handleAddFooterLink = () => {
-    addFooterLink.mutate(newFooterLink, {
+  // Handle add link
+  const handleAddLink = () => {
+    addFooterLink.mutate(newLink, {
       onSuccess: () => {
-        setNewFooterLink({
+        setIsAddDialogOpen(false);
+        setNewLink({
           title: '',
           url: '',
           category: 'quick_links',
-          sort_order: 0
+          sort_order: 1
         });
-        setIsFooterLinkDialogOpen(false);
       }
     });
   };
   
-  const handleUpdateFooterLink = () => {
-    if (editFooterLink) {
-      updateFooterLink.mutate(editFooterLink, {
+  // Handle update link
+  const handleUpdateLink = () => {
+    if (editLink) {
+      updateFooterLink.mutate(editLink, {
         onSuccess: () => {
-          setEditFooterLink(null);
-          setIsFooterLinkDialogOpen(false);
+          setIsEditDialogOpen(false);
+          setEditLink(null);
         }
       });
     }
   };
   
-  const confirmDelete = () => {
-    if (linkToDelete) {
-      deleteFooterLink.mutate(linkToDelete);
-      setLinkToDelete(null);
-      setIsDeleteDialogOpen(false);
+  // Handle delete link
+  const handleDeleteLink = () => {
+    if (deleteId) {
+      deleteFooterLink.mutate(deleteId, {
+        onSuccess: () => {
+          setIsDeleteDialogOpen(false);
+          setDeleteId(null);
+        }
+      });
     }
   };
-
-  const categoryLabels = {
+  
+  // Group links by category
+  const groupedLinks = footerLinks ? footerLinks.reduce((acc: Record<string, FooterLink[]>, link) => {
+    if (!acc[link.category]) {
+      acc[link.category] = [];
+    }
+    acc[link.category].push(link);
+    return acc;
+  }, {}) : {};
+  
+  // Category labels for display
+  const categoryLabels: Record<string, string> = {
     'quick_links': 'روابط سريعة',
     'services': 'خدمات',
     'legal': 'قانوني'
   };
   
-  // Group footer links by category for display
-  const quickLinks = footerLinks?.filter(link => link.category === 'quick_links').sort((a, b) => a.sort_order - b.sort_order) || [];
-  const serviceLinks = footerLinks?.filter(link => link.category === 'services').sort((a, b) => a.sort_order - b.sort_order) || [];
-  const legalLinks = footerLinks?.filter(link => link.category === 'legal').sort((a, b) => a.sort_order - b.sort_order) || [];
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-crypto-orange"></div>
-      </div>
-    );
-  }
-  
   return (
-    <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-crypto-orange">روابط التذييل</CardTitle>
-          <CardDescription className="text-gray-400">قم بإدارة روابط تذييل الموقع</CardDescription>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-white">روابط التذييل</h2>
         <Button 
-          onClick={() => {
-            setEditFooterLink(null);
-            setNewFooterLink({
-              title: '',
-              url: '',
-              category: 'quick_links',
-              sort_order: 0
-            });
-            setIsFooterLinkDialogOpen(true);
-          }}
+          onClick={() => setIsAddDialogOpen(true)}
           className="bg-crypto-orange hover:bg-crypto-orange/90 text-white"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-4 w-4 mr-2" />
           إضافة رابط جديد
         </Button>
-      </CardHeader>
-      <CardContent>
-        {['quick_links', 'services', 'legal'].map(category => {
-          const links = category === 'quick_links' 
-            ? quickLinks 
-            : category === 'services' 
-              ? serviceLinks 
-              : legalLinks;
-          
-          return (
-            <div key={category} className="mb-8">
-              <h3 className="text-lg font-medium mb-4 text-crypto-orange">{categoryLabels[category as keyof typeof categoryLabels]}</h3>
-              {links.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">لا توجد روابط في هذا التصنيف</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-white/10 hover:bg-crypto-darkBlue/30">
-                        <TableHead className="text-right text-crypto-orange">العنوان</TableHead>
-                        <TableHead className="text-right text-crypto-orange">الرابط</TableHead>
-                        <TableHead className="text-right text-crypto-orange">الترتيب</TableHead>
-                        <TableHead className="text-right text-crypto-orange">الإجراءات</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {links.map(link => (
-                        <TableRow key={link.id} className="border-white/10 hover:bg-crypto-darkBlue/30">
-                          <TableCell className="text-white">{link.title}</TableCell>
-                          <TableCell>
-                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-crypto-orange hover:underline">
-                              {link.url}
-                            </a>
-                          </TableCell>
-                          <TableCell className="text-white">{link.sort_order}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2 space-x-reverse">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setEditFooterLink(link);
-                                  setIsFooterLinkDialogOpen(true);
-                                }}
-                                className="text-white hover:text-crypto-orange hover:bg-white/10"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  setLinkToDelete(link.id);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                                className="text-white hover:text-red-500 hover:bg-white/10"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </CardContent>
+      </div>
       
-      <FooterLinkDialog 
-        isOpen={isFooterLinkDialogOpen}
-        onOpenChange={setIsFooterLinkDialogOpen}
-        editLink={editFooterLink}
-        newLink={newFooterLink}
-        onInputChange={handleFooterLinkInputChange}
-        onCategoryChange={handleFooterLinkCategoryChange}
-        onSubmit={editFooterLink ? handleUpdateFooterLink : handleAddFooterLink}
-        isPending={addFooterLink.isPending || updateFooterLink.isPending}
+      {isLoading ? (
+        <div className="flex justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-crypto-orange"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Object.keys(groupedLinks).map((category) => (
+            <Card key={category} className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-crypto-orange">{categoryLabels[category] || category}</CardTitle>
+                <CardDescription className="text-gray-400">روابط {categoryLabels[category] || category}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {groupedLinks[category].sort((a, b) => a.sort_order - b.sort_order).map((link) => (
+                    <li key={link.id} className="flex items-center justify-between p-2 rounded-md hover:bg-crypto-darkBlue/20">
+                      <div>
+                        <p className="font-medium">{link.title}</p>
+                        <p className="text-sm text-gray-400">{link.url}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditLink(link);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="h-8 w-8 text-gray-400 hover:text-white hover:bg-crypto-darkBlue/50"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setDeleteId(link.id);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                          className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Add/Edit Link Dialog */}
+      <FooterLinkDialog
+        isOpen={isAddDialogOpen || isEditDialogOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            if (isAddDialogOpen) setIsAddDialogOpen(false);
+            if (isEditDialogOpen) {
+              setIsEditDialogOpen(false);
+              setEditLink(null);
+            }
+          }
+        }}
+        editLink={editLink}
+        newLink={newLink}
+        onInputChange={handleInputChange}
+        onCategoryChange={handleCategoryChange}
+        onSubmit={editLink ? handleUpdateLink : handleAddLink}
+        isPending={editLink ? updateFooterLink.isPending : addFooterLink.isPending}
       />
       
-      <DeleteConfirmationDialog 
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onConfirm={confirmDelete}
+        onConfirm={handleDeleteLink}
         onCancel={() => {
-          setLinkToDelete(null);
           setIsDeleteDialogOpen(false);
+          setDeleteId(null);
         }}
         type="footer"
       />
-    </Card>
+    </div>
   );
 };
 

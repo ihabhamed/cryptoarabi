@@ -1,190 +1,223 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash2, Plus } from "lucide-react";
-import { SocialLink, useSocialLinks, useAddSocialLink, useUpdateSocialLink, useDeleteSocialLink } from '@/lib/hooks/useSocialLinks';
+import { Card, CardContent } from "@/components/ui/card";
+import { PencilIcon, PlusCircle, Trash2 } from "lucide-react";
+import { SocialLink, useAddSocialLink, useDeleteSocialLink, useSocialLinks, useUpdateSocialLink } from '@/lib/hooks/useSocialLinks';
 import SocialLinkDialog from './SocialLinkDialog';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
-const SocialLinksTab: React.FC = () => {
+const SocialLinksTab = () => {
+  // Fetch social links data
   const { data: socialLinks, isLoading } = useSocialLinks();
   const addSocialLink = useAddSocialLink();
   const updateSocialLink = useUpdateSocialLink();
   const deleteSocialLink = useDeleteSocialLink();
   
-  const [newSocialLink, setNewSocialLink] = useState<Omit<SocialLink, 'id' | 'created_at' | 'updated_at'>>({
+  // State for dialogs
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editLink, setEditLink] = useState<SocialLink | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  
+  // New link template
+  const [newLink, setNewLink] = useState<Omit<SocialLink, 'id' | 'created_at' | 'updated_at'>>({
     platform: '',
     url: '',
     icon: ''
   });
   
-  const [editSocialLink, setEditSocialLink] = useState<SocialLink | null>(null);
-  const [isSocialLinkDialogOpen, setIsSocialLinkDialogOpen] = useState(false);
-  const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Save state to localStorage when component mounts/unmounts
+  useEffect(() => {
+    // Load state from localStorage
+    const savedState = localStorage.getItem('socialLinksTabState');
+    if (savedState) {
+      try {
+        const { newLink: savedNewLink } = JSON.parse(savedState);
+        if (savedNewLink) {
+          setNewLink(savedNewLink);
+        }
+      } catch (e) {
+        console.error('Error parsing saved social links tab state:', e);
+      }
+    }
+    
+    // Save state to localStorage when component unmounts
+    return () => {
+      const stateToSave = {
+        newLink
+      };
+      localStorage.setItem('socialLinksTabState', JSON.stringify(stateToSave));
+    };
+  }, [newLink]);
   
-  const handleSocialLinkInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Handle input changes for new link
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (editSocialLink) {
-      setEditSocialLink({
-        ...editSocialLink,
-        [name]: value
-      });
+    if (editLink) {
+      setEditLink({ ...editLink, [name]: value });
     } else {
-      setNewSocialLink({
-        ...newSocialLink,
-        [name]: value
-      });
+      setNewLink({ ...newLink, [name]: value });
     }
   };
   
-  const handleAddSocialLink = () => {
-    addSocialLink.mutate(newSocialLink, {
+  // Handle add link
+  const handleAddLink = () => {
+    addSocialLink.mutate(newLink, {
       onSuccess: () => {
-        setNewSocialLink({
+        setIsAddDialogOpen(false);
+        setNewLink({
           platform: '',
           url: '',
           icon: ''
         });
-        setIsSocialLinkDialogOpen(false);
       }
     });
   };
   
-  const handleUpdateSocialLink = () => {
-    if (editSocialLink) {
-      updateSocialLink.mutate(editSocialLink, {
+  // Handle update link
+  const handleUpdateLink = () => {
+    if (editLink) {
+      updateSocialLink.mutate(editLink, {
         onSuccess: () => {
-          setEditSocialLink(null);
-          setIsSocialLinkDialogOpen(false);
+          setIsEditDialogOpen(false);
+          setEditLink(null);
         }
       });
     }
   };
   
-  const confirmDelete = () => {
-    if (linkToDelete) {
-      deleteSocialLink.mutate(linkToDelete);
-      setLinkToDelete(null);
-      setIsDeleteDialogOpen(false);
+  // Handle delete link
+  const handleDeleteLink = () => {
+    if (deleteId) {
+      deleteSocialLink.mutate(deleteId, {
+        onSuccess: () => {
+          setIsDeleteDialogOpen(false);
+          setDeleteId(null);
+        }
+      });
     }
   };
   
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-crypto-orange"></div>
-      </div>
-    );
-  }
+  // Icon map for common social platforms
+  const getIconClass = (platform: string, icon: string) => {
+    const lowercasePlatform = platform.toLowerCase();
+    if (lowercasePlatform.includes('twitter') || lowercasePlatform.includes('x')) return 'i-lucide-twitter';
+    if (lowercasePlatform.includes('facebook')) return 'i-lucide-facebook';
+    if (lowercasePlatform.includes('instagram')) return 'i-lucide-instagram';
+    if (lowercasePlatform.includes('linkedin')) return 'i-lucide-linkedin';
+    if (lowercasePlatform.includes('youtube')) return 'i-lucide-youtube';
+    if (lowercasePlatform.includes('github')) return 'i-lucide-github';
+    if (lowercasePlatform.includes('telegram')) return 'i-lucide-send';
+    if (lowercasePlatform.includes('discord')) return 'i-lucide-message-circle';
+    // If no match, use the provided icon or default
+    return icon || 'i-lucide-link';
+  };
   
   return (
-    <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-crypto-orange">روابط التواصل الاجتماعي</CardTitle>
-          <CardDescription className="text-gray-400">قم بإدارة روابط التواصل الاجتماعي</CardDescription>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-white">روابط التواصل الاجتماعي</h2>
         <Button 
-          onClick={() => {
-            setEditSocialLink(null);
-            setNewSocialLink({
-              platform: '',
-              url: '',
-              icon: ''
-            });
-            setIsSocialLinkDialogOpen(true);
-          }}
+          onClick={() => setIsAddDialogOpen(true)}
           className="bg-crypto-orange hover:bg-crypto-orange/90 text-white"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-4 w-4 mr-2" />
           إضافة رابط جديد
         </Button>
-      </CardHeader>
-      <CardContent>
-        {socialLinks?.length === 0 ? (
-          <p className="text-gray-400 text-center py-4">لا توجد روابط تواصل اجتماعي</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/10 hover:bg-crypto-darkBlue/30">
-                  <TableHead className="text-right text-crypto-orange">المنصة</TableHead>
-                  <TableHead className="text-right text-crypto-orange">الرابط</TableHead>
-                  <TableHead className="text-right text-crypto-orange">الأيقونة</TableHead>
-                  <TableHead className="text-right text-crypto-orange">الإجراءات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {socialLinks?.map(link => (
-                  <TableRow key={link.id} className="border-white/10 hover:bg-crypto-darkBlue/30">
-                    <TableCell className="text-white">{link.platform}</TableCell>
-                    <TableCell>
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-crypto-orange hover:underline">
-                        {link.url}
-                      </a>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center w-10 h-10 bg-crypto-darkBlue rounded-md text-white">
-                        <div dangerouslySetInnerHTML={{ __html: link.icon }} />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2 space-x-reverse">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setEditSocialLink(link);
-                            setIsSocialLinkDialogOpen(true);
-                          }}
-                          className="text-white hover:text-crypto-orange hover:bg-white/10"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setLinkToDelete(link.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                          className="text-white hover:text-red-500 hover:bg-white/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
+      </div>
       
-      <SocialLinkDialog 
-        isOpen={isSocialLinkDialogOpen}
-        onOpenChange={setIsSocialLinkDialogOpen}
-        editLink={editSocialLink}
-        newLink={newSocialLink}
-        onInputChange={handleSocialLinkInputChange}
-        onSubmit={editSocialLink ? handleUpdateSocialLink : handleAddSocialLink}
-        isPending={addSocialLink.isPending || updateSocialLink.isPending}
+      {isLoading ? (
+        <div className="flex justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-crypto-orange"></div>
+        </div>
+      ) : (
+        <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {socialLinks?.map((link) => (
+                <div 
+                  key={link.id} 
+                  className="flex items-center justify-between p-4 rounded-md bg-crypto-darkBlue/30 border border-white/10"
+                >
+                  <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-crypto-orange/20 flex items-center justify-center">
+                      <span className={`${getIconClass(link.platform, link.icon)} h-5 w-5 text-crypto-orange`}></span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{link.platform}</p>
+                      <p className="text-sm text-gray-400 truncate max-w-[150px]">{link.url}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditLink(link);
+                        setIsEditDialogOpen(true);
+                      }}
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-crypto-darkBlue/50"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setDeleteId(link.id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {(!socialLinks || socialLinks.length === 0) && (
+              <div className="text-center py-8 text-gray-400">
+                <p>لا توجد روابط تواصل اجتماعي بعد</p>
+                <p className="text-sm mt-2">انقر على "إضافة رابط جديد" لإضافة أول رابط</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Add/Edit Link Dialog */}
+      <SocialLinkDialog
+        isOpen={isAddDialogOpen || isEditDialogOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            if (isAddDialogOpen) setIsAddDialogOpen(false);
+            if (isEditDialogOpen) {
+              setIsEditDialogOpen(false);
+              setEditLink(null);
+            }
+          }
+        }}
+        editLink={editLink}
+        newLink={newLink}
+        onInputChange={handleInputChange}
+        onSubmit={editLink ? handleUpdateLink : handleAddLink}
+        isPending={editLink ? updateSocialLink.isPending : addSocialLink.isPending}
       />
       
-      <DeleteConfirmationDialog 
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onConfirm={confirmDelete}
+        onConfirm={handleDeleteLink}
         onCancel={() => {
-          setLinkToDelete(null);
           setIsDeleteDialogOpen(false);
+          setDeleteId(null);
         }}
         type="social"
       />
-    </Card>
+    </div>
   );
 };
 

@@ -1,78 +1,101 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
+import { NavLink } from 'react-router-dom';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { 
-  LayoutDashboard, Settings, Home, Link2, FileText, 
-  LogOut, X, Newspaper, Palette, Database, Gift
+  Home, Settings, FileText, Link2, LogOut, Database, BookOpen, Zap
 } from 'lucide-react';
 
 interface AdminMobileMenuProps {
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  handleSignOut: () => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  handleSignOut: () => Promise<void>;
 }
 
-const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ setOpen, handleSignOut }) => {
-  const location = useLocation();
-  
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'لوحة التحكم', href: '/admin' },
-    { icon: Settings, label: 'إعدادات الموقع', href: '/admin/site-settings' },
-    { icon: Link2, label: 'إدارة الروابط', href: '/admin/links' },
-    { icon: Gift, label: 'إدارة الإيردروب', href: '/admin/airdrops' },
-    { icon: Newspaper, label: 'إدارة المدونة', href: '/admin/blog' },
-    { icon: Palette, label: 'إدارة الخدمات', href: '/admin/services' },
-    { icon: FileText, label: 'الصفحات القانونية', href: '/admin/legal' },
-    { icon: Database, label: 'النسخ الاحتياطي', href: '/admin/backup' },
-    { icon: Home, label: 'العودة للموقع', href: '/' },
-  ];
+const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ 
+  open, 
+  setOpen,
+  handleSignOut
+}) => {
+  // Close the mobile menu when a link is clicked
+  const handleLinkClick = () => {
+    setOpen(false);
+  };
 
   return (
-    <>
-      <div className="py-6 px-4 border-b border-white/10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-crypto-orange">لوحة التحكم</h2>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="text-white">
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-      <nav className="py-4">
-        <ul className="space-y-1 px-2">
-          {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <li key={index}>
-                <Link
-                  to={item.href}
-                  onClick={() => setOpen(false)}
-                  className={`flex items-center px-3 py-2 text-white rounded-md transition-colors ${
-                    isActive 
-                      ? 'bg-crypto-darkBlue/50 text-crypto-orange' 
-                      : 'hover:bg-crypto-darkBlue/50 hover:text-crypto-orange'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 ml-3" />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-          <li>
-            <button
-              onClick={() => {
-                handleSignOut();
-                setOpen(false);
-              }}
-              className="flex items-center w-full px-3 py-2 text-white hover:bg-crypto-darkBlue/50 hover:text-crypto-orange rounded-md"
-            >
-              <LogOut className="h-5 w-5 ml-3" />
-              <span>تسجيل الخروج</span>
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-md bg-crypto-darkGray border border-white/10">
+        <nav className="flex flex-col p-4 space-y-4" dir="rtl">
+          <NavLink
+            to="/admin"
+            end
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <Home size={18} />
+            <span>الرئيسية</span>
+          </NavLink>
+          <NavLink
+            to="/admin/site-settings"
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <Settings size={18} />
+            <span>إعدادات الموقع</span>
+          </NavLink>
+          <NavLink
+            to="/admin/links"
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <Link2 size={18} />
+            <span>إدارة الروابط</span>
+          </NavLink>
+          <NavLink
+            to="/admin/legal"
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <FileText size={18} />
+            <span>الصفحات القانونية</span>
+          </NavLink>
+          <NavLink
+            to="/admin/services"
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <Zap size={18} />
+            <span>الخدمات</span>
+          </NavLink>
+          <NavLink
+            to="/admin/blog"
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <BookOpen size={18} />
+            <span>المدونة</span>
+          </NavLink>
+          <NavLink
+            to="/admin/airdrops"
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-gray-300 hover:bg-crypto-darkBlue/50"
+            onClick={handleLinkClick}
+          >
+            <Database size={18} />
+            <span>الإيردروب</span>
+          </NavLink>
+          <button
+            onClick={() => {
+              handleSignOut();
+              setOpen(false);
+            }}
+            className="flex items-center gap-3 p-3 rounded-md transition-colors text-white bg-red-500 hover:bg-red-600"
+          >
+            <LogOut size={18} />
+            <span>تسجيل الخروج</span>
+          </button>
+        </nav>
+      </DialogContent>
+    </Dialog>
   );
 };
 

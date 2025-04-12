@@ -1,64 +1,88 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, Settings, Home, Link2, FileText, 
-  LogOut, Newspaper, Palette, Database, Gift
+  Home, Settings, FileText, Link2, Database, BookOpen, Zap
 } from 'lucide-react';
 
 interface AdminSidebarProps {
-  handleSignOut: () => void;
+  handleSignOut: () => Promise<void>;
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ handleSignOut }) => {
   const location = useLocation();
   
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'لوحة التحكم', href: '/admin' },
-    { icon: Settings, label: 'إعدادات الموقع', href: '/admin/site-settings' },
-    { icon: Link2, label: 'إدارة الروابط', href: '/admin/links' },
-    { icon: Gift, label: 'إدارة الإيردروب', href: '/admin/airdrops' },
-    { icon: Newspaper, label: 'إدارة المدونة', href: '/admin/blog' },
-    { icon: Palette, label: 'إدارة الخدمات', href: '/admin/services' },
-    { icon: FileText, label: 'الصفحات القانونية', href: '/admin/legal' },
-    { icon: Database, label: 'النسخ الاحتياطي', href: '/admin/backup' },
-    { icon: Home, label: 'العودة للموقع', href: '/' },
-  ];
+  // Nav item active style
+  const isActive = (path: string) => {
+    return location.pathname === path ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50";
+  };
 
   return (
-    <aside className="hidden md:block w-64 bg-crypto-darkBlue/50 border-r border-white/10 overflow-y-auto">
-      <nav className="p-4">
-        <ul className="space-y-1">
-          {menuItems.map((item, index) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <li key={index}>
-                <Link
-                  to={item.href}
-                  className={`flex items-center px-3 py-2.5 text-white rounded-md transition-colors ${
-                    isActive 
-                      ? 'bg-crypto-darkBlue/70 text-crypto-orange' 
-                      : 'hover:bg-crypto-darkBlue/70 hover:text-crypto-orange'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 ml-3" />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-          <li className="pt-4">
-            <button
-              onClick={handleSignOut}
-              className="flex items-center w-full px-3 py-2.5 text-white hover:bg-crypto-darkBlue/70 hover:text-crypto-orange rounded-md"
-            >
-              <LogOut className="h-5 w-5 ml-3" />
-              <span>تسجيل الخروج</span>
-            </button>
-          </li>
-        </ul>
+    <div className="hidden md:flex flex-col w-64 bg-crypto-darkGray border-r border-white/10 h-screen fixed">
+      <div className="p-4 border-b border-white/10">
+        <h2 className="text-xl font-bold text-crypto-orange">لوحة التحكم</h2>
+      </div>
+      <nav className="flex-1 p-4 space-y-1">
+        <NavLink
+          to="/admin"
+          end
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin')}`}
+        >
+          <Home size={18} />
+          <span>الرئيسية</span>
+        </NavLink>
+        <NavLink
+          to="/admin/site-settings"
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/site-settings')}`}
+        >
+          <Settings size={18} />
+          <span>إعدادات الموقع</span>
+        </NavLink>
+        <NavLink
+          to="/admin/links"
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/links')}`}
+        >
+          <Link2 size={18} />
+          <span>إدارة الروابط</span>
+        </NavLink>
+        <NavLink
+          to="/admin/legal"
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/legal')}`}
+        >
+          <FileText size={18} />
+          <span>الصفحات القانونية</span>
+        </NavLink>
+        <NavLink
+          to="/admin/services"
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/services')}`}
+        >
+          <Zap size={18} />
+          <span>الخدمات</span>
+        </NavLink>
+        <NavLink
+          to="/admin/blog"
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/blog')}`}
+        >
+          <BookOpen size={18} />
+          <span>المدونة</span>
+        </NavLink>
+        <NavLink
+          to="/admin/airdrops"
+          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/airdrops')}`}
+        >
+          <Database size={18} />
+          <span>الإيردروب</span>
+        </NavLink>
       </nav>
-    </aside>
+      <div className="p-4 border-t border-white/10">
+        <button
+          onClick={handleSignOut}
+          className="w-full p-3 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors flex justify-center items-center"
+        >
+          تسجيل الخروج
+        </button>
+      </div>
+    </div>
   );
 };
 
