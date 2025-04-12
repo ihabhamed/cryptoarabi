@@ -40,38 +40,14 @@ const AdminAuth = () => {
       if (data?.user) {
         console.log('AdminAuth: User logged in successfully:', data.user.id);
         
-        // Implement a clear delay to allow session to be fully established
+        // Allow auth state to fully establish
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Get user_roles directly without using RLS policies
-        console.log('AdminAuth: Checking for admin role...');
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin');
-        
-        if (roleError) {
-          console.error('AdminAuth: Error checking roles:', roleError);
-        } else {
-          console.log('AdminAuth: Role check result:', roleData);
-          
-          if (roleData && roleData.length > 0) {
-            console.log('AdminAuth: User verified as admin, redirecting to admin panel');
-            toast({
-              title: "تم تسجيل الدخول بنجاح",
-              description: "مرحبا بك في لوحة التحكم",
-            });
-            navigate('/admin');
-            return;
-          }
-        }
-        
-        // Use checkIsAdmin as backup verification
+        // Check if user is admin using RPC function
         const isAdmin = await checkIsAdmin();
+        console.log('AdminAuth: Is user admin?', isAdmin);
         
         if (isAdmin) {
-          console.log('AdminAuth: User verified as admin through checkIsAdmin, redirecting to admin panel');
           toast({
             title: "تم تسجيل الدخول بنجاح",
             description: "مرحبا بك في لوحة التحكم",

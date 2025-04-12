@@ -29,25 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Checking admin status for user:', user.id);
       
-      // Direct check through the database using the security definer function first
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('role', 'admin');
-      
-      if (roleError) {
-        console.error('Error checking user_roles directly:', roleError);
-      } else {
-        console.log('User role check result:', roleData);
-        if (roleData && roleData.length > 0) {
-          console.log('User has admin role verified by direct check');
-          setIsAdmin(true);
-          return true;
-        }
-      }
-      
-      // Fallback to the RPC function
+      // Use the RPC function we created
       const { data, error } = await supabase.rpc('is_admin');
       
       if (error) {

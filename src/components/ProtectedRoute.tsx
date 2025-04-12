@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,28 +21,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         try {
           console.log('ProtectedRoute: Starting admin verification for user', user.id);
           
-          // Direct database check first
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('role', 'admin');
-          
-          if (roleError) {
-            console.error('ProtectedRoute: Error checking roles directly:', roleError);
-          } else {
-            console.log('ProtectedRoute: Direct role check result:', roleData);
-            
-            if (roleData && roleData.length > 0) {
-              console.log('ProtectedRoute: User confirmed as admin via direct check');
-              setIsVerifying(false);
-              return;
-            }
-          }
-          
-          // Fallback to checkIsAdmin
+          // Use the RPC function to check admin status
           const isUserAdmin = await checkIsAdmin();
-          console.log('ProtectedRoute: Admin check via checkIsAdmin result:', isUserAdmin);
+          console.log('ProtectedRoute: Admin check result:', isUserAdmin);
           
           if (!isUserAdmin) {
             console.log('ProtectedRoute: User is not an admin, redirecting to login');
@@ -54,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             });
             navigate('/admin/login');
           } else {
-            console.log('ProtectedRoute: User verified as admin via checkIsAdmin');
+            console.log('ProtectedRoute: User verified as admin');
           }
         } catch (error) {
           console.error("Error verifying admin status:", error);
