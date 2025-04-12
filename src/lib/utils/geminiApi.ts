@@ -1,4 +1,3 @@
-
 // Utility functions for Google Gemini API
 
 export async function generateMetaTags(title: string, content: string) {
@@ -36,19 +35,15 @@ export async function generateHashtags(title: string, content: string) {
   try {
     console.log("Generating hashtags for:", { title, content });
     
-    // Get the correct anonymous key
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!anonKey) {
-      console.error("Missing SUPABASE_ANON_KEY");
-      throw new Error('لم نتمكن من توليد هاشتاغات - خطأ في المصادقة');
-    }
+    // Import the Supabase anon key directly from the client
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    // Make the API request with proper authorization
+    // Use the key from the client configuration
     const response = await fetch(`https://tlpiqkbiwcdyzpqqzsbg.supabase.co/functions/v1/generate-hashtags`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${anonKey}`
+        'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRscGlxa2Jpd2NkeXpwcXF6c2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjE4MzgsImV4cCI6MjA1OTk5NzgzOH0.5KKw0L7Uo-lsFK0ovvhZXh-_LKYGPE9qq2SIE90acvg"
       },
       body: JSON.stringify({ title, content })
     });

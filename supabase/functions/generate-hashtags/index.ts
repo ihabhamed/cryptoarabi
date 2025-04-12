@@ -13,6 +13,16 @@ serve(async (req) => {
   }
 
   try {
+    // Log all headers for debugging (don't log sensitive values)
+    console.log("Request headers:");
+    for (const [key, value] of req.headers.entries()) {
+      if (key.toLowerCase() !== 'authorization' && key.toLowerCase() !== 'apikey') {
+        console.log(`${key}: ${value}`);
+      } else {
+        console.log(`${key}: [REDACTED]`);
+      }
+    }
+    
     // Verify the authorization token
     const authHeader = req.headers.get('Authorization');
     const apiKeyHeader = req.headers.get('apikey');
