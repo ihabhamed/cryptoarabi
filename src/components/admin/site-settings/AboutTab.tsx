@@ -29,7 +29,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
   const [features, setFeatures] = React.useState<string[]>(() => {
     if (Array.isArray(formData.about_features)) {
       return formData.about_features;
-    } else if (typeof formData.about_features === 'string' && formData.about_features !== '') {
+    } else if (typeof formData.about_features === 'string') {
       try {
         // Try to parse if it's a JSON string
         const parsedFeatures = JSON.parse(formData.about_features);

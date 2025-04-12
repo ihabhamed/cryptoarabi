@@ -13,7 +13,7 @@ import { toast } from "@/lib/utils/toast-utils";
 /**
  * SiteSettings interface
  * Represents the site settings data structure used throughout the application.
- * Note: about_features can be string[] in the application but is stored as a JSON string in the database.
+ * Note: about_features is string[] in the application but is stored as a JSON string in the database.
  */
 export interface SiteSettings {
   id: string;
@@ -28,7 +28,7 @@ export interface SiteSettings {
   about_title: string;
   about_content: string;
   about_image_url: string;
-  about_features: string[] | string; // Can be array in UI, stored as JSON string in DB
+  about_features: string[]; // In the application, it's always a string array
   about_year_founded: string | null;
   about_button_text: string | null;
   about_button_url: string | null;
@@ -36,6 +36,15 @@ export interface SiteSettings {
   privacy_policy: string | null;
   terms_conditions: string | null;
   updated_at: string;
+}
+
+/**
+ * SiteSettingsDB interface
+ * Represents the site settings data structure in the database.
+ * The about_features field is stored as a JSON string in the database.
+ */
+export interface SiteSettingsDB extends Omit<SiteSettings, 'about_features'> {
+  about_features: string; // In the database, it's stored as a JSON string
 }
 
 /**
@@ -64,13 +73,13 @@ export const useSiteSettings = () => {
           // Parse the JSON string to get the array
           data.about_features = JSON.parse(data.about_features);
         } catch (e) {
-          // If parsing fails, set to empty array string
+          // If parsing fails, set to empty array
           console.error('Error parsing about_features:', e);
-          data.about_features = '[]';
+          data.about_features = [];
         }
       } else if (data && !data.about_features) {
-        // Default to empty array string if not present
-        data.about_features = '[]';
+        // Default to empty array if not present
+        data.about_features = [];
       }
       
       return data as SiteSettings;
@@ -91,20 +100,29 @@ export const useUpdateSiteSettings = () => {
   return useMutation({
     mutationFn: async (updatedSettings: Partial<SiteSettings>) => {
       // Clone the settings to avoid modifying the original object
-      const dataToStore = { ...updatedSettings };
+      const dataToStore: Partial<SiteSettingsDB> = { ...updatedSettings };
       
       // Prepare about_features for storage
       if (dataToStore.about_features !== undefined) {
         // Convert array to JSON string for database storage
         if (Array.isArray(dataToStore.about_features)) {
           dataToStore.about_features = JSON.stringify(dataToStore.about_features);
+        } else if (typeof dataToStore.about_features === 'string') {
+          // If it's already a string, make sure it's a valid JSON string
+          try {
+            // Test if it's a valid JSON string
+            JSON.parse(dataToStore.about_features);
+          } catch (e) {
+            // If not valid JSON, wrap it in quotes and brackets
+            dataToStore.about_features = JSON.stringify([dataToStore.about_features]);
+          }
         }
       }
 
       // Update site settings in Supabase
       const { data, error } = await supabase
         .from('site_settings')
-        .update(dataToStore)
+        .update(dataToStore as any)
         .eq('id', updatedSettings.id)
         .select()
         .single();
@@ -121,12 +139,12 @@ export const useUpdateSiteSettings = () => {
           data.about_features = JSON.parse(data.about_features);
         } catch (e) {
           console.error('Error parsing about_features in response:', e);
-          // Default to empty array string on parsing error
-          data.about_features = '[]';
+          // Default to empty array on parsing error
+          data.about_features = [];
         }
       } else if (data && !data.about_features) {
-        // Default to empty array string if not present
-        data.about_features = '[]';
+        // Default to empty array if not present
+        data.about_features = [];
       }
 
       return data as SiteSettings;
