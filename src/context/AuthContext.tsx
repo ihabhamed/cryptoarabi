@@ -21,13 +21,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
 
   const checkIsAdmin = async (): Promise<boolean> => {
-    if (!user) {
-      console.log('Cannot check admin status: No user is logged in');
-      return false;
-    }
-    
     try {
-      console.log('Checking admin status for user:', user.id);
+      console.log('Checking admin status for user:', user?.id);
+      
+      if (!user) {
+        console.log('Cannot check admin status: No user is logged in');
+        return false;
+      }
       
       const { data, error } = await supabase.rpc('is_admin');
       
@@ -50,42 +50,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       try {
-        // Set up auth state listener FIRST
+        // First get the initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Initial session check:', initialSession?.user?.id);
+        
+        if (initialSession) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+          
+          // Check admin status with delay to ensure auth is ready
+          setTimeout(async () => {
+            await checkIsAdmin();
+            setLoading(false);
+          }, 500);
+        } else {
+          setLoading(false);
+        }
+        
+        // Set up auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('Auth state changed:', event, session?.user?.id);
-            setSession(session);
-            setUser(session?.user ?? null);
+          async (event, newSession) => {
+            console.log('Auth state changed:', event, newSession?.user?.id);
             
-            if (session?.user) {
-              // Delay admin check to ensure session is fully established
-              // Use a longer timeout to ensure auth is fully ready
-              setTimeout(async () => {
-                // Wait even longer to ensure auth is fully processed
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                await checkIsAdmin();
-              }, 1000);
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            
+            if (newSession?.user) {
+              // For new sign-ins, check admin status after a delay
+              if (event === 'SIGNED_IN') {
+                setTimeout(async () => {
+                  await checkIsAdmin();
+                }, 1000);
+              }
             } else {
               setIsAdmin(false);
             }
           }
         );
-        
-        // THEN check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session check:', session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // If there's a user, check admin status with a delay
-        if (session?.user) {
-          setTimeout(async () => {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            await checkIsAdmin();
-          }, 1000);
-        }
-        
-        setLoading(false);
         
         return () => {
           subscription.unsubscribe();

@@ -40,31 +40,33 @@ const AdminAuth = () => {
       if (data?.user) {
         console.log('AdminAuth: User logged in successfully:', data.user.id);
         
-        // Wait MUCH longer for session to be fully established
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Wait for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Multiple attempts to check admin status
+        // Multiple attempts to check admin status with increasing delays
         let isAdmin = false;
         for (let attempt = 1; attempt <= 3; attempt++) {
           console.log(`AdminAuth: Admin check attempt ${attempt}/3`);
-          // Longer delay between attempts
+          
+          // Wait between attempts
           if (attempt > 1) {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
           }
           
           isAdmin = await checkIsAdmin();
           console.log(`AdminAuth: Is user admin? (attempt ${attempt})`, isAdmin);
           
-          if (isAdmin) break;
+          if (isAdmin) {
+            toast({
+              title: "تم تسجيل الدخول بنجاح",
+              description: "مرحبا بك في لوحة التحكم",
+            });
+            navigate('/admin');
+            break;
+          }
         }
         
-        if (isAdmin) {
-          toast({
-            title: "تم تسجيل الدخول بنجاح",
-            description: "مرحبا بك في لوحة التحكم",
-          });
-          navigate('/admin');
-        } else {
+        if (!isAdmin) {
           console.log('AdminAuth: User is not an admin, signing out');
           // Sign out if not admin
           await supabase.auth.signOut();
