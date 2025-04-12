@@ -69,16 +69,32 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    console.log(`Field changed: ${name} = ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
+  // Generate slug from title - used as a fallback to the more robust method in BasicInfoSection
   const generateSlug = () => {
     if (formData.title) {
-      // Generate slug from title - remove special chars, replace spaces with dashes, lowercase
-      const slug = formData.title
-        .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-');
+      // Generate a timestamp-based component for uniqueness
+      const timestamp = new Date().getTime().toString().slice(-6);
+      let slug = '';
+      
+      // Check if title contains Arabic characters
+      if (/[\u0600-\u06FF]/.test(formData.title)) {
+        // For Arabic text, use a generic post slug with timestamp
+        slug = `post-${timestamp}`;
+      } else {
+        // For Latin text, use the standard slug generator with timestamp appended
+        slug = formData.title
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')  // Remove special characters except hyphens
+          .replace(/\s+/g, '-')      // Replace spaces with hyphens
+          .concat(`-${timestamp}`);  // Add timestamp for uniqueness
+      }
+      
+      // Ensure the slug doesn't have double hyphens and trim any leading/trailing hyphens
+      slug = slug.replace(/-+/g, '-').replace(/^-+|-+$/g, '');
       
       setFormData(prev => ({ ...prev, slug }));
     }

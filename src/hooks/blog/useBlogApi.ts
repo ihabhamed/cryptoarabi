@@ -73,12 +73,28 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         return false;
       }
       
-      // Ensure slug is not empty
+      // Generate a valid slug if none exists
       if (!blogData.slug) {
-        // Generate a timestamp-based slug if title doesn't provide one
+        // Generate a timestamp-based slug for uniqueness
         const timestamp = new Date().getTime().toString().slice(-6);
-        blogData.slug = `post-${timestamp}`;
-        console.log("Generated fallback slug:", blogData.slug);
+        
+        // Check if title contains Arabic characters
+        if (blogData.title && /[\u0600-\u06FF]/.test(blogData.title)) {
+          // For Arabic titles, create a generic slug with timestamp
+          blogData.slug = `post-${timestamp}`;
+        } else if (blogData.title) {
+          // For non-Arabic titles, create a slug from the title
+          blogData.slug = blogData.title
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '') // Remove special characters
+            .replace(/\s+/g, '-')     // Replace spaces with hyphens
+            .concat(`-${timestamp}`);  // Add timestamp for uniqueness
+        } else {
+          // Fallback for no title
+          blogData.slug = `post-${timestamp}`;
+        }
+        
+        console.log("Generated slug for post:", blogData.slug);
       }
       
       // Create a clean data object with only the fields that exist in the database

@@ -36,17 +36,30 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       
       console.log("Form data before submission:", formData);
       
-      // Ensure we have a slug
-      if (!formData.slug && formData.title) {
-        // Generate a timestamp-based slug
+      // Ensure we have a valid slug
+      let finalFormData: Partial<BlogPost> = { ...formData };
+      
+      if (!finalFormData.slug && finalFormData.title) {
+        // Generate a timestamp-based slug for uniqueness
         const timestamp = new Date().getTime().toString().slice(-6);
-        formData.slug = `post-${timestamp}`;
-        console.log("Generated fallback slug for submission:", formData.slug);
+        
+        // Check if title contains Arabic characters
+        if (/[\u0600-\u06FF]/.test(finalFormData.title)) {
+          // For Arabic titles, create a generic slug with timestamp
+          finalFormData.slug = `post-${timestamp}`;
+        } else {
+          // For non-Arabic titles, create a slug from the title
+          finalFormData.slug = finalFormData.title
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '') // Remove special characters
+            .replace(/\s+/g, '-')     // Replace spaces with hyphens
+            .concat(`-${timestamp}`);  // Add timestamp for uniqueness
+        }
+        
+        console.log("Generated slug for submission:", finalFormData.slug);
       }
       
       // Generate meta title and description if not provided
-      let finalFormData: Partial<BlogPost> = { ...formData };
-      
       if ((!finalFormData.meta_title || !finalFormData.meta_description) && finalFormData.title && finalFormData.content) {
         try {
           const { metaTitle, metaDescription } = await generateMetaTags(
