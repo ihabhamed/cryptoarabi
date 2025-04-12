@@ -29,25 +29,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Checking admin status for user:', user.id);
       
-      // Use the RPC function with a deliberate retry mechanism
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        console.log(`Admin check attempt ${attempt}/3`);
-        const { data, error } = await supabase.rpc('is_admin');
-        
-        if (error) {
-          console.error(`Error checking admin status via RPC (attempt ${attempt}):`, error);
-          // Wait a moment before retrying
-          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 500));
-          continue;
-        }
-        
-        console.log('Admin check result from RPC:', data);
-        setIsAdmin(!!data);
-        return !!data;
+      const { data, error } = await supabase.rpc('is_admin');
+      
+      if (error) {
+        console.error('Error checking admin status via RPC:', error);
+        return false;
       }
       
-      console.log('All admin check attempts failed');
-      return false;
+      console.log('Admin check result from RPC:', data);
+      setIsAdmin(!!data);
+      return !!data;
     } catch (error) {
       console.error('Exception checking admin status:', error);
       return false;
@@ -59,13 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       try {
-        // First check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session check:', session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Set up auth state listener
+        // Set up auth state listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('Auth state changed:', event, session?.user?.id);
@@ -74,9 +59,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             if (session?.user) {
               // Delay admin check to ensure session is fully established
+              // Use a longer timeout to ensure auth is fully ready
               setTimeout(async () => {
-                // Use a longer timeout to ensure auth is fully ready
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Wait even longer to ensure auth is fully processed
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 await checkIsAdmin();
               }, 1000);
             } else {
@@ -85,22 +71,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         );
         
+        // THEN check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
         // If there's a user, check admin status with a delay
         if (session?.user) {
           setTimeout(async () => {
+            await new Promise(resolve => setTimeout(resolve, 2000));
             await checkIsAdmin();
           }, 1000);
         }
         
+        setLoading(false);
+        
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
         console.error("Error setting up auth:", error);
-      } finally {
         setLoading(false);
       }
-      
-      return () => {
-        // Clean up subscription (this part stays the same)
-      };
     };
     
     setupAuth();

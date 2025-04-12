@@ -40,20 +40,22 @@ const AdminAuth = () => {
       if (data?.user) {
         console.log('AdminAuth: User logged in successfully:', data.user.id);
         
-        // Wait longer for session to be fully established
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait MUCH longer for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Multiple attempts to check admin status
         let isAdmin = false;
         for (let attempt = 1; attempt <= 3; attempt++) {
           console.log(`AdminAuth: Admin check attempt ${attempt}/3`);
+          // Longer delay between attempts
+          if (attempt > 1) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
+          
           isAdmin = await checkIsAdmin();
           console.log(`AdminAuth: Is user admin? (attempt ${attempt})`, isAdmin);
           
           if (isAdmin) break;
-          
-          // Wait between attempts
-          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000));
         }
         
         if (isAdmin) {

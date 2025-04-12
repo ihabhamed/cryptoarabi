@@ -21,17 +21,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         try {
           console.log('ProtectedRoute: Starting admin verification for user', user.id);
           
-          // Multiple attempts to check admin status
+          // Wait to ensure auth state is fully established
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Try multiple times with increased delays
           let isUserAdmin = false;
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            console.log(`ProtectedRoute: Admin check attempt ${attempt}/3`);
+          for (let attempt = 1; attempt <= 5; attempt++) {
+            console.log(`ProtectedRoute: Admin check attempt ${attempt}/5`);
+            
+            // Wait longer between attempts
+            if (attempt > 1) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+            
             isUserAdmin = await checkIsAdmin();
             console.log(`ProtectedRoute: Admin check result (attempt ${attempt}):`, isUserAdmin);
             
             if (isUserAdmin) break;
-            
-            // Wait between attempts
-            if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000));
           }
           
           if (!isUserAdmin) {
@@ -62,7 +68,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     };
     
     verifyAdminStatus();
-  }, [user, loading]);
+  }, [user, loading, checkIsAdmin, navigate, toast]);
   
   if (loading || isVerifying) {
     return (
