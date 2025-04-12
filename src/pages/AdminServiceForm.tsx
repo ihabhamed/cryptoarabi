@@ -26,9 +26,11 @@ const AdminServiceForm = () => {
     image_url: ''
   });
   
+  // Load data from localStorage or API
   useEffect(() => {
-    const fetchService = async () => {
+    const loadFormData = async () => {
       if (isEditMode && id) {
+        // For edit mode, fetch from API
         setIsLoading(true);
         try {
           const { data, error } = await supabase
@@ -47,6 +49,12 @@ const AdminServiceForm = () => {
               duration: data.duration || '',
               image_url: data.image_url || ''
             });
+            
+            // Save to localStorage in edit mode
+            localStorage.setItem('serviceFormData', JSON.stringify({
+              ...data,
+              id: id
+            }));
           }
         } catch (error: any) {
           toast({
@@ -57,11 +65,53 @@ const AdminServiceForm = () => {
         } finally {
           setIsLoading(false);
         }
+      } else {
+        // For new entry, check localStorage
+        const savedData = localStorage.getItem('serviceFormData');
+        
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            
+            // Only use saved data if we're not in edit mode or if the IDs match
+            if (!isEditMode || (parsedData.id === id)) {
+              setFormData({
+                title: parsedData.title || '',
+                description: parsedData.description || '',
+                price: parsedData.price || '',
+                duration: parsedData.duration || '',
+                image_url: parsedData.image_url || ''
+              });
+            }
+          } catch (e) {
+            // If parsing fails, continue with empty form
+            console.error("Error parsing saved form data", e);
+          }
+        }
       }
     };
     
-    fetchService();
+    loadFormData();
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (!isEditMode) {
+        // Don't clear localStorage when navigating away in edit mode
+        // This allows us to preserve data between tab switches
+      }
+    };
   }, [id, isEditMode, toast]);
+  
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    // Only save if there's actual data and not just the initial empty state
+    if (formData.title || formData.description || formData.price || formData.duration || formData.image_url) {
+      localStorage.setItem('serviceFormData', JSON.stringify({
+        ...formData,
+        id: id
+      }));
+    }
+  }, [formData, id]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -111,6 +161,9 @@ const AdminServiceForm = () => {
           description: "تم إضافة الخدمة بنجاح",
         });
       }
+      
+      // Clear form data after successful submission
+      localStorage.removeItem('serviceFormData');
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -121,6 +174,15 @@ const AdminServiceForm = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+  
+  // Cancel button handler
+  const handleCancel = () => {
+    if (!isEditMode) {
+      // Clear form data when cancelling new service
+      localStorage.removeItem('serviceFormData');
+    }
+    navigate('/admin');
   };
   
   if (isLoading && isEditMode) {
@@ -156,7 +218,7 @@ const AdminServiceForm = () => {
                 <label className="block text-white mb-2">العنوان</label>
                 <Input
                   name="title"
-                  value={formData.title}
+                  value={formData.title || ''}
                   onChange={handleChange}
                   placeholder="أدخل عنوان الخدمة"
                   className="bg-crypto-darkBlue/50 border-white/20 text-white"
@@ -215,7 +277,7 @@ const AdminServiceForm = () => {
             <Button 
               variant="outline" 
               className="border-white/20 text-white hover:bg-white/10"
-              onClick={() => navigate('/admin')}
+              onClick={handleCancel}
             >
               إلغاء
             </Button>

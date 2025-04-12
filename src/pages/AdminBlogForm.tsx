@@ -29,9 +29,11 @@ const AdminBlogForm = () => {
     publish_date: new Date().toISOString()
   });
   
+  // Load data from localStorage or API
   useEffect(() => {
-    const fetchBlogPost = async () => {
+    const loadFormData = async () => {
       if (isEditMode && id) {
+        // For edit mode, fetch from API
         setIsLoading(true);
         try {
           const { data, error } = await supabase
@@ -43,7 +45,7 @@ const AdminBlogForm = () => {
           if (error) throw error;
           
           if (data) {
-            setFormData({
+            const blogData = {
               title: data.title,
               content: data.content,
               excerpt: data.excerpt || '',
@@ -52,7 +54,15 @@ const AdminBlogForm = () => {
               slug: data.slug || '',
               image_url: data.image_url || '',
               publish_date: data.publish_date
-            });
+            };
+            
+            setFormData(blogData);
+            
+            // Save to localStorage in edit mode
+            localStorage.setItem('blogFormData', JSON.stringify({
+              ...blogData,
+              id: id
+            }));
           }
         } catch (error: any) {
           toast({
@@ -63,11 +73,56 @@ const AdminBlogForm = () => {
         } finally {
           setIsLoading(false);
         }
+      } else {
+        // For new entry, check localStorage
+        const savedData = localStorage.getItem('blogFormData');
+        
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            
+            // Only use saved data if we're not in edit mode or if the IDs match
+            if (!isEditMode || (parsedData.id === id)) {
+              setFormData({
+                title: parsedData.title || '',
+                content: parsedData.content || '',
+                excerpt: parsedData.excerpt || '',
+                author: parsedData.author || '',
+                category: parsedData.category || '',
+                slug: parsedData.slug || '',
+                image_url: parsedData.image_url || '',
+                publish_date: parsedData.publish_date || new Date().toISOString()
+              });
+            }
+          } catch (e) {
+            // If parsing fails, continue with empty form
+            console.error("Error parsing saved form data", e);
+          }
+        }
       }
     };
     
-    fetchBlogPost();
+    loadFormData();
+    
+    // Cleanup function
+    return () => {
+      if (!isEditMode) {
+        // Don't clear localStorage when navigating away in edit mode
+        // This allows us to preserve data between tab switches
+      }
+    };
   }, [id, isEditMode, toast]);
+  
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    // Only save if there's actual data
+    if (formData.title || formData.content) {
+      localStorage.setItem('blogFormData', JSON.stringify({
+        ...formData,
+        id: id
+      }));
+    }
+  }, [formData, id]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -136,6 +191,9 @@ const AdminBlogForm = () => {
           description: "تم إضافة المنشور بنجاح",
         });
       }
+      
+      // Clear form data after successful submission
+      localStorage.removeItem('blogFormData');
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -146,6 +204,15 @@ const AdminBlogForm = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+  
+  // Cancel button handler
+  const handleCancel = () => {
+    if (!isEditMode) {
+      // Clear form data when cancelling new blog post
+      localStorage.removeItem('blogFormData');
+    }
+    navigate('/admin');
   };
   
   if (isLoading && isEditMode) {
@@ -181,7 +248,7 @@ const AdminBlogForm = () => {
                 <label className="block text-white mb-2">العنوان</label>
                 <Input
                   name="title"
-                  value={formData.title}
+                  value={formData.title || ''}
                   onChange={handleChange}
                   placeholder="أدخل عنوان المنشور"
                   className="bg-crypto-darkBlue/50 border-white/20 text-white"
@@ -284,7 +351,7 @@ const AdminBlogForm = () => {
             <Button 
               variant="outline" 
               className="border-white/20 text-white hover:bg-white/10"
-              onClick={() => navigate('/admin')}
+              onClick={handleCancel}
             >
               إلغاء
             </Button>

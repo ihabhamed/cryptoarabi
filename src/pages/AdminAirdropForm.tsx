@@ -32,21 +32,81 @@ const AdminAirdropForm = () => {
     publish_date: new Date().toISOString()
   });
   
+  // Load data from localStorage or API
   useEffect(() => {
-    if (existingAirdrop && isEditMode) {
-      setFormData({
-        title: existingAirdrop.title,
-        description: existingAirdrop.description || '',
-        status: existingAirdrop.status,
-        twitter_link: existingAirdrop.twitter_link || '',
-        youtube_link: existingAirdrop.youtube_link || '',
-        claim_url: existingAirdrop.claim_url || '',
-        start_date: existingAirdrop.start_date || '',
-        end_date: existingAirdrop.end_date || '',
-        publish_date: existingAirdrop.publish_date
-      });
+    const loadFormData = async () => {
+      if (isEditMode && existingAirdrop) {
+        // For edit mode, use the data from useAirdrop hook
+        const airdropData = {
+          title: existingAirdrop.title,
+          description: existingAirdrop.description || '',
+          status: existingAirdrop.status,
+          twitter_link: existingAirdrop.twitter_link || '',
+          youtube_link: existingAirdrop.youtube_link || '',
+          claim_url: existingAirdrop.claim_url || '',
+          start_date: existingAirdrop.start_date || '',
+          end_date: existingAirdrop.end_date || '',
+          publish_date: existingAirdrop.publish_date
+        };
+        
+        setFormData(airdropData);
+        
+        // Save to localStorage in edit mode
+        localStorage.setItem('airdropFormData', JSON.stringify({
+          ...airdropData,
+          id: id
+        }));
+      } else if (!isEditMode) {
+        // For new entry, check localStorage
+        const savedData = localStorage.getItem('airdropFormData');
+        
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            
+            // Only use saved data if we're not in edit mode or if the IDs match
+            if (!isEditMode || (parsedData.id === id)) {
+              setFormData({
+                title: parsedData.title || '',
+                description: parsedData.description || '',
+                status: parsedData.status || 'upcoming',
+                twitter_link: parsedData.twitter_link || '',
+                youtube_link: parsedData.youtube_link || '',
+                claim_url: parsedData.claim_url || '',
+                start_date: parsedData.start_date || '',
+                end_date: parsedData.end_date || '',
+                publish_date: parsedData.publish_date || new Date().toISOString()
+              });
+            }
+          } catch (e) {
+            // If parsing fails, continue with empty form
+            console.error("Error parsing saved form data", e);
+          }
+        }
+      }
+    };
+    
+    loadFormData();
+    
+    // Cleanup function
+    return () => {
+      if (!isEditMode) {
+        // Don't clear localStorage when navigating away in edit mode
+        // This allows us to preserve data between tab switches
+      }
+    };
+  }, [existingAirdrop, id, isEditMode]);
+  
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    // Only save if there's actual data
+    if (formData.title) {
+      localStorage.setItem('airdropFormData', JSON.stringify({
+        ...formData,
+        id: id
+      }));
     }
-  }, [existingAirdrop, isEditMode]);
+  }, [formData, id]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -61,6 +121,11 @@ const AdminAirdropForm = () => {
     e.preventDefault();
     
     try {
+      // Validate required fields
+      if (!formData.title || !formData.status) {
+        throw new Error('العنوان والحالة مطلوبان');
+      }
+      
       if (isEditMode && id) {
         await updateAirdrop.mutateAsync({
           id,
@@ -77,6 +142,9 @@ const AdminAirdropForm = () => {
           description: "تم إضافة الإيردروب بنجاح",
         });
       }
+      
+      // Clear form data after successful submission
+      localStorage.removeItem('airdropFormData');
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -85,6 +153,15 @@ const AdminAirdropForm = () => {
         description: error.message || "حدث خطأ أثناء حفظ الإيردروب",
       });
     }
+  };
+  
+  // Cancel button handler
+  const handleCancel = () => {
+    if (!isEditMode) {
+      // Clear form data when cancelling new airdrop
+      localStorage.removeItem('airdropFormData');
+    }
+    navigate('/admin');
   };
   
   if (isLoading && isEditMode) {
@@ -120,7 +197,7 @@ const AdminAirdropForm = () => {
                 <label className="block text-white mb-2">العنوان</label>
                 <Input
                   name="title"
-                  value={formData.title}
+                  value={formData.title || ''}
                   onChange={handleChange}
                   placeholder="أدخل عنوان الإيردروب"
                   className="bg-crypto-darkBlue/50 border-white/20 text-white"
@@ -218,7 +295,7 @@ const AdminAirdropForm = () => {
             <Button 
               variant="outline" 
               className="border-white/20 text-white hover:bg-white/10"
-              onClick={() => navigate('/admin')}
+              onClick={handleCancel}
             >
               إلغاء
             </Button>
