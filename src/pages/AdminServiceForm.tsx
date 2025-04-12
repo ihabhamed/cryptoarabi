@@ -132,9 +132,20 @@ const AdminServiceForm = () => {
           description: "تم تحديث الخدمة بنجاح",
         });
       } else {
+        // Ensure title is provided for new services
+        if (!finalFormData.title) {
+          throw new Error('عنوان الخدمة مطلوب');
+        }
+        
         const { error } = await supabase
           .from('services')
-          .insert(finalFormData);
+          .insert({
+            title: finalFormData.title, // Explicitly provide title to satisfy TypeScript
+            description: finalFormData.description || null,
+            price: finalFormData.price || null,
+            duration: finalFormData.duration || null,
+            image_url: finalFormData.image_url || null
+          });
         
         if (error) throw error;
         

@@ -1,5 +1,14 @@
 
-import { toast as originalToast, ToasterToast } from "@/hooks/use-toast";
+import { toast as originalToast } from "@/hooks/use-toast";
+import type { Toast } from "@/components/ui/toast";
+
+// Define our own ToasterToast type based on the UI component's Toast type
+export type ToasterToast = Toast & {
+  id: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: React.ReactElement;
+};
 
 // Type for toast params without the ID
 type ToastParams = Omit<ToasterToast, 'id'>;
