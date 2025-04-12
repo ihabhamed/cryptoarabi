@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/hooks";
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +18,16 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   const { data: existingAirdrop, isLoading } = useAirdrop(id);
   const addAirdrop = useAddAirdrop();
   const updateAirdrop = useUpdateAirdrop();
-  const { linkCopied, copyAirdropLink } = useAirdropLink();
+  const { linkCopied, copyAirdropLink: baseCopyAirdropLink } = useAirdropLink();
+  
+  // Create a wrapper function that passes the ID to copyAirdropLink
+  const copyAirdropLink = () => {
+    if (id) {
+      baseCopyAirdropLink(id);
+    } else {
+      baseCopyAirdropLink();
+    }
+  };
   
   const [formData, setFormData] = useState<NewAirdrop>({
     title: '',

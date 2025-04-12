@@ -7,7 +7,17 @@ export function useAirdropLink() {
   const [linkCopied, setLinkCopied] = useState(false);
   const { toast } = useToast();
   
-  const copyAirdropLink = (id?: string) => {
+  const copyAirdropLink = (idOrEvent?: string | React.MouseEvent<HTMLButtonElement>) => {
+    // Handle if the parameter is a React MouseEvent (when used directly as onClick handler)
+    if (idOrEvent && typeof idOrEvent !== 'string') {
+      // If used as a button click handler without parameters, we need to access id through other means
+      // In this case, we assume the id is already available in the context where the function is called
+      return;
+    }
+    
+    // Handle direct ID string
+    const id = typeof idOrEvent === 'string' ? idOrEvent : undefined;
+    
     if (id) {
       const link = getAirdropLink(id);
       navigator.clipboard.writeText(link).then(() => {
