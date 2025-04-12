@@ -63,7 +63,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   // Load data from localStorage or API
   useEffect(() => {
     const loadFormData = async () => {
-      const storageKey = getStorageKey(isEditMode, id);
+      const storageKey = getStorageKey("airdrop", isEditMode, id);
       
       if (isEditMode && existingAirdrop) {
         // For edit mode, use the data from useAirdrop hook
@@ -119,7 +119,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   useEffect(() => {
     // Only save if there's actual data
     if (formData.title) {
-      const storageKey = getStorageKey(isEditMode, id);
+      const storageKey = getStorageKey("airdrop", isEditMode, id);
       saveFormData(storageKey, { ...formData, id });
     }
   }, [formData, id, isEditMode]);
@@ -169,7 +169,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
       }
       
       // Clear form data after successful submission
-      const storageKey = getStorageKey(isEditMode, id);
+      const storageKey = getStorageKey("airdrop", isEditMode, id);
       clearFormData(storageKey);
       
       if (onSuccess) {
