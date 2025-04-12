@@ -14,7 +14,15 @@ export function useAirdrops() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Make sure we cast the data to match our Airdrop interface
+      // This ensures image_url is included even if null
+      const typedData: Airdrop[] = data?.map(item => ({
+        ...item,
+        image_url: item.image_url || null
+      })) || [];
+      
+      return typedData;
     },
   });
 }
@@ -31,7 +39,17 @@ export function useAirdrop(id: string | undefined) {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      
+      // Ensure the returned data conforms to our Airdrop interface
+      if (data) {
+        const typedData: Airdrop = {
+          ...data,
+          image_url: data.image_url || null
+        };
+        return typedData;
+      }
+      
+      return null;
     },
     enabled: !!id,
   });
@@ -54,7 +72,14 @@ export function useAddAirdrop() {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      
+      // Ensure the returned data conforms to our Airdrop interface
+      const typedData: Airdrop = {
+        ...data,
+        image_url: data.image_url || null
+      };
+      
+      return typedData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['airdrops'] });
@@ -75,7 +100,14 @@ export function useUpdateAirdrop() {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      
+      // Ensure the returned data conforms to our Airdrop interface
+      const typedData: Airdrop = {
+        ...data,
+        image_url: data.image_url || null
+      };
+      
+      return typedData;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['airdrops'] });
