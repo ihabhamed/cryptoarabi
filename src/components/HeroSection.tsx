@@ -49,7 +49,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative pt-28 pb-20 lg:pt-36 lg:pb-28 overflow-hidden">
+    <section className="relative pt-36 pb-20 lg:pt-48 lg:pb-28 overflow-hidden">
       {/* Animated Background Elements */}
       <div ref={backgroundRef} className="absolute inset-0 z-0 overflow-hidden">
         {/* Gradient background */}
@@ -72,55 +72,30 @@ const HeroSection = () => {
       </div>
 
       <div className="container-custom relative z-10">
-        <div className="flex flex-col md:flex-row-reverse items-center">
-          <div className="md:w-1/2 text-center md:text-right mb-10 md:mb-0">
-            <h1 
-              className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 leading-tight animate-fade-in"
-              style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.3)' }}
+        <div className="flex flex-col items-center text-center">
+          <h1 
+            className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 leading-tight animate-fade-in"
+            style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.3)' }}
+          >
+            مستقبل المال الرقمي <br />
+            يبدأ من <span className="text-gradient-primary glow-text">هنا</span>
+          </h1>
+          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            استكشف عالم العملات المشفرة والبلوكتشين مع منصتنا المتخصصة. نقدم لك أحدث المعلومات والتحليلات والاستشارات في عالم الويب 3.0
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            <Button 
+              className="bg-crypto-orange hover:bg-crypto-orange/80 text-white py-6 px-8 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
             >
-              مستقبل المال الرقمي <br />
-              يبدأ من <span className="text-gradient-primary glow-text">هنا</span>
-            </h1>
-            <p className="text-lg text-gray-300 mb-8 max-w-xl md:mx-0 mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              استكشف عالم العملات المشفرة والبلوكتشين مع منصتنا المتخصصة. نقدم لك أحدث المعلومات والتحليلات والاستشارات في عالم الويب 3.0
-            </p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-              <Button 
-                className="bg-crypto-orange hover:bg-crypto-orange/80 text-white py-6 px-8 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
-              >
-                ابدأ رحلتك
-                <ArrowLeft className="mr-2 h-5 w-5 rtl-flip" />
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-white/20 hover:border-white/40 text-white py-6 px-8 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-              >
-                تعلم المزيد
-              </Button>
-            </div>
-          </div>
-          
-          <div className="md:w-1/2 md:pl-10 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-crypto-orange/20 to-crypto-lightBlue/20 rounded-2xl blur-xl"></div>
-              <div className="floating-element relative glass-morphism rounded-2xl p-6 transition-transform duration-700 hover:translate-y-[-5px]">
-                <img 
-                  src="https://images.unsplash.com/photo-1621761191319-c6fb62004040?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-                  alt="Crypto illustration" 
-                  className="w-full h-auto rounded-xl shadow-2xl"
-                />
-                
-                {/* Animated overlay elements */}
-                <div className="absolute top-4 right-4 w-12 h-12 rounded-lg bg-crypto-orange/10 backdrop-blur-sm border border-white/10 flex items-center justify-center animate-pulse">
-                  <div className="w-8 h-8 bg-crypto-orange/30 rounded-md"></div>
-                </div>
-                
-                <div className="absolute bottom-8 left-8 w-16 h-16 rounded-lg bg-crypto-lightBlue/10 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-                  <div className="w-10 h-10 bg-crypto-lightBlue/30 rounded-md animate-pulse"></div>
-                </div>
-              </div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-crypto-orange/30 rounded-full blur-2xl floating-element pulse-animation"></div>
-            </div>
+              ابدأ رحلتك
+              <ArrowLeft className="mr-2 h-5 w-5 rtl-flip" />
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-white/20 hover:border-white/40 text-white py-6 px-8 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            >
+              تعلم المزيد
+            </Button>
           </div>
         </div>
         
@@ -141,8 +116,7 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Add CSS for the animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes glow {
           0% { text-shadow: 0 0 5px rgba(249, 115, 22, 0.5); }
           50% { text-shadow: 0 0 20px rgba(249, 115, 22, 0.8), 0 0 30px rgba(249, 115, 22, 0.6); }
