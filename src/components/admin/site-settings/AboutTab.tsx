@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, X, LinkIcon } from "lucide-react";
 import { SiteSettings } from '@/lib/hooks/useSiteSettings';
+import FeaturesList from './FeaturesList';
+import ButtonSettings from './ButtonSettings';
 
 interface AboutTabProps {
   formData: Partial<SiteSettings>;
@@ -42,9 +43,6 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     return []; // Default to empty array
   });
   
-  // State for new feature input
-  const [newFeature, setNewFeature] = React.useState('');
-
   // Update parent formData when features change
   React.useEffect(() => {
     // Create a synthetic event to update formData
@@ -57,39 +55,6 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     
     handleInputChange(customEvent);
   }, [features, handleInputChange]);
-
-  /**
-   * Add a new feature to the features list
-   */
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setFeatures([...features, newFeature.trim()]);
-      setNewFeature('');
-    }
-  };
-
-  /**
-   * Remove a feature from the features list
-   * @param index - Index of the feature to remove
-   */
-  const removeFeature = (index: number) => {
-    setFeatures(features.filter((_, i) => i !== index));
-  };
-
-  /**
-   * Handle Enter key press in the new feature input
-   */
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addFeature();
-    }
-  };
-
-  // Helper function to check if URL is external
-  const isExternalUrl = (url: string): boolean => {
-    return url?.match(/^https?:\/\//) !== null;
-  };
 
   return (
     <Card className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
@@ -151,94 +116,19 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
           />
         </div>
         
-        {/* Company features section */}
-        <div className="space-y-2">
-          <Label className="text-white">مميزات الشركة</Label>
-          <div className="space-y-3">
-            {/* List of existing features */}
-            {features.map((feature, index) => (
-              <div key={index} className="flex gap-2">
-                <Input 
-                  value={feature}
-                  onChange={(e) => {
-                    const newFeatures = [...features];
-                    newFeatures[index] = e.target.value;
-                    setFeatures(newFeatures);
-                  }}
-                  className="bg-crypto-darkBlue/30 border-white/10 text-white"
-                />
-                <Button 
-                  type="button" 
-                  variant="destructive"
-                  onClick={() => removeFeature(index)}
-                  className="shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            {/* Add new feature input */}
-            <div className="flex gap-2">
-              <Input 
-                value={newFeature}
-                onChange={(e) => setNewFeature(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="أضف ميزة جديدة..."
-                className="bg-crypto-darkBlue/30 border-white/10 text-white"
-              />
-              <Button 
-                type="button" 
-                variant="secondary"
-                onClick={addFeature}
-                disabled={!newFeature.trim()}
-                className="shrink-0"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                إضافة
-              </Button>
-            </div>
-          </div>
-        </div>
+        {/* Features list component */}
+        <FeaturesList 
+          features={features} 
+          onChange={setFeatures} 
+        />
         
-        {/* About button section */}
-        <div className="space-y-4 border border-white/10 rounded-md p-4 bg-crypto-darkBlue/20">
-          <div className="flex items-center gap-2 mb-2">
-            <LinkIcon className="h-5 w-5 text-crypto-orange" />
-            <h3 className="text-lg font-medium text-white">إعدادات زر القسم</h3>
-          </div>
-          
-          {/* About button text field */}
-          <div className="space-y-2">
-            <Label htmlFor="about_button_text" className="text-white">نص زر من نحن</Label>
-            <Input 
-              id="about_button_text" 
-              name="about_button_text"
-              value={formData.about_button_text || ''} 
-              onChange={handleInputChange}
-              placeholder="اعرف المزيد عنا" 
-              className="bg-crypto-darkBlue/30 border-white/10 text-white"
-            />
-          </div>
-          
-          {/* About button URL field */}
-          <div className="space-y-2">
-            <Label htmlFor="about_button_url" className="text-white">رابط زر من نحن</Label>
-            <Input 
-              id="about_button_url" 
-              name="about_button_url"
-              value={formData.about_button_url || ''} 
-              onChange={handleInputChange}
-              placeholder="/about" 
-              className="bg-crypto-darkBlue/30 border-white/10 text-white"
-            />
-            <p className="text-sm text-gray-400">
-              {isExternalUrl(formData.about_button_url || '') 
-                ? 'سيتم فتح هذا الرابط في نافذة جديدة (رابط خارجي)' 
-                : 'سيتم توجيه المستخدم داخل الموقع (رابط داخلي)'}
-            </p>
-          </div>
-        </div>
+        {/* Button settings component */}
+        <ButtonSettings 
+          buttonText={formData.about_button_text || ''}
+          buttonUrl={formData.about_button_url || ''}
+          onTextChange={handleInputChange}
+          onUrlChange={handleInputChange}
+        />
       </CardContent>
       <CardFooter>
         <Button 
