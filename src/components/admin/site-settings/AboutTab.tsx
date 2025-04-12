@@ -1,4 +1,10 @@
 
+/**
+ * AboutTab Component
+ * 
+ * This component renders the About section tab in the site settings admin panel.
+ * It allows administrators to edit about section content, including features list.
+ */
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,34 +17,50 @@ import { SiteSettings } from '@/lib/hooks/useSiteSettings';
 interface AboutTabProps {
   formData: Partial<SiteSettings>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  updateSettings: any;
+  updateSettings: any; // Mutation object from useUpdateSiteSettings
 }
 
+/**
+ * AboutTab Component
+ * Renders form fields for managing "About" section content in site settings
+ */
 const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps) => {
-  // Handle features as an array
-  const [features, setFeatures] = React.useState<string[]>(
-    Array.isArray(formData.about_features) 
-      ? formData.about_features 
-      : typeof formData.about_features === 'string' && formData.about_features !== ''
-        ? [formData.about_features] 
-        : []
-  );
+  // Initialize features from formData, handling various possible data types
+  const [features, setFeatures] = React.useState<string[]>(() => {
+    if (Array.isArray(formData.about_features)) {
+      return formData.about_features;
+    } else if (typeof formData.about_features === 'string' && formData.about_features !== '') {
+      try {
+        // Try to parse if it's a JSON string
+        const parsedFeatures = JSON.parse(formData.about_features);
+        return Array.isArray(parsedFeatures) ? parsedFeatures : [formData.about_features];
+      } catch {
+        // If parsing fails, treat as a single feature
+        return [formData.about_features];
+      }
+    }
+    return []; // Default to empty array
+  });
   
+  // State for new feature input
   const [newFeature, setNewFeature] = React.useState('');
 
-  // Update formData when features change
+  // Update parent formData when features change
   React.useEffect(() => {
-    // Create a custom update for the features array
+    // Create a synthetic event to update formData
     const customEvent = {
       target: {
         name: 'about_features',
         value: features
       }
-    } as any; // Use 'any' type to bypass type checking for this custom event
+    } as any; // Type assertion for custom event
     
     handleInputChange(customEvent);
   }, [features, handleInputChange]);
 
+  /**
+   * Add a new feature to the features list
+   */
   const addFeature = () => {
     if (newFeature.trim()) {
       setFeatures([...features, newFeature.trim()]);
@@ -46,10 +68,17 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     }
   };
 
+  /**
+   * Remove a feature from the features list
+   * @param index - Index of the feature to remove
+   */
   const removeFeature = (index: number) => {
     setFeatures(features.filter((_, i) => i !== index));
   };
 
+  /**
+   * Handle Enter key press in the new feature input
+   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -64,6 +93,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
         <CardDescription className="text-gray-400">قم بتعديل محتوى قسم من نحن</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* About title field */}
         <div className="space-y-2">
           <Label htmlFor="about_title" className="text-white">عنوان قسم من نحن</Label>
           <Input 
@@ -75,6 +105,8 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
         </div>
+
+        {/* About content field */}
         <div className="space-y-2">
           <Label htmlFor="about_content" className="text-white">محتوى قسم من نحن</Label>
           <Textarea 
@@ -87,6 +119,8 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
         </div>
+
+        {/* Year founded field */}
         <div className="space-y-2">
           <Label htmlFor="about_year_founded" className="text-white">سنة التأسيس</Label>
           <Input 
@@ -98,6 +132,8 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
             className="bg-crypto-darkBlue/30 border-white/10 text-white"
           />
         </div>
+
+        {/* About image URL field */}
         <div className="space-y-2">
           <Label htmlFor="about_image_url" className="text-white">رابط صورة قسم من نحن</Label>
           <Input 
@@ -110,9 +146,11 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
           />
         </div>
         
+        {/* Company features section */}
         <div className="space-y-2">
           <Label className="text-white">مميزات الشركة</Label>
           <div className="space-y-3">
+            {/* List of existing features */}
             {features.map((feature, index) => (
               <div key={index} className="flex gap-2">
                 <Input 
@@ -134,6 +172,8 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
                 </Button>
               </div>
             ))}
+
+            {/* Add new feature input */}
             <div className="flex gap-2">
               <Input 
                 value={newFeature}
@@ -156,6 +196,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
           </div>
         </div>
         
+        {/* About button text field */}
         <div className="space-y-2">
           <Label htmlFor="about_button_text" className="text-white">نص زر من نحن</Label>
           <Input 
@@ -168,6 +209,7 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
           />
         </div>
         
+        {/* About button URL field */}
         <div className="space-y-2">
           <Label htmlFor="about_button_url" className="text-white">رابط زر من نحن</Label>
           <Input 
