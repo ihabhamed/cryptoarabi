@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/hooks";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/utils/toast-utils";
 import { NewAirdrop } from '@/types/supabase';
 import { useAirdropImage } from '@/hooks/useAirdropImage';
 import { useAirdropLink } from '@/hooks/useAirdropLink';
@@ -14,7 +15,6 @@ interface UseAirdropFormProps {
 
 export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   const isEditMode = !!id;
-  const { toast } = useToast();
   const { data: existingAirdrop, isLoading } = useAirdrop(id);
   const addAirdrop = useAddAirdrop();
   const updateAirdrop = useUpdateAirdrop();

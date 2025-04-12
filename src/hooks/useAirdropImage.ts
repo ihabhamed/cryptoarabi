@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { uploadImage } from '@/lib/utils/imageUpload';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/utils/toast-utils";
 import { NewAirdrop } from '@/types/supabase';
 
 interface UseAirdropImageProps {
@@ -9,7 +9,6 @@ interface UseAirdropImageProps {
 }
 
 export function useAirdropImage({ initialImageUrl }: UseAirdropImageProps = {}) {
-  const { toast } = useToast();
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialImageUrl || null);

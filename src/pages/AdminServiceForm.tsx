@@ -4,32 +4,36 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/lib/utils/toast-utils";
 import { Service } from '@/types/supabase';
+import { uploadImage } from '@/lib/utils/imageUpload';
+import ImageUploader from '@/components/admin/blog/ImageUploader';
 
 const AdminServiceForm = () => {
   const { id } = useParams();
-  const isEditMode = !!id;
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const isEditMode = !!id;
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<Partial<Service>>({
     title: '',
     description: '',
     price: '',
     duration: '',
-    image_url: ''
+    image_url: '',
   });
   
-  // Load data from localStorage or API
+  // Load data for edit mode
   useEffect(() => {
-    const loadFormData = async () => {
+    const loadServiceData = async () => {
       if (isEditMode && id) {
-        // For edit mode, fetch from API
         setIsLoading(true);
         try {
           const { data, error } = await supabase
@@ -46,15 +50,12 @@ const AdminServiceForm = () => {
               description: data.description || '',
               price: data.price || '',
               duration: data.duration || '',
-              image_url: data.image_url || ''
+              image_url: data.image_url || '',
             });
             
-            // Save to localStorage in edit mode
-            const storageKey = `serviceFormData_${id}`;
-            localStorage.setItem(storageKey, JSON.stringify({
-              ...data,
-              id: id
-            }));
+            if (data.image_url) {
+              setPreviewUrl(data.image_url);
+            }
           }
         } catch (error: any) {
           toast({
@@ -65,48 +66,32 @@ const AdminServiceForm = () => {
         } finally {
           setIsLoading(false);
         }
-      } else {
-        // For new entry, check localStorage
-        const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
-        const savedData = localStorage.getItem(storageKey);
-        
-        if (savedData) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            
-            setFormData({
-              title: parsedData.title || '',
-              description: parsedData.description || '',
-              price: parsedData.price || '',
-              duration: parsedData.duration || '',
-              image_url: parsedData.image_url || ''
-            });
-          } catch (e) {
-            // If parsing fails, continue with empty form
-            console.error("Error parsing saved form data", e);
-          }
-        }
       }
     };
     
-    loadFormData();
-  }, [id, isEditMode, toast]);
+    loadServiceData();
+  }, [id, isEditMode]);
   
-  // Save form data to localStorage whenever it changes
-  useEffect(() => {
-    // Only save if there's actual data and not just the initial empty state
-    if (formData.title || formData.description || formData.price || formData.duration || formData.image_url) {
-      const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
-      localStorage.setItem(storageKey, JSON.stringify({
-        ...formData,
-        id: id
-      }));
-    }
-  }, [formData, id, isEditMode]);
-  
+  // Form handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleImageChange = (file: File | null) => {
+    if (!file) return;
+    setSelectedImage(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
+  
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (previewUrl && !previewUrl.startsWith('http')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setFormData(prev => ({ ...prev, image_url: '' }));
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,15 +99,30 @@ const AdminServiceForm = () => {
     setIsSaving(true);
     
     try {
-      // Validate that required fields are present
+      // Validate required fields
       if (!formData.title) {
         throw new Error('عنوان الخدمة مطلوب');
+      }
+      
+      let finalFormData = { ...formData };
+      
+      // Upload image if selected
+      if (selectedImage) {
+        setUploadingImage(true);
+        const imageUrl = await uploadImage(selectedImage, 'services');
+        setUploadingImage(false);
+        
+        if (!imageUrl) {
+          throw new Error('فشل في رفع الصورة');
+        }
+        
+        finalFormData.image_url = imageUrl;
       }
       
       if (isEditMode && id) {
         const { error } = await supabase
           .from('services')
-          .update(formData)
+          .update(finalFormData)
           .eq('id', id);
         
         if (error) throw error;
@@ -132,18 +132,9 @@ const AdminServiceForm = () => {
           description: "تم تحديث الخدمة بنجاح",
         });
       } else {
-        // Make sure we have the required fields for insertion
-        const newService = {
-          title: formData.title,
-          description: formData.description,
-          price: formData.price,
-          duration: formData.duration,
-          image_url: formData.image_url
-        };
-        
         const { error } = await supabase
           .from('services')
-          .insert(newService);
+          .insert(finalFormData);
         
         if (error) throw error;
         
@@ -153,9 +144,6 @@ const AdminServiceForm = () => {
         });
       }
       
-      // Clear form data after successful submission
-      const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
-      localStorage.removeItem(storageKey);
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -165,14 +153,12 @@ const AdminServiceForm = () => {
       });
     } finally {
       setIsSaving(false);
+      setUploadingImage(false);
     }
   };
   
   // Cancel button handler
   const handleCancel = () => {
-    const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
-    // Only clear the form data for this specific form
-    localStorage.removeItem(storageKey);
     navigate('/admin');
   };
   
@@ -252,16 +238,16 @@ const AdminServiceForm = () => {
                 </div>
               </div>
               
-              <div>
-                <label className="block text-white mb-2">رابط الصورة</label>
-                <Input
-                  name="image_url"
-                  value={formData.image_url || ''}
-                  onChange={handleChange}
-                  placeholder="أدخل رابط صورة الخدمة"
-                  className="bg-crypto-darkBlue/50 border-white/20 text-white"
-                />
-              </div>
+              <ImageUploader 
+                previewUrl={previewUrl}
+                onImageChange={handleImageChange}
+                onImageUrlChange={(url) => handleChange({ 
+                  target: { name: 'image_url', value: url }
+                } as React.ChangeEvent<HTMLInputElement>)}
+                onRemoveImage={handleRemoveImage}
+                imageUrl={formData.image_url || ''}
+                isUploading={uploadingImage}
+              />
             </form>
           </CardContent>
           <CardFooter className="border-t border-white/10 pt-4 flex justify-end gap-3">
@@ -276,10 +262,11 @@ const AdminServiceForm = () => {
               type="submit"
               className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
               onClick={handleSubmit}
-              disabled={isSaving}
+              disabled={isSaving || uploadingImage}
             >
               <Save className="mr-2 h-4 w-4" />
               {isEditMode ? 'حفظ التغييرات' : 'إضافة الخدمة'}
+              {(isSaving || uploadingImage) && <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>}
             </Button>
           </CardFooter>
         </Card>

@@ -5,7 +5,7 @@ import { Navigate } from 'react-router-dom';
 import AdminLayout from '@/components/admin/AdminLayout';
 import SettingsTabs from '@/components/admin/site-settings/SettingsTabs';
 import { useSiteSettings, useUpdateSiteSettings } from '@/lib/hooks';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/lib/utils/toast-utils';
 
 const SiteSettings = () => {
   const { user, loading, isAdmin } = useAuth();

@@ -1,11 +1,10 @@
 
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/utils/toast-utils";
 import { getAirdropLink } from '@/lib/utils/airdropFormUtils';
 
 export function useAirdropLink() {
   const [linkCopied, setLinkCopied] = useState(false);
-  const { toast } = useToast();
   
   const copyAirdropLink = (idOrEvent?: string | React.MouseEvent<HTMLButtonElement>) => {
     // Handle if the parameter is a React MouseEvent (when used directly as onClick handler)

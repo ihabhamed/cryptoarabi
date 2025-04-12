@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useAirdrops, useDeleteAirdrop } from '@/lib/hooks';
-import { useToast } from '@/lib/hooks/useToast';
+import { toast } from "@/lib/utils/toast-utils";
 import { useDeleteDialog } from '@/hooks/useDeleteDialog';
 import { DeleteConfirmationDialog } from '@/components/admin/dashboard/DeleteConfirmationDialog';
 import { 
@@ -21,7 +20,6 @@ import {
 const AirdropTab = () => {
   const navigate = useNavigate();
   const { data: airdrops, isLoading: isLoadingAirdrops } = useAirdrops();
-  const { toast } = useToast();
   const deleteAirdrop = useDeleteAirdrop();
   const { 
     itemToDelete, 

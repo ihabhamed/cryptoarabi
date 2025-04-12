@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/utils/toast-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from '@/types/supabase';
 import { uploadImage } from '@/lib/utils/imageUpload';
@@ -12,7 +12,6 @@ interface UseBlogFormProps {
 
 export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
   const isEditMode = !!id;
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -108,7 +107,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     };
     
     loadFormData();
-  }, [id, isEditMode, toast]);
+  }, [id, isEditMode]);
   
   // Save form data to localStorage whenever it changes
   useEffect(() => {

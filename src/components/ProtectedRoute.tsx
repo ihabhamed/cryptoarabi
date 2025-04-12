@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/lib/hooks';
+import { toast } from '@/lib/utils/toast-utils';
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRouteProps {
@@ -11,7 +10,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, isAdmin } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   
@@ -71,7 +69,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     };
     
     verifyAdminStatus();
-  }, [user, loading, navigate, toast]);
+  }, [user, loading, navigate]);
   
   if (loading || isVerifying) {
     return (

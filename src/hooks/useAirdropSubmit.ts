@@ -2,12 +2,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAddAirdrop } from "@/lib/hooks";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/utils/toast-utils";
 import { NewAirdrop } from "@/types/supabase";
 import { airdropFormSchema, AirdropFormValues } from "@/lib/validations/airdropSchema";
 
 export function useAirdropSubmit() {
-  const { toast } = useToast();
   const addAirdrop = useAddAirdrop();
 
   const form = useForm<AirdropFormValues>({

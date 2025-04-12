@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/lib/utils/toast-utils";
 import { X, Upload } from "lucide-react";
 import { validateImageFile } from '@/lib/utils/imageUpload';
 
@@ -23,7 +22,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   imageUrl,
   isUploading
 }) => {
-  const { toast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

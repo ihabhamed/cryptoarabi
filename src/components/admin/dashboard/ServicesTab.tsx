@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useServices, useDeleteService } from '@/lib/hooks';
-import { useToast } from '@/lib/hooks/useToast';
+import { toast } from "@/lib/utils/toast-utils";
 import { useDeleteDialog } from '@/hooks/useDeleteDialog';
 import { DeleteConfirmationDialog } from '@/components/admin/dashboard/DeleteConfirmationDialog';
 import { 
@@ -22,7 +21,6 @@ import {
 const ServicesTab = () => {
   const navigate = useNavigate();
   const { data: services, isLoading: isLoadingServices } = useServices();
-  const { toast } = useToast();
   const deleteService = useDeleteService();
   const { 
     itemToDelete, 
