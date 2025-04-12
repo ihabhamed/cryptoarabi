@@ -103,10 +103,19 @@ export const useUpdateSiteSettings = () => {
   
   return useMutation({
     mutationFn: async (updatedSettings: Partial<SiteSettings>) => {
-      // Clone the settings to avoid modifying the original object
-      const dataToStore: Partial<SiteSettingsDB> = { ...updatedSettings };
+      // Create a new object of type Partial<SiteSettingsDB>
+      // Need to be explicit about the type and handle about_features conversion
+      const dataToStore: Partial<SiteSettingsDB> = { 
+        ...Object.keys(updatedSettings).reduce((acc, key) => {
+          if (key !== 'about_features') {
+            // @ts-ignore - We know these properties exist
+            acc[key] = updatedSettings[key];
+          }
+          return acc;
+        }, {} as Partial<SiteSettingsDB>)
+      };
       
-      // Prepare about_features for storage (convert from array to string)
+      // Handle about_features separately to ensure proper type conversion
       if (updatedSettings.about_features !== undefined) {
         dataToStore.about_features = JSON.stringify(updatedSettings.about_features);
       }
