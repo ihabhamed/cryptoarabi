@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -25,25 +25,21 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
         ]
   );
 
-  // Update local features state when formData changes
-  useEffect(() => {
-    if (formData.about_features && Array.isArray(formData.about_features)) {
-      setFeatures(formData.about_features);
-    }
-  }, [formData.about_features]);
-
   const handleFeatureChange = (index: number, value: string) => {
     const updatedFeatures = [...features];
     updatedFeatures[index] = value;
     setFeatures(updatedFeatures);
     
-    // Update the form data by calling the parent handler with a custom event object
-    handleInputChange({
+    // Update the form data
+    const updatedFormData = { ...formData, about_features: updatedFeatures };
+    const syntheticEvent = {
       target: {
         name: 'about_features',
         value: updatedFeatures
       }
-    } as unknown as React.ChangeEvent<HTMLInputElement>);
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
   };
 
   const addFeature = () => {
@@ -51,12 +47,15 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     setFeatures(updatedFeatures);
     
     // Update the form data
-    handleInputChange({
+    const updatedFormData = { ...formData, about_features: updatedFeatures };
+    const syntheticEvent = {
       target: {
         name: 'about_features',
         value: updatedFeatures
       }
-    } as unknown as React.ChangeEvent<HTMLInputElement>);
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
   };
 
   const removeFeature = (index: number) => {
@@ -66,12 +65,15 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
     setFeatures(updatedFeatures);
     
     // Update the form data
-    handleInputChange({
+    const updatedFormData = { ...formData, about_features: updatedFeatures };
+    const syntheticEvent = {
       target: {
         name: 'about_features',
         value: updatedFeatures
       }
-    } as unknown as React.ChangeEvent<HTMLInputElement>);
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
   };
 
   return (
