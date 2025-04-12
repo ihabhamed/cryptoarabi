@@ -49,11 +49,11 @@ export const useSiteSettings = () => {
         } catch (e) {
           // If parsing fails, keep it as a string or set as empty array
           console.error('Error parsing about_features:', e);
-          data.about_features = [];
+          data.about_features = [] as string[]; // Type assertion to string[]
         }
       } else if (data && !data.about_features) {
         // Ensure about_features is at least an empty array if not present
-        data.about_features = [];
+        data.about_features = [] as string[]; // Type assertion to string[]
       }
       
       return data as SiteSettings;
@@ -72,7 +72,7 @@ export const useUpdateSiteSettings = () => {
       // Prepare data for storage - stringify about_features if it's an array
       const dataToStore: any = { ...updatedSettings };
       
-      if (dataToStore.about_features) {
+      if (dataToStore.about_features !== undefined) {
         // Ensure about_features is stored as a JSON string in the database
         if (Array.isArray(dataToStore.about_features)) {
           dataToStore.about_features = JSON.stringify(dataToStore.about_features);
@@ -97,10 +97,10 @@ export const useUpdateSiteSettings = () => {
           data.about_features = JSON.parse(data.about_features);
         } catch (e) {
           console.error('Error parsing about_features in response:', e);
-          data.about_features = [];
+          data.about_features = [] as string[]; // Type assertion to string[]
         }
       } else if (data && !data.about_features) {
-        data.about_features = [];
+        data.about_features = [] as string[]; // Type assertion to string[]
       }
 
       return data as SiteSettings;
