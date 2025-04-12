@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/utils/toast-utils";
@@ -16,7 +17,7 @@ export interface SiteSettings {
   about_title: string;
   about_content: string;
   about_image_url: string;
-  about_features: string | string[]; // Can be stored as a JSON string in the database
+  about_features: string[] | string; // Can be stored as a JSON string in the database
   about_year_founded: string;
   about_button_text: string;
   about_button_url: string;

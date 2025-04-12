@@ -28,14 +28,15 @@ const AboutTab = ({ formData, handleInputChange, updateSettings }: AboutTabProps
 
   // Update formData when features change
   React.useEffect(() => {
-    const event = {
+    // Create a custom update for the features array
+    const customEvent = {
       target: {
         name: 'about_features',
         value: features
       }
-    } as React.ChangeEvent<HTMLInputElement>;
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
     
-    handleInputChange(event);
+    handleInputChange(customEvent);
   }, [features, handleInputChange]);
 
   const addFeature = () => {
