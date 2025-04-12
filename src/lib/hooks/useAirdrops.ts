@@ -18,7 +18,8 @@ export function useAirdrops() {
       // This ensures image_url is included even if null
       const typedData: Airdrop[] = data?.map(item => ({
         ...item,
-        image_url: item.image_url || null
+        // Add image_url if it doesn't exist in the returned data
+        image_url: item.image_url ?? null
       })) || [];
       
       return typedData;
@@ -43,7 +44,8 @@ export function useAirdrop(id: string | undefined) {
       if (data) {
         const typedData: Airdrop = {
           ...data,
-          image_url: data.image_url || null
+          // Add image_url if it doesn't exist in the returned data
+          image_url: data.image_url ?? null
         };
         return typedData;
       }
@@ -75,7 +77,8 @@ export function useAddAirdrop() {
       // Ensure the returned data conforms to our Airdrop interface
       const typedData: Airdrop = {
         ...data,
-        image_url: data.image_url || null
+        // Add image_url if it doesn't exist in the returned data
+        image_url: data.image_url ?? null
       };
       
       return typedData;
@@ -103,7 +106,8 @@ export function useUpdateAirdrop() {
       // Ensure the returned data conforms to our Airdrop interface
       const typedData: Airdrop = {
         ...data,
-        image_url: data.image_url || null
+        // Add image_url if it doesn't exist in the returned data
+        image_url: data.image_url ?? null
       };
       
       return typedData;
