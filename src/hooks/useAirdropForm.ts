@@ -3,7 +3,10 @@ import { useState, useEffect } from 'react';
 import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/hooks";
 import { useToast } from "@/hooks/use-toast";
 import { NewAirdrop } from '@/types/supabase';
-import { uploadImage } from '@/lib/utils/imageUpload';
+import { useAirdropImage } from '@/hooks/useAirdropImage';
+import { useAirdropLink } from '@/hooks/useAirdropLink';
+import { formatAirdropData, validateAirdropData } from '@/lib/utils/airdropFormUtils';
+import { saveFormData, clearFormData, getFormData, getStorageKey } from '@/lib/utils/formStorage';
 
 interface UseAirdropFormProps {
   id?: string;
@@ -16,10 +19,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   const { data: existingAirdrop, isLoading } = useAirdrop(id);
   const addAirdrop = useAddAirdrop();
   const updateAirdrop = useUpdateAirdrop();
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const { linkCopied, copyAirdropLink } = useAirdropLink();
   
   const [formData, setFormData] = useState<NewAirdrop>({
     title: '',
@@ -34,78 +34,63 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     publish_date: new Date().toISOString()
   });
   
+  const {
+    uploadingImage,
+    previewUrl,
+    handleImageChange,
+    handleImageUrlChange: handleImageUrlChangeBase,
+    handleRemoveImage: handleRemoveImageBase,
+    uploadSelectedImage
+  } = useAirdropImage({ 
+    initialImageUrl: isEditMode && existingAirdrop?.image_url ? existingAirdrop.image_url : null 
+  });
+  
+  // Custom handlers that pass the state setter
+  const handleImageUrlChange = (url: string) => handleImageUrlChangeBase(url, setFormData);
+  const handleRemoveImage = () => handleRemoveImageBase(setFormData);
+  
   // Load data from localStorage or API
   useEffect(() => {
     const loadFormData = async () => {
+      const storageKey = getStorageKey(isEditMode, id);
+      
       if (isEditMode && existingAirdrop) {
         // For edit mode, use the data from useAirdrop hook
-        const airdropData = {
-          title: existingAirdrop.title,
-          description: existingAirdrop.description || '',
-          status: existingAirdrop.status,
-          twitter_link: existingAirdrop.twitter_link || '',
-          youtube_link: existingAirdrop.youtube_link || '',
-          claim_url: existingAirdrop.claim_url || '',
-          start_date: existingAirdrop.start_date || '',
-          end_date: existingAirdrop.end_date || '',
-          image_url: existingAirdrop.image_url || '',
-          publish_date: existingAirdrop.publish_date
-        };
-        
+        const airdropData = formatAirdropData(existingAirdrop);
         setFormData(airdropData);
         
         // Save to localStorage in edit mode with unique key
-        const storageKey = `airdropFormData_${id}`;
-        localStorage.setItem(storageKey, JSON.stringify({
-          ...airdropData,
-          id: id
-        }));
+        saveFormData(storageKey, { ...airdropData, id });
       } else if (!isEditMode) {
         // For new entry, check localStorage
-        const storageKey = 'airdropFormData_new';
-        const savedData = localStorage.getItem(storageKey);
+        const savedData = getFormData<NewAirdrop & { id?: string }>(storageKey);
         
         if (savedData) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            
-            setFormData({
-              title: parsedData.title || '',
-              description: parsedData.description || '',
-              status: parsedData.status || 'upcoming',
-              twitter_link: parsedData.twitter_link || '',
-              youtube_link: parsedData.youtube_link || '',
-              claim_url: parsedData.claim_url || '',
-              start_date: parsedData.start_date || '',
-              end_date: parsedData.end_date || '',
-              image_url: parsedData.image_url || '',
-              publish_date: parsedData.publish_date || new Date().toISOString()
-            });
-          } catch (e) {
-            // If parsing fails, continue with empty form
-            console.error("Error parsing saved form data", e);
-          }
+          setFormData({
+            title: savedData.title || '',
+            description: savedData.description || '',
+            status: savedData.status || 'upcoming',
+            twitter_link: savedData.twitter_link || '',
+            youtube_link: savedData.youtube_link || '',
+            claim_url: savedData.claim_url || '',
+            start_date: savedData.start_date || '',
+            end_date: savedData.end_date || '',
+            image_url: savedData.image_url || '',
+            publish_date: savedData.publish_date || new Date().toISOString()
+          });
         }
       }
     };
     
     loadFormData();
-    
-    // If in edit mode and the airdrop has an image_url, set it as the preview
-    if (isEditMode && existingAirdrop?.image_url) {
-      setPreviewUrl(existingAirdrop.image_url);
-    }
   }, [existingAirdrop, id, isEditMode]);
   
   // Save form data to localStorage whenever it changes
   useEffect(() => {
     // Only save if there's actual data
     if (formData.title) {
-      const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
-      localStorage.setItem(storageKey, JSON.stringify({
-        ...formData,
-        id: id
-      }));
+      const storageKey = getStorageKey(isEditMode, id);
+      saveFormData(storageKey, { ...formData, id });
     }
   }, [formData, id, isEditMode]);
   
@@ -118,83 +103,21 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleImageChange = (file: File | null) => {
-    if (!file) return;
-    
-    setSelectedImage(file);
-    
-    // Create a preview URL
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-  };
-  
-  const handleImageUrlChange = (url: string) => {
-    setFormData(prev => ({ ...prev, image_url: url }));
-    
-    // If we have a direct URL, show it as preview and clear any file selection
-    if (url) {
-      setSelectedImage(null);
-      setPreviewUrl(url);
-    } else if (!selectedImage) {
-      setPreviewUrl(null);
-    }
-  };
-  
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    if (previewUrl && !previewUrl.startsWith('http')) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    setFormData(prev => ({ ...prev, image_url: '' }));
-  };
-  
-  const copyAirdropLink = () => {
-    if (isEditMode && id) {
-      const link = `${window.location.origin}/airdrop/${id}`;
-      navigator.clipboard.writeText(link).then(() => {
-        setLinkCopied(true);
-        toast({
-          title: "تم النسخ",
-          description: "تم نسخ الرابط بنجاح",
-        });
-        setTimeout(() => setLinkCopied(false), 2000);
-      });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "غير متاح",
-        description: "يجب حفظ الإيردروب أولاً قبل نسخ الرابط",
-      });
-    }
-  };
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       // Validate required fields
-      if (!formData.title || !formData.status) {
-        throw new Error('العنوان والحالة مطلوبان');
+      const validationError = validateAirdropData(formData);
+      if (validationError) {
+        throw new Error(validationError);
       }
       
       let finalFormData = { ...formData };
       
       // Upload image if selected
-      if (selectedImage) {
-        setUploadingImage(true);
-        const imageUrl = await uploadImage(selectedImage, 'airdrops');
-        setUploadingImage(false);
-        
-        if (!imageUrl) {
-          toast({
-            variant: "destructive",
-            title: "خطأ في رفع الصورة",
-            description: "حدث خطأ أثناء رفع الصورة، يرجى المحاولة مرة أخرى",
-          });
-          return;
-        }
-        
+      const imageUrl = await uploadSelectedImage();
+      if (imageUrl) {
         finalFormData = { ...finalFormData, image_url: imageUrl };
       }
       
@@ -216,8 +139,8 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
       }
       
       // Clear form data after successful submission
-      const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
-      localStorage.removeItem(storageKey);
+      const storageKey = getStorageKey(isEditMode, id);
+      clearFormData(storageKey);
       
       if (onSuccess) {
         onSuccess();
