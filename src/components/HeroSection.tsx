@@ -13,7 +13,7 @@ const HeroSection = () => {
   // Animation effect for background elements
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!backgroundRef.current) return;
+      if (!backgroundRef.current || isMobile) return;
       
       const x = e.clientX / window.innerWidth;
       const y = e.clientY / window.innerHeight;
@@ -48,7 +48,7 @@ const HeroSection = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       clearInterval(interval);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <section className="relative pt-36 pb-20 lg:pt-48 lg:pb-28 overflow-hidden">
