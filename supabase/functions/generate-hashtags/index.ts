@@ -13,6 +13,36 @@ serve(async (req) => {
   }
 
   try {
+    // Verify the authorization token
+    const authHeader = req.headers.get('Authorization');
+    const apiKeyHeader = req.headers.get('apikey');
+    
+    // Check for authorization header or apikey (use either)
+    if (!authHeader && !apiKeyHeader) {
+      console.error("Missing Authorization header or apikey");
+      return new Response(
+        JSON.stringify({ error: "Missing authorization" }),
+        { 
+          status: 401, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+    
+    // Extract the token
+    let token = '';
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else if (apiKeyHeader) {
+      token = apiKeyHeader;
+    }
+    
+    // Log token presence (don't log the actual token)
+    console.log("Token present:", !!token);
+    
     const { title, content } = await req.json();
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
