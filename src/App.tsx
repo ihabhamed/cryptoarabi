@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import React from "react";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import WindowFocusHandler from "./components/WindowFocusHandler";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App: React.FC = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <WindowFocusHandler />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />

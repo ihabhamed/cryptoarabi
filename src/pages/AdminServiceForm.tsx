@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -51,7 +50,8 @@ const AdminServiceForm = () => {
             });
             
             // Save to localStorage in edit mode
-            localStorage.setItem('serviceFormData', JSON.stringify({
+            const storageKey = `serviceFormData_${id}`;
+            localStorage.setItem(storageKey, JSON.stringify({
               ...data,
               id: id
             }));
@@ -67,22 +67,20 @@ const AdminServiceForm = () => {
         }
       } else {
         // For new entry, check localStorage
-        const savedData = localStorage.getItem('serviceFormData');
+        const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
+        const savedData = localStorage.getItem(storageKey);
         
         if (savedData) {
           try {
             const parsedData = JSON.parse(savedData);
             
-            // Only use saved data if we're not in edit mode or if the IDs match
-            if (!isEditMode || (parsedData.id === id)) {
-              setFormData({
-                title: parsedData.title || '',
-                description: parsedData.description || '',
-                price: parsedData.price || '',
-                duration: parsedData.duration || '',
-                image_url: parsedData.image_url || ''
-              });
-            }
+            setFormData({
+              title: parsedData.title || '',
+              description: parsedData.description || '',
+              price: parsedData.price || '',
+              duration: parsedData.duration || '',
+              image_url: parsedData.image_url || ''
+            });
           } catch (e) {
             // If parsing fails, continue with empty form
             console.error("Error parsing saved form data", e);
@@ -92,26 +90,19 @@ const AdminServiceForm = () => {
     };
     
     loadFormData();
-    
-    // Cleanup function to prevent memory leaks
-    return () => {
-      if (!isEditMode) {
-        // Don't clear localStorage when navigating away in edit mode
-        // This allows us to preserve data between tab switches
-      }
-    };
   }, [id, isEditMode, toast]);
   
   // Save form data to localStorage whenever it changes
   useEffect(() => {
     // Only save if there's actual data and not just the initial empty state
     if (formData.title || formData.description || formData.price || formData.duration || formData.image_url) {
-      localStorage.setItem('serviceFormData', JSON.stringify({
+      const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
+      localStorage.setItem(storageKey, JSON.stringify({
         ...formData,
         id: id
       }));
     }
-  }, [formData, id]);
+  }, [formData, id, isEditMode]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -163,7 +154,8 @@ const AdminServiceForm = () => {
       }
       
       // Clear form data after successful submission
-      localStorage.removeItem('serviceFormData');
+      const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
+      localStorage.removeItem(storageKey);
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -178,10 +170,9 @@ const AdminServiceForm = () => {
   
   // Cancel button handler
   const handleCancel = () => {
-    if (!isEditMode) {
-      // Clear form data when cancelling new service
-      localStorage.removeItem('serviceFormData');
-    }
+    const storageKey = isEditMode && id ? `serviceFormData_${id}` : 'serviceFormData_new';
+    // Only clear the form data for this specific form
+    localStorage.removeItem(storageKey);
     navigate('/admin');
   };
   

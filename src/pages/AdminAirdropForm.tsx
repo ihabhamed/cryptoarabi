@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -51,33 +50,32 @@ const AdminAirdropForm = () => {
         
         setFormData(airdropData);
         
-        // Save to localStorage in edit mode
-        localStorage.setItem('airdropFormData', JSON.stringify({
+        // Save to localStorage in edit mode with unique key
+        const storageKey = `airdropFormData_${id}`;
+        localStorage.setItem(storageKey, JSON.stringify({
           ...airdropData,
           id: id
         }));
       } else if (!isEditMode) {
         // For new entry, check localStorage
-        const savedData = localStorage.getItem('airdropFormData');
+        const storageKey = 'airdropFormData_new';
+        const savedData = localStorage.getItem(storageKey);
         
         if (savedData) {
           try {
             const parsedData = JSON.parse(savedData);
             
-            // Only use saved data if we're not in edit mode or if the IDs match
-            if (!isEditMode || (parsedData.id === id)) {
-              setFormData({
-                title: parsedData.title || '',
-                description: parsedData.description || '',
-                status: parsedData.status || 'upcoming',
-                twitter_link: parsedData.twitter_link || '',
-                youtube_link: parsedData.youtube_link || '',
-                claim_url: parsedData.claim_url || '',
-                start_date: parsedData.start_date || '',
-                end_date: parsedData.end_date || '',
-                publish_date: parsedData.publish_date || new Date().toISOString()
-              });
-            }
+            setFormData({
+              title: parsedData.title || '',
+              description: parsedData.description || '',
+              status: parsedData.status || 'upcoming',
+              twitter_link: parsedData.twitter_link || '',
+              youtube_link: parsedData.youtube_link || '',
+              claim_url: parsedData.claim_url || '',
+              start_date: parsedData.start_date || '',
+              end_date: parsedData.end_date || '',
+              publish_date: parsedData.publish_date || new Date().toISOString()
+            });
           } catch (e) {
             // If parsing fails, continue with empty form
             console.error("Error parsing saved form data", e);
@@ -87,26 +85,22 @@ const AdminAirdropForm = () => {
     };
     
     loadFormData();
-    
-    // Cleanup function
-    return () => {
-      if (!isEditMode) {
-        // Don't clear localStorage when navigating away in edit mode
-        // This allows us to preserve data between tab switches
-      }
-    };
   }, [existingAirdrop, id, isEditMode]);
   
   // Save form data to localStorage whenever it changes
   useEffect(() => {
     // Only save if there's actual data
     if (formData.title) {
-      localStorage.setItem('airdropFormData', JSON.stringify({
+      const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
+      localStorage.setItem(storageKey, JSON.stringify({
         ...formData,
         id: id
       }));
+      
+      // Log storage for debugging
+      console.log(`Saving airdrop form data to localStorage with key: ${storageKey}`);
     }
-  }, [formData, id]);
+  }, [formData, id, isEditMode]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -144,7 +138,8 @@ const AdminAirdropForm = () => {
       }
       
       // Clear form data after successful submission
-      localStorage.removeItem('airdropFormData');
+      const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
+      localStorage.removeItem(storageKey);
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -157,10 +152,8 @@ const AdminAirdropForm = () => {
   
   // Cancel button handler
   const handleCancel = () => {
-    if (!isEditMode) {
-      // Clear form data when cancelling new airdrop
-      localStorage.removeItem('airdropFormData');
-    }
+    const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
+    localStorage.removeItem(storageKey);
     navigate('/admin');
   };
   
