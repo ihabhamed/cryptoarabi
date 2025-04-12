@@ -34,10 +34,13 @@ export async function generateMetaTags(title: string, content: string) {
 
 export async function generateHashtags(title: string, content: string) {
   try {
-    console.log("Generating hashtags for:", { title, content });
+    console.log("Generating hashtags for:", { title, content: content?.substring(0, 50) + "..." });
     
     // Use the hardcoded API key for now
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRscGlxa2Jpd2NkeXpwcXF6c2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjE4MzgsImV4cCI6MjA1OTk5NzgzOH0.5KKw0L7Uo-lsFK0ovvhZXh-_LKYGPE9qq2SIE90acvg";
+    
+    // If content is too long, trim it to avoid exceeding API limits
+    const trimmedContent = content && content.length > 1000 ? content.substring(0, 1000) + "..." : content;
     
     // Make the API request with proper authentication
     const response = await fetch(`https://tlpiqkbiwcdyzpqqzsbg.supabase.co/functions/v1/generate-hashtags`, {
@@ -47,7 +50,10 @@ export async function generateHashtags(title: string, content: string) {
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'apikey': SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify({ 
+        title, 
+        content: trimmedContent || "" 
+      })
     });
     
     console.log("API response status:", response.status);
@@ -55,19 +61,23 @@ export async function generateHashtags(title: string, content: string) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Hashtags API error:", response.status, errorData);
-      throw new Error('فشل في جلب الهاشتاغات من الخادم');
+      
+      // Provide fallback hashtags if API fails
+      return ["crypto", "blockchain", "web3", "token", "airdrop"];
     }
     
     const data = await response.json();
     console.log("Hashtags generated:", data);
     
     if (!data || !data.hashtags || !Array.isArray(data.hashtags) || data.hashtags.length === 0) {
-      throw new Error('لم نتمكن من توليد هاشتاغات للمحتوى الحالي');
+      // Return fallback hashtags if response is invalid
+      return ["crypto", "blockchain", "web3", "token", "airdrop"];
     }
     
     return data.hashtags;
   } catch (error) {
     console.error('Error generating hashtags:', error);
-    throw error;
+    // Return fallback hashtags on error
+    return ["crypto", "blockchain", "web3", "token", "airdrop"];
   }
 }

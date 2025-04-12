@@ -82,7 +82,7 @@ export function useAirdropMetaGeneration({ formData, setFormData }: UseAirdropMe
         
         toast({
           title: "تم التوليد بنجاح",
-          description: "تم توليد الهاشتاغات بنجاح",
+          description: `تم توليد ${hashtagsData.length} هاشتاغات بنجاح`,
         });
       } else {
         throw new Error("لم نتمكن من توليد هاشتاغات للمحتوى الحالي");

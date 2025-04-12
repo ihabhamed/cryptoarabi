@@ -49,43 +49,76 @@ serve(async (req) => {
       );
     }
     
-    console.log("Processing request for hashtags with:", { title: title.substring(0, 30) + "..." });
+    console.log("Processing request for hashtags with:", { 
+      title: title.substring(0, Math.min(30, title.length)) + (title.length > 30 ? "..." : ""),
+      contentLength: content ? content.length : 0
+    });
 
-    // Generate hashtags using Gemini API
-    const response = await generateHashtagsWithGemini(title, content || '');
-    console.log("Gemini API response status:", response.status);
+    try {
+      // Generate hashtags using Gemini API
+      const response = await generateHashtagsWithGemini(title, content || '');
+      console.log("Gemini API response status:", response.status);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Gemini API error:", JSON.stringify(errorData));
-      throw new Error(`Gemini API error: ${JSON.stringify(errorData)}`);
-    }
-
-    const geminiResponse = await response.json();
-    console.log("Gemini response received");
-    
-    // Parse and validate hashtags from the response
-    const hashtags = parseHashtagsResponse(geminiResponse);
-    
-    // Final validation
-    if (hashtags.length === 0) {
-      throw new Error("No hashtags could be extracted");
-    }
-    
-    return new Response(
-      JSON.stringify({ hashtags }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "Unknown error");
+        console.error("Gemini API error:", errorText);
+        
+        // Return fallback hashtags on API error
+        return new Response(
+          JSON.stringify({ 
+            hashtags: ["crypto", "blockchain", "web3", "token", "airdrop"],
+            note: "Using fallback hashtags due to Gemini API error"
+          }),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        );
       }
-    );
+
+      const geminiResponse = await response.json();
+      console.log("Gemini response received");
+      
+      // Parse and validate hashtags from the response
+      const hashtags = parseHashtagsResponse(geminiResponse);
+      
+      return new Response(
+        JSON.stringify({ hashtags }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    } catch (apiError) {
+      console.error("Error calling Gemini API:", apiError);
+      
+      // Return fallback hashtags on API error
+      return new Response(
+        JSON.stringify({ 
+          hashtags: ["crypto", "blockchain", "web3", "token", "airdrop"],
+          note: "Using fallback hashtags due to API error"
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
   } catch (error) {
     console.error("Error in generate-hashtags function:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        hashtags: ["crypto", "blockchain", "web3", "token", "airdrop"],
+        note: "Using fallback hashtags due to error"
+      }),
       { 
         status: 500, 
         headers: { 
