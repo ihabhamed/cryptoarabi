@@ -64,9 +64,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         } finally {
           setIsVerifying(false);
         }
-      } else if (!loading && !user) {
-        console.log('ProtectedRoute: No user, redirecting to login');
-        setIsVerifying(false);
       }
     };
     
