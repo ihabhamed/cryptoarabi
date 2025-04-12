@@ -3,7 +3,7 @@ import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, X } from "lucide-react";
+import { PlusCircle, X, Pencil } from "lucide-react";
 
 interface FeaturesListProps {
   features: string[];
@@ -16,6 +16,7 @@ interface FeaturesListProps {
  */
 const FeaturesList: React.FC<FeaturesListProps> = ({ features, onChange }) => {
   const [newFeature, setNewFeature] = React.useState('');
+  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
 
   /**
    * Add a new feature to the features list
@@ -33,6 +34,9 @@ const FeaturesList: React.FC<FeaturesListProps> = ({ features, onChange }) => {
    */
   const removeFeature = (index: number) => {
     onChange(features.filter((_, i) => i !== index));
+    if (editingIndex === index) {
+      setEditingIndex(null);
+    }
   };
 
   /**
@@ -58,7 +62,11 @@ const FeaturesList: React.FC<FeaturesListProps> = ({ features, onChange }) => {
 
   return (
     <div className="space-y-2">
-      <Label className="text-white">مميزات الشركة</Label>
+      <Label className="text-white flex items-center">
+        <span>مميزات الشركة</span>
+        <span className="text-xs text-gray-400 mr-2">(يمكنك إضافة، تعديل، أو حذف المميزات)</span>
+      </Label>
+      
       <div className="space-y-3">
         {/* List of existing features */}
         {features.map((feature, index) => (
@@ -68,6 +76,14 @@ const FeaturesList: React.FC<FeaturesListProps> = ({ features, onChange }) => {
               onChange={(e) => updateFeature(index, e.target.value)}
               className="bg-crypto-darkBlue/30 border-white/10 text-white"
             />
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => setEditingIndex(index === editingIndex ? null : index)}
+              className="shrink-0 border-white/10 hover:bg-crypto-orange/20"
+            >
+              <Pencil className="h-4 w-4 text-crypto-orange" />
+            </Button>
             <Button 
               type="button" 
               variant="destructive"

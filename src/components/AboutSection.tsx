@@ -103,16 +103,19 @@ const AboutSection = () => {
               تأسست شركتنا في عام {aboutYearFounded}، ومنذ ذلك الحين نحن نعمل على تطوير وتقديم حلول مبتكرة لمساعدة الأفراد والشركات على الاستفادة من تقنية البلوكتشين في أعمالهم ومشاريعهم.
             </p>
 
-            <ul className="space-y-3 mb-8">
-              {(features.length > 0 ? features : defaultFeatures).map((feature, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="flex-shrink-0 w-6 h-6 bg-crypto-orange/20 rounded-full flex items-center justify-center mr-3">
-                    <Check className="h-4 w-4 text-crypto-orange" />
-                  </span>
-                  <span className="text-gray-300">{feature}</span>
-                </li>
-              ))}
-            </ul>
+            {/* Only show features if there are any */}
+            {(features.length > 0 || isLoading) && (
+              <ul className="space-y-3 mb-8">
+                {(features.length > 0 ? features : defaultFeatures).map((feature, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="flex-shrink-0 w-6 h-6 bg-crypto-orange/20 rounded-full flex items-center justify-center mr-3">
+                      <Check className="h-4 w-4 text-crypto-orange" />
+                    </span>
+                    <span className="text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {renderButton()}
           </div>
