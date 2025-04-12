@@ -35,7 +35,7 @@ serve(async (req) => {
     }
     
     // Extract request data
-    const { title, content, error } = await extractRequestData(req);
+    const { title, content, language, error } = await extractRequestData(req);
     if (error) {
       return new Response(
         JSON.stringify({ error }),
@@ -51,22 +51,27 @@ serve(async (req) => {
     
     console.log("Processing request for hashtags with:", { 
       title: title.substring(0, Math.min(30, title.length)) + (title.length > 30 ? "..." : ""),
-      contentLength: content ? content.length : 0
+      contentLength: content ? content.length : 0,
+      language: language || "en"
     });
 
     try {
-      // Generate hashtags using Gemini API
-      const response = await generateHashtagsWithGemini(title, content || '');
+      // Generate hashtags using Gemini API with language preference
+      const response = await generateHashtagsWithGemini(title, content || '', language || 'ar');
       console.log("Gemini API response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => "Unknown error");
         console.error("Gemini API error:", errorText);
         
-        // Return fallback hashtags on API error
+        // Return fallback hashtags on API error (Arabic by default)
+        const fallbackHashtags = language === "en" 
+          ? ["crypto", "blockchain", "web3", "token", "airdrop"] 
+          : ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+          
         return new Response(
           JSON.stringify({ 
-            hashtags: ["crypto", "blockchain", "web3", "token", "airdrop"],
+            hashtags: fallbackHashtags,
             note: "Using fallback hashtags due to Gemini API error"
           }),
           { 
@@ -82,7 +87,7 @@ serve(async (req) => {
       console.log("Gemini response received");
       
       // Parse and validate hashtags from the response
-      const hashtags = parseHashtagsResponse(geminiResponse);
+      const hashtags = parseHashtagsResponse(geminiResponse, language || 'ar');
       
       return new Response(
         JSON.stringify({ hashtags }),
@@ -96,10 +101,14 @@ serve(async (req) => {
     } catch (apiError) {
       console.error("Error calling Gemini API:", apiError);
       
-      // Return fallback hashtags on API error
+      // Return fallback hashtags on API error (Arabic by default)
+      const fallbackHashtags = language === "en" 
+        ? ["crypto", "blockchain", "web3", "token", "airdrop"] 
+        : ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
+        
       return new Response(
         JSON.stringify({ 
-          hashtags: ["crypto", "blockchain", "web3", "token", "airdrop"],
+          hashtags: fallbackHashtags,
           note: "Using fallback hashtags due to API error"
         }),
         { 
@@ -116,7 +125,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        hashtags: ["crypto", "blockchain", "web3", "token", "airdrop"],
+        hashtags: ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"],
         note: "Using fallback hashtags due to error"
       }),
       { 

@@ -52,7 +52,8 @@ export async function generateHashtags(title: string, content: string) {
       },
       body: JSON.stringify({ 
         title, 
-        content: trimmedContent || "" 
+        content: trimmedContent || "",
+        language: "ar" // Request Arabic hashtags
       })
     });
     
@@ -62,22 +63,22 @@ export async function generateHashtags(title: string, content: string) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Hashtags API error:", response.status, errorData);
       
-      // Provide fallback hashtags if API fails
-      return ["crypto", "blockchain", "web3", "token", "airdrop"];
+      // Provide fallback Arabic hashtags if API fails
+      return ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
     }
     
     const data = await response.json();
     console.log("Hashtags generated:", data);
     
     if (!data || !data.hashtags || !Array.isArray(data.hashtags) || data.hashtags.length === 0) {
-      // Return fallback hashtags if response is invalid
-      return ["crypto", "blockchain", "web3", "token", "airdrop"];
+      // Return fallback Arabic hashtags if response is invalid
+      return ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
     }
     
     return data.hashtags;
   } catch (error) {
     console.error('Error generating hashtags:', error);
-    // Return fallback hashtags on error
-    return ["crypto", "blockchain", "web3", "token", "airdrop"];
+    // Return fallback Arabic hashtags on error
+    return ["كريبتو", "بلوكتشين", "عملات_رقمية", "ويب3", "إيردروب"];
   }
 }
