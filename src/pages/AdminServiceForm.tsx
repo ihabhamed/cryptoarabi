@@ -35,7 +35,7 @@ const AdminServiceForm = () => {
             .from('services')
             .select('*')
             .eq('id', id)
-            .single();
+            .maybeSingle();
           
           if (error) throw error;
           
@@ -73,6 +73,11 @@ const AdminServiceForm = () => {
     setIsSaving(true);
     
     try {
+      // Validate that required fields are present
+      if (!formData.title) {
+        throw new Error('عنوان الخدمة مطلوب');
+      }
+      
       if (isEditMode && id) {
         const { error } = await supabase
           .from('services')
@@ -86,9 +91,18 @@ const AdminServiceForm = () => {
           description: "تم تحديث الخدمة بنجاح",
         });
       } else {
+        // Make sure we have the required fields for insertion
+        const newService = {
+          title: formData.title,
+          description: formData.description,
+          price: formData.price,
+          duration: formData.duration,
+          image_url: formData.image_url
+        };
+        
         const { error } = await supabase
           .from('services')
-          .insert(formData);
+          .insert(newService);
         
         if (error) throw error;
         

@@ -38,7 +38,7 @@ const AdminBlogForm = () => {
             .from('blog_posts')
             .select('*')
             .eq('id', id)
-            .single();
+            .maybeSingle();
           
           if (error) throw error;
           
@@ -95,6 +95,11 @@ const AdminBlogForm = () => {
         generateSlug();
       }
       
+      // Validate that required fields are present
+      if (!formData.title || !formData.content) {
+        throw new Error('العنوان والمحتوى مطلوبان');
+      }
+      
       if (isEditMode && id) {
         const { error } = await supabase
           .from('blog_posts')
@@ -108,9 +113,21 @@ const AdminBlogForm = () => {
           description: "تم تحديث المنشور بنجاح",
         });
       } else {
+        // Make sure we have the required fields for insertion
+        const newPost = {
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt,
+          author: formData.author,
+          category: formData.category,
+          slug: formData.slug,
+          image_url: formData.image_url,
+          publish_date: formData.publish_date
+        };
+        
         const { error } = await supabase
           .from('blog_posts')
-          .insert(formData);
+          .insert(newPost);
         
         if (error) throw error;
         

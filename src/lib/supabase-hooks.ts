@@ -42,6 +42,11 @@ export function useAddAirdrop() {
   
   return useMutation({
     mutationFn: async (newAirdrop: NewAirdrop): Promise<Airdrop> => {
+      // Ensure required fields are present
+      if (!newAirdrop.title || !newAirdrop.status) {
+        throw new Error('Title and status are required');
+      }
+      
       const { data, error } = await supabase
         .from('airdrops')
         .insert(newAirdrop)
