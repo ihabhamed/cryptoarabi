@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Pagination, 
@@ -113,32 +113,77 @@ const Blog = () => {
             ))}
           </div>
 
-          {/* Pagination - Updated with Arabic labels */}
-          <div className="mt-12">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious href="#" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
-                    السابق
-                  </PaginationPrevious>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive={currentPage === 1} onClick={() => setCurrentPage(1)}>
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink href="#" isActive={currentPage === 2} onClick={() => setCurrentPage(2)}>
-                    2
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" onClick={() => setCurrentPage(Math.min(2, currentPage + 1))}>
-                    التالي
-                  </PaginationNext>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+          {/* Enhanced Pagination with Arabic labels and styling */}
+          <div className="mt-12 flex justify-center">
+            <div className="bg-crypto-darkGray rounded-xl p-4 border border-white/10 flex items-center shadow-lg">
+              <Pagination>
+                <PaginationContent className="gap-2">
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(Math.max(1, currentPage - 1));
+                      }}
+                      className="font-medium bg-crypto-darkBlue hover:bg-crypto-orange/20 border border-crypto-orange/30 text-crypto-orange hover:text-white transition-colors duration-300 flex flex-row-reverse"
+                    >
+                      <span>السابق</span>
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </PaginationPrevious>
+                  </PaginationItem>
+                  
+                  <PaginationItem>
+                    <PaginationLink 
+                      href="#" 
+                      isActive={currentPage === 1} 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(1);
+                      }}
+                      className={`font-medium transition-colors duration-300 ${
+                        currentPage === 1 
+                          ? 'bg-crypto-orange text-white border-crypto-orange' 
+                          : 'bg-transparent text-white hover:bg-crypto-orange/20 border border-crypto-orange/30'
+                      }`}
+                    >
+                      1
+                    </PaginationLink>
+                  </PaginationItem>
+                  
+                  <PaginationItem>
+                    <PaginationLink 
+                      href="#" 
+                      isActive={currentPage === 2} 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(2);
+                      }}
+                      className={`font-medium transition-colors duration-300 ${
+                        currentPage === 2 
+                          ? 'bg-crypto-orange text-white border-crypto-orange' 
+                          : 'bg-transparent text-white hover:bg-crypto-orange/20 border border-crypto-orange/30'
+                      }`}
+                    >
+                      2
+                    </PaginationLink>
+                  </PaginationItem>
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(Math.min(2, currentPage + 1));
+                      }}
+                      className="font-medium bg-crypto-darkBlue hover:bg-crypto-orange/20 border border-crypto-orange/30 text-crypto-orange hover:text-white transition-colors duration-300"
+                    >
+                      <span>التالي</span>
+                      <ArrowLeft className="h-4 w-4 mr-2 rtl-flip" />
+                    </PaginationNext>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         </div>
       </div>
