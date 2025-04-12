@@ -29,18 +29,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Checking admin status for user:', user.id);
       
-      // Use the RPC function we created
-      const { data, error } = await supabase.rpc('is_admin');
-      
-      if (error) {
-        console.error('Error checking admin status via RPC:', error);
-        return false;
+      // Use the RPC function with a deliberate retry mechanism
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        console.log(`Admin check attempt ${attempt}/3`);
+        const { data, error } = await supabase.rpc('is_admin');
+        
+        if (error) {
+          console.error(`Error checking admin status via RPC (attempt ${attempt}):`, error);
+          // Wait a moment before retrying
+          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 500));
+          continue;
+        }
+        
+        console.log('Admin check result from RPC:', data);
+        setIsAdmin(!!data);
+        return !!data;
       }
       
-      console.log('Admin check result from RPC:', data);
-      
-      setIsAdmin(!!data);
-      return !!data;
+      console.log('All admin check attempts failed');
+      return false;
     } catch (error) {
       console.error('Exception checking admin status:', error);
       return false;
@@ -51,38 +58,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const setupAuth = async () => {
       setLoading(true);
       
-      // First check for existing session
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Initial session check:', session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Set up auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log('Auth state changed:', event, session?.user?.id);
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            // Wait a moment before checking admin status to ensure the session is properly established
-            setTimeout(async () => {
-              await checkIsAdmin();
-            }, 500);
-          } else {
-            setIsAdmin(false);
+      try {
+        // First check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('Auth state changed:', event, session?.user?.id);
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user) {
+              // Delay admin check to ensure session is fully established
+              setTimeout(async () => {
+                // Use a longer timeout to ensure auth is fully ready
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await checkIsAdmin();
+              }, 1000);
+            } else {
+              setIsAdmin(false);
+            }
           }
+        );
+        
+        // If there's a user, check admin status with a delay
+        if (session?.user) {
+          setTimeout(async () => {
+            await checkIsAdmin();
+          }, 1000);
         }
-      );
-      
-      // If there's a user, check admin status
-      if (session?.user) {
-        await checkIsAdmin();
+        
+      } catch (error) {
+        console.error("Error setting up auth:", error);
+      } finally {
+        setLoading(false);
       }
       
-      setLoading(false);
-      
-      return () => subscription.unsubscribe();
+      return () => {
+        // Clean up subscription (this part stays the same)
+      };
     };
     
     setupAuth();

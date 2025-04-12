@@ -40,12 +40,21 @@ const AdminAuth = () => {
       if (data?.user) {
         console.log('AdminAuth: User logged in successfully:', data.user.id);
         
-        // Allow auth state to fully establish
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait longer for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Check if user is admin using RPC function
-        const isAdmin = await checkIsAdmin();
-        console.log('AdminAuth: Is user admin?', isAdmin);
+        // Multiple attempts to check admin status
+        let isAdmin = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          console.log(`AdminAuth: Admin check attempt ${attempt}/3`);
+          isAdmin = await checkIsAdmin();
+          console.log(`AdminAuth: Is user admin? (attempt ${attempt})`, isAdmin);
+          
+          if (isAdmin) break;
+          
+          // Wait between attempts
+          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000));
+        }
         
         if (isAdmin) {
           toast({

@@ -21,9 +21,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         try {
           console.log('ProtectedRoute: Starting admin verification for user', user.id);
           
-          // Use the RPC function to check admin status
-          const isUserAdmin = await checkIsAdmin();
-          console.log('ProtectedRoute: Admin check result:', isUserAdmin);
+          // Multiple attempts to check admin status
+          let isUserAdmin = false;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            console.log(`ProtectedRoute: Admin check attempt ${attempt}/3`);
+            isUserAdmin = await checkIsAdmin();
+            console.log(`ProtectedRoute: Admin check result (attempt ${attempt}):`, isUserAdmin);
+            
+            if (isUserAdmin) break;
+            
+            // Wait between attempts
+            if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000));
+          }
           
           if (!isUserAdmin) {
             console.log('ProtectedRoute: User is not an admin, redirecting to login');
