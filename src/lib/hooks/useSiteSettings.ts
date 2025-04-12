@@ -40,6 +40,8 @@ export const useSiteSettings = () => {
 
       return data as SiteSettings;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
   });
 };
 
@@ -67,16 +69,14 @@ export const useUpdateSiteSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['site-settings'] });
       toast({
         title: "تم التحديث",
-        description: "تم تحديث إعدادات الموقع بنجاح",
-        // Removed duration property which was causing TypeScript error
+        description: "تم تحديث إعدادات الموقع بنجاح"
       });
     },
     onError: (error) => {
       toast({
         variant: "destructive",
         title: "حدث خطأ",
-        description: `فشل في تحديث إعدادات الموقع: ${error.message}`,
-        // Removed duration property which was causing TypeScript error
+        description: `فشل في تحديث إعدادات الموقع: ${error.message}`
       });
     },
   });
