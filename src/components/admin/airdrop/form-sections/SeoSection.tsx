@@ -1,119 +1,75 @@
 
-import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Sparkles } from 'lucide-react';
+import React from 'react';
 import { NewAirdrop } from '@/types/supabase';
-import { generateMetaTags } from '@/lib/utils/geminiApi';
-import { toast } from '@/lib/utils/toast-utils';
+import { Button } from "@/components/ui/button";
+import { Wand2 } from "lucide-react";
 
 interface SeoSectionProps {
-  formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string };
+  formData: NewAirdrop & { meta_title?: string; meta_description?: string };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  isGeneratingMeta?: boolean;
+  generateMetaContent?: () => void;
 }
 
-const SeoSection: React.FC<SeoSectionProps> = ({
-  formData,
+const SeoSection: React.FC<SeoSectionProps> = ({ 
+  formData, 
   handleChange,
+  isGeneratingMeta,
+  generateMetaContent
 }) => {
-  const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
-
-  const generateMetaTagsWithAI = async () => {
-    if (!formData.title || !formData.description) {
-      toast({
-        title: "نقص في المعلومات",
-        description: "يرجى إضافة عنوان ووصف للإيردروب أولاً",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsGeneratingMeta(true);
-    
-    try {
-      const { metaTitle, metaDescription } = await generateMetaTags(
-        formData.title,
-        formData.description
-      );
-      
-      // Update form data with generated meta tags
-      const titleEvent = {
-        target: {
-          name: 'meta_title',
-          value: metaTitle
-        }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      const descEvent = {
-        target: {
-          name: 'meta_description',
-          value: metaDescription
-        }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleChange(titleEvent);
-      handleChange(descEvent);
-      
-      toast({
-        title: "تم التوليد بنجاح",
-        description: "تم توليد العنوان والوصف بنجاح",
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ في التوليد",
-        description: "حدث خطأ أثناء توليد العنوان والوصف",
-        variant: "destructive"
-      });
-      console.error("Error generating meta tags:", error);
-    } finally {
-      setIsGeneratingMeta(false);
-    }
-  };
-
   return (
-    <div className="border-t border-white/10 pt-6 mt-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-white">تحسين محركات البحث (SEO)</h3>
-        <Button
-          type="button"
-          onClick={generateMetaTagsWithAI}
-          className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
-          disabled={isGeneratingMeta}
-        >
-          <Sparkles className="mr-2 h-4 w-4" />
-          {isGeneratingMeta ? "جاري التوليد..." : "توليد تلقائي"}
-        </Button>
+    <div className="space-y-4 border border-white/10 rounded-md p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium text-white">بيانات SEO</h3>
+        {generateMetaContent && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="border-crypto-orange text-crypto-orange hover:bg-crypto-orange/10"
+            onClick={generateMetaContent}
+            disabled={isGeneratingMeta}
+          >
+            <Wand2 className="h-4 w-4 mr-2" />
+            {isGeneratingMeta ? "جاري التوليد..." : "توليد تلقائي"}
+          </Button>
+        )}
       </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-white mb-2">عنوان ميتا (Meta Title)</label>
-          <Input
-            name="meta_title"
-            value={formData.meta_title || ''}
-            onChange={handleChange}
-            placeholder="عنوان للمتصفح وصفحات البحث"
-            className="bg-crypto-darkBlue/50 border-white/20 text-white"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            يظهر في علامة تبويب المتصفح وفي نتائج البحث (60-70 حرف)
-          </p>
-        </div>
-        
-        <div>
-          <label className="block text-white mb-2">وصف ميتا (Meta Description)</label>
-          <Textarea
-            name="meta_description"
-            value={formData.meta_description || ''}
-            onChange={handleChange}
-            placeholder="وصف مختصر للمحتوى"
-            className="bg-crypto-darkBlue/50 border-white/20 text-white min-h-[80px]"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            وصف يظهر في نتائج محركات البحث (150-160 حرف)
-          </p>
-        </div>
+      
+      <div>
+        <label htmlFor="meta_title" className="block text-sm font-medium text-gray-300 mb-1">
+          عنوان الميتا
+        </label>
+        <input
+          type="text"
+          id="meta_title"
+          name="meta_title"
+          className="w-full bg-crypto-darkBlue/50 border border-white/10 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-crypto-orange"
+          value={formData.meta_title || ''}
+          onChange={handleChange}
+          placeholder="أدخل عنوان الميتا"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          يظهر في نتائج البحث (60-70 حرف مثالي)
+        </p>
+      </div>
+      
+      <div>
+        <label htmlFor="meta_description" className="block text-sm font-medium text-gray-300 mb-1">
+          وصف الميتا
+        </label>
+        <textarea
+          id="meta_description"
+          name="meta_description"
+          rows={3}
+          className="w-full bg-crypto-darkBlue/50 border border-white/10 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-crypto-orange resize-none"
+          value={formData.meta_description || ''}
+          onChange={handleChange}
+          placeholder="أدخل وصف الميتا"
+        />
+        <p className="text-xs text-gray-400 mt-1">
+          يظهر في نتائج البحث (حوالي 155-160 حرف مثالي)
+        </p>
       </div>
     </div>
   );

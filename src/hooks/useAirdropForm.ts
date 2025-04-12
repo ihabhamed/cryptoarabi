@@ -5,6 +5,7 @@ import { toast } from "@/lib/utils/toast-utils";
 import { NewAirdrop } from '@/types/supabase';
 import { useAirdropImage } from '@/hooks/useAirdropImage';
 import { useAirdropLink } from '@/hooks/useAirdropLink';
+import { useAirdropMetaGeneration } from '@/hooks/useAirdropMetaGeneration';
 import { formatAirdropData, validateAirdropData } from '@/lib/utils/airdropFormUtils';
 import { saveFormData, clearFormData, getFormData, getStorageKey } from '@/lib/utils/formStorage';
 
@@ -54,6 +55,16 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     uploadSelectedImage
   } = useAirdropImage({ 
     initialImageUrl: isEditMode && existingAirdrop?.image_url ? existingAirdrop.image_url : null 
+  });
+  
+  const {
+    isGeneratingMeta,
+    isGeneratingHashtags,
+    generateMetaContent,
+    generateHashtagsContent
+  } = useAirdropMetaGeneration({
+    formData,
+    setFormData
   });
   
   // Custom handlers that pass the state setter
@@ -191,6 +202,8 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     uploadingImage,
     previewUrl,
     linkCopied,
+    isGeneratingMeta,
+    isGeneratingHashtags,
     handleChange,
     handleSelectChange,
     handleImageChange,
@@ -198,6 +211,8 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     handleRemoveImage,
     handleSubmit,
     copyAirdropLink,
+    generateMetaContent,
+    generateHashtagsContent,
     isSaving: addAirdrop.isPending || updateAirdrop.isPending
   };
 }

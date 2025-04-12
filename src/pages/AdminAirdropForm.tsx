@@ -19,6 +19,8 @@ const AdminAirdropForm = () => {
     uploadingImage,
     previewUrl,
     linkCopied,
+    isGeneratingMeta,
+    isGeneratingHashtags,
     handleChange,
     handleSelectChange,
     handleImageChange,
@@ -26,6 +28,8 @@ const AdminAirdropForm = () => {
     handleRemoveImage,
     handleSubmit,
     copyAirdropLink,
+    generateMetaContent,
+    generateHashtagsContent,
     isSaving
   } = useAirdropForm({
     id,
@@ -72,6 +76,10 @@ const AdminAirdropForm = () => {
                 formData={formData}
                 handleChange={handleChange}
                 handleSelectChange={handleSelectChange}
+                isGeneratingMeta={isGeneratingMeta}
+                isGeneratingHashtags={isGeneratingHashtags}
+                generateMetaContent={generateMetaContent}
+                generateHashtagsContent={generateHashtagsContent}
               />
               
               <div className="mt-6 border-t border-white/10 pt-6">

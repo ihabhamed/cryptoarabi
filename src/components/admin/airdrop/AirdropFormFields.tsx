@@ -9,12 +9,20 @@ interface AirdropFormFieldsProps {
   formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
+  isGeneratingMeta?: boolean;
+  isGeneratingHashtags?: boolean;
+  generateMetaContent?: () => void;
+  generateHashtagsContent?: () => void;
 }
 
 const AirdropFormFields: React.FC<AirdropFormFieldsProps> = ({
   formData,
   handleChange,
-  handleSelectChange
+  handleSelectChange,
+  isGeneratingMeta,
+  isGeneratingHashtags,
+  generateMetaContent,
+  generateHashtagsContent
 }) => {
   return (
     <div className="space-y-6">
@@ -29,12 +37,16 @@ const AirdropFormFields: React.FC<AirdropFormFieldsProps> = ({
       <SeoSection 
         formData={formData}
         handleChange={handleChange}
+        isGeneratingMeta={isGeneratingMeta}
+        generateMetaContent={generateMetaContent}
       />
       
       {/* Tags Section */}
       <TagsSection 
         formData={formData}
         handleChange={handleChange}
+        isGeneratingHashtags={isGeneratingHashtags}
+        generateHashtagsContent={generateHashtagsContent}
       />
     </div>
   );
