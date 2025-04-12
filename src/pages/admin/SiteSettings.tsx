@@ -13,7 +13,7 @@ import {
   Globe, Home, Book, MessageSquare, Newspaper, Settings, FileText, 
   Link as LinkIcon, FileCog, Users, PanelLeftOpen, Footprints
 } from "lucide-react";
-import { useSiteSettings, useUpdateSiteSettings } from '@/lib/hooks/useSiteSettings';
+import { useSiteSettings, useUpdateSiteSettings } from '@/lib/hooks';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 const SiteSettings = () => {

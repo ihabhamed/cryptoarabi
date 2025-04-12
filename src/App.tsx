@@ -25,7 +25,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import WindowFocusHandler from "./components/WindowFocusHandler";
 
 // Create a client
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+      staleTime: 10 * 1000, // 10 seconds
+    },
+  },
+});
 
 // Make sure App is declared as a function component
 const App: React.FC = () => {
