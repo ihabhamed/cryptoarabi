@@ -61,8 +61,11 @@ export type Database = {
           content: string
           created_at: string
           excerpt: string | null
+          hashtags: string | null
           id: string
           image_url: string | null
+          meta_description: string | null
+          meta_title: string | null
           publish_date: string
           slug: string | null
           title: string
@@ -74,8 +77,11 @@ export type Database = {
           content: string
           created_at?: string
           excerpt?: string | null
+          hashtags?: string | null
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           publish_date?: string
           slug?: string | null
           title: string
@@ -87,8 +93,11 @@ export type Database = {
           content?: string
           created_at?: string
           excerpt?: string | null
+          hashtags?: string | null
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           publish_date?: string
           slug?: string | null
           title?: string
