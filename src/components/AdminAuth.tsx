@@ -40,19 +40,28 @@ const AdminAuth = () => {
       if (data?.user) {
         console.log('AdminAuth: User logged in successfully:', data.user.id);
         
-        // Wait for session to be fully established
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Wait longer for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Multiple attempts to check admin status with increasing delays
         let isAdmin = false;
         for (let attempt = 1; attempt <= 3; attempt++) {
           console.log(`AdminAuth: Admin check attempt ${attempt}/3`);
           
-          // Wait between attempts
+          // Wait between attempts with increasing intervals
           if (attempt > 1) {
-            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+            await new Promise(resolve => setTimeout(resolve, attempt * 1500));
           }
           
+          // Use a stored session here rather than the context directly
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          
+          if (!currentSession?.user) {
+            console.log('AdminAuth: No user in session during admin check');
+            continue;
+          }
+          
+          console.log('AdminAuth: Checking with session user:', currentSession.user.id);
           isAdmin = await checkIsAdmin();
           console.log(`AdminAuth: Is user admin? (attempt ${attempt})`, isAdmin);
           

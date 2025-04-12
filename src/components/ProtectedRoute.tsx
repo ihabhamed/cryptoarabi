@@ -3,39 +3,44 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading, isAdmin, checkIsAdmin } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   
   useEffect(() => {
     const verifyAdminStatus = async () => {
-      if (!loading && user) {
+      if (!loading) {
         setIsVerifying(true);
+        
+        // Get the current session to ensure we have the most up-to-date auth state
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (!currentSession?.user) {
+          console.log('ProtectedRoute: No user in session, redirecting to login');
+          setIsVerifying(false);
+          return;
+        }
+        
         try {
-          console.log('ProtectedRoute: Starting admin verification for user', user.id);
+          console.log('ProtectedRoute: Starting admin verification for user', currentSession.user.id);
           
-          // Multiple attempts to check admin status with increasing delays
-          let isUserAdmin = false;
-          for (let attempt = 1; attempt <= 3; attempt++) {
-            console.log(`ProtectedRoute: Admin check attempt ${attempt}/3`);
-            
-            // Wait between attempts
-            if (attempt > 1) {
-              await new Promise(resolve => setTimeout(resolve, attempt * 1000));
-            }
-            
-            isUserAdmin = await checkIsAdmin();
-            console.log(`ProtectedRoute: Admin check result (attempt ${attempt}):`, isUserAdmin);
-            
-            if (isUserAdmin) break;
+          // Direct call to supabase RPC for admin check
+          const { data: isUserAdmin, error } = await supabase.rpc('is_admin');
+          
+          if (error) {
+            console.error("Error checking admin status:", error);
+            throw error;
           }
+          
+          console.log('ProtectedRoute: Admin check result:', isUserAdmin);
           
           if (!isUserAdmin) {
             console.log('ProtectedRoute: User is not an admin, redirecting to login');
@@ -59,13 +64,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         } finally {
           setIsVerifying(false);
         }
-      } else if (!loading) {
+      } else if (!loading && !user) {
+        console.log('ProtectedRoute: No user, redirecting to login');
         setIsVerifying(false);
       }
     };
     
     verifyAdminStatus();
-  }, [user, loading, checkIsAdmin, navigate, toast]);
+  }, [user, loading, navigate, toast]);
   
   if (loading || isVerifying) {
     return (

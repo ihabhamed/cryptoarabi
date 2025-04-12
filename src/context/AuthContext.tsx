@@ -22,12 +22,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkIsAdmin = async (): Promise<boolean> => {
     try {
-      console.log('Checking admin status for user:', user?.id);
+      // Get current session to ensure we have the latest auth state
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      if (!user) {
-        console.log('Cannot check admin status: No user is logged in');
+      if (!currentSession?.user) {
+        console.log('Cannot check admin status: No user in current session');
         return false;
       }
+      
+      console.log('Checking admin status for user:', currentSession.user.id);
       
       const { data, error } = await supabase.rpc('is_admin');
       
@@ -58,11 +61,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setSession(initialSession);
           setUser(initialSession.user);
           
-          // Check admin status with delay to ensure auth is ready
+          // Wait before checking admin status to ensure auth is ready
           setTimeout(async () => {
             await checkIsAdmin();
             setLoading(false);
-          }, 500);
+          }, 1000);
         } else {
           setLoading(false);
         }
@@ -72,15 +75,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           async (event, newSession) => {
             console.log('Auth state changed:', event, newSession?.user?.id);
             
+            // Update session and user state
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
             if (newSession?.user) {
               // For new sign-ins, check admin status after a delay
               if (event === 'SIGNED_IN') {
+                // Longer delay to ensure Supabase session is fully established
                 setTimeout(async () => {
                   await checkIsAdmin();
-                }, 1000);
+                }, 1500);
               }
             } else {
               setIsAdmin(false);
