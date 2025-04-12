@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { BlogPost } from '@/types/supabase';
+import { saveFormData, getFormData, clearFormData } from '@/lib/utils/formStorage';
 
 interface UseBlogFormStateProps {
   id?: string;
@@ -9,6 +10,7 @@ interface UseBlogFormStateProps {
 
 export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}) {
   const isEditMode = !!id;
+  const storageKey = isEditMode && id ? `blogFormData_${id}` : 'blogFormData_new';
   
   const [formData, setFormData] = useState<Partial<BlogPost>>({
     title: '',
@@ -31,45 +33,39 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
         setFormData(initialData);
       } else {
         // Check localStorage based on edit mode
-        const storageKey = isEditMode && id ? `blogFormData_${id}` : 'blogFormData_new';
-        const savedData = localStorage.getItem(storageKey);
+        const savedData = getFormData<Partial<BlogPost>>(storageKey);
         
         if (savedData) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            
-            setFormData({
-              title: parsedData.title || '',
-              content: parsedData.content || '',
-              excerpt: parsedData.excerpt || '',
-              author: parsedData.author || '',
-              category: parsedData.category || '',
-              slug: parsedData.slug || '',
-              image_url: parsedData.image_url || '',
-              publish_date: parsedData.publish_date || new Date().toISOString()
-            });
-          } catch (e) {
-            // If parsing fails, continue with empty form
-            console.error("Error parsing saved form data", e);
-          }
+          setFormData({
+            title: savedData.title || '',
+            content: savedData.content || '',
+            excerpt: savedData.excerpt || '',
+            author: savedData.author || '',
+            category: savedData.category || '',
+            slug: savedData.slug || '',
+            image_url: savedData.image_url || '',
+            meta_title: savedData.meta_title || '',
+            meta_description: savedData.meta_description || '',
+            hashtags: savedData.hashtags || '',
+            publish_date: savedData.publish_date || new Date().toISOString()
+          });
         }
       }
     };
     
     loadFormData();
-  }, [id, isEditMode, initialData]);
+  }, [id, isEditMode, initialData, storageKey]);
   
   // Save form data to localStorage whenever it changes
   useEffect(() => {
     // Only save if there's actual data
     if (formData.title || formData.content) {
-      const storageKey = isEditMode && id ? `blogFormData_${id}` : 'blogFormData_new';
-      localStorage.setItem(storageKey, JSON.stringify({
+      saveFormData(storageKey, {
         ...formData,
         id: id
-      }));
+      });
     }
-  }, [formData, id, isEditMode]);
+  }, [formData, id, storageKey]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -88,9 +84,8 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     }
   };
 
-  const clearFormData = () => {
-    const storageKey = isEditMode && id ? `blogFormData_${id}` : 'blogFormData_new';
-    localStorage.removeItem(storageKey);
+  const clearFormDataState = () => {
+    clearFormData(storageKey);
   };
 
   return {
@@ -103,6 +98,6 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     isEditMode,
     handleChange,
     generateSlug,
-    clearFormData
+    clearFormData: clearFormDataState
   };
 }

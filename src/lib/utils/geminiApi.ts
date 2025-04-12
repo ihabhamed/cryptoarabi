@@ -26,3 +26,26 @@ export async function generateMetaTags(title: string, content: string) {
     };
   }
 }
+
+export async function generateHashtags(title: string, content: string) {
+  try {
+    const response = await fetch(`https://tlpiqkbiwcdyzpqqzsbg.supabase.co/functions/v1/generate-hashtags`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({ title, content })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to generate hashtags');
+    }
+    
+    const data = await response.json();
+    return data.hashtags || [];
+  } catch (error) {
+    console.error('Error generating hashtags:', error);
+    return [];
+  }
+}

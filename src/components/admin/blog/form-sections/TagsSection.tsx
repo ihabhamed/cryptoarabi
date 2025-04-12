@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Tag, Search, PlusCircle } from 'lucide-react';
+import { X, Tag, Search, PlusCircle, Sparkles } from 'lucide-react';
 import { BlogPost } from '@/types/supabase';
 import { useBlogPosts } from '@/lib/hooks/useBlogPosts';
+import { toast } from '@/lib/utils/toast-utils';
+import { generateHashtags } from '@/lib/utils/geminiApi';
 
 interface TagsSectionProps {
   formData: Partial<BlogPost & { hashtags?: string }>;
@@ -19,6 +21,7 @@ const TagsSection: React.FC<TagsSectionProps> = ({
   const [hashtag, setHashtag] = useState('');
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [suggestedHashtags, setSuggestedHashtags] = useState<string[]>([]);
+  const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
   const { data: blogPosts } = useBlogPosts();
   
   // Initialize hashtags from formData
@@ -39,6 +42,17 @@ const TagsSection: React.FC<TagsSectionProps> = ({
     
     handleChange(event);
     setHashtags(newHashtags);
+    
+    // Save to localStorage to ensure persistence
+    const storageKey = formData.id ? `blogFormData_${formData.id}` : 'blogFormData_new';
+    const savedData = localStorage.getItem(storageKey);
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      localStorage.setItem(storageKey, JSON.stringify({
+        ...parsedData,
+        hashtags: newHashtags.join(', ')
+      }));
+    }
   };
   
   // Add a hashtag
@@ -67,6 +81,61 @@ const TagsSection: React.FC<TagsSectionProps> = ({
     }
   };
   
+  // Generate hashtags automatically based on content
+  const generateHashtagsAutomatically = async () => {
+    if (!formData.title || !formData.content) {
+      toast({
+        title: "نقص في المعلومات",
+        description: "يرجى إضافة عنوان ومحتوى للمنشور أولاً",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsGeneratingHashtags(true);
+    
+    try {
+      const generatedTags = await generateHashtags(
+        formData.title,
+        formData.content
+      );
+      
+      if (generatedTags && generatedTags.length > 0) {
+        // Filter out hashtags that are already added
+        const newTags = generatedTags.filter(tag => !hashtags.includes(tag));
+        
+        if (newTags.length > 0) {
+          setSuggestedHashtags([...suggestedHashtags, ...newTags]);
+          
+          toast({
+            title: "تم التوليد بنجاح",
+            description: `تم توليد ${newTags.length} هاشتاغ جديد. انقر عليها لإضافتها.`,
+          });
+        } else {
+          toast({
+            title: "لم يتم العثور على هاشتاغات جديدة",
+            description: "جميع الهاشتاغات المقترحة موجودة بالفعل",
+          });
+        }
+      } else {
+        toast({
+          title: "لم يتم العثور على هاشتاغات",
+          description: "لم نتمكن من توليد هاشتاغات للمحتوى الحالي",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطأ في التوليد",
+        description: "حدث خطأ أثناء توليد الهاشتاغات",
+        variant: "destructive"
+      });
+      console.error("Error generating hashtags:", error);
+    } finally {
+      setIsGeneratingHashtags(false);
+    }
+  };
+  
   // Generate hashtag suggestions based on title and content
   useEffect(() => {
     if (formData.title || formData.content) {
@@ -90,11 +159,23 @@ const TagsSection: React.FC<TagsSectionProps> = ({
   }, [formData.title, formData.content, blogPosts, hashtags]);
 
   return (
-    <div className="border-t border-white/10 pt-6">
-      <label className="flex items-center text-white mb-2">
-        <Tag className="mr-2 h-4 w-4" />
-        الهاشتاغات
-      </label>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <label className="flex items-center text-white">
+          <Tag className="mr-2 h-4 w-4" />
+          الهاشتاغات
+        </label>
+        
+        <Button 
+          type="button"
+          onClick={generateHashtagsAutomatically}
+          className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
+          disabled={isGeneratingHashtags}
+        >
+          <Sparkles className="mr-2 h-4 w-4" />
+          {isGeneratingHashtags ? "جاري التوليد..." : "توليد هاشتاغات تلقائياً"}
+        </Button>
+      </div>
       
       <div className="flex gap-2 mb-2">
         <Input

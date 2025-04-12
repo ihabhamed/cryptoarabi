@@ -39,6 +39,6 @@ export function getFormData<T>(key: string): T | null {
 /**
  * Gets the appropriate storage key for a form
  */
-export function getStorageKey(isEditMode: boolean, id?: string): string {
-  return isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
+export function getStorageKey(formType: string, isEditMode: boolean, id?: string): string {
+  return isEditMode && id ? `${formType}FormData_${id}` : `${formType}FormData_new`;
 }

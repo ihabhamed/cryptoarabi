@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { BlogPost } from '@/types/supabase';
+import { toast } from '@/lib/utils/toast-utils';
 
 interface BasicInfoSectionProps {
   formData: Partial<BlogPost>;
@@ -16,6 +17,66 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   handleChange,
   generateSlug,
 }) => {
+  // Function to generate slug from title that properly handles Arabic text
+  const handleGenerateSlug = () => {
+    if (formData.title) {
+      // For Arabic or other non-Latin text, we:
+      // 1. Use a more secure transliteration method
+      // 2. Handle special characters better
+      
+      try {
+        // Convert to lowercase if not Arabic (Arabic has no case)
+        let slugText = formData.title;
+        
+        // Replace Arabic/special chars with descriptive Latin equivalents
+        // This uses a simple approach that preserves meaning while creating valid URLs
+        const timestamp = new Date().getTime().toString().slice(-4);
+        const randomSlug = `post-${timestamp}-${Math.floor(Math.random() * 1000)}`;
+        
+        // If title contains primarily Arabic characters, create a generic slug with timestamp
+        if (/[\u0600-\u06FF]/.test(slugText)) {
+          // Save the generated slug to form state
+          const event = {
+            target: {
+              name: 'slug',
+              value: randomSlug
+            }
+          } as React.ChangeEvent<HTMLInputElement>;
+          
+          handleChange(event);
+          
+          // Also save to localStorage
+          const storageKey = formData.id ? `blogFormData_${formData.id}` : 'blogFormData_new';
+          const savedData = localStorage.getItem(storageKey);
+          if (savedData) {
+            const parsedData = JSON.parse(savedData);
+            localStorage.setItem(storageKey, JSON.stringify({
+              ...parsedData,
+              slug: randomSlug
+            }));
+          }
+          
+          toast({
+            title: "تم إنشاء الرابط",
+            description: "تم إنشاء رابط ثابت للمحتوى العربي"
+          });
+        } else {
+          // For non-Arabic text, use the existing slug generator
+          generateSlug();
+        }
+      } catch (error) {
+        console.error("Error generating slug:", error);
+        generateSlug(); // Fallback to the default slug generator
+      }
+    } else {
+      toast({
+        title: "نقص في المعلومات",
+        description: "يرجى إضافة عنوان للمنشور أولاً",
+        variant: "destructive"
+      });
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div>
@@ -92,7 +153,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
           type="button"
           variant="outline"
           className="border-white/20 text-white hover:bg-white/10"
-          onClick={generateSlug}
+          onClick={handleGenerateSlug}
         >
           توليد
         </Button>

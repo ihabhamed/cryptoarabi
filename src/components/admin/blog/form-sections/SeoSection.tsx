@@ -55,6 +55,18 @@ const SeoSection: React.FC<SeoSectionProps> = ({
       handleChange(titleEvent);
       handleChange(descEvent);
       
+      // Save to localStorage to ensure persistence
+      const storageKey = formData.id ? `blogFormData_${formData.id}` : 'blogFormData_new';
+      const savedData = localStorage.getItem(storageKey);
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        localStorage.setItem(storageKey, JSON.stringify({
+          ...parsedData,
+          meta_title: metaTitle,
+          meta_description: metaDescription
+        }));
+      }
+      
       toast({
         title: "تم التوليد بنجاح",
         description: "تم توليد العنوان والوصف بنجاح",
