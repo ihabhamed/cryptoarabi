@@ -41,7 +41,7 @@ const Navbar = () => {
             </div>
           </div>
           
-          <a href="#" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">استشارات</a>
+          <Link to="/airdrop" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">إيردروب</Link>
           <a href="#" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">المدونة</a>
           <Link to="/contact" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">تواصل معنا</Link>
         </div>
@@ -87,7 +87,7 @@ const Navbar = () => {
               )}
             </div>
             
-            <a href="#" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">استشارات</a>
+            <Link to="/airdrop" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">إيردروب</Link>
             <a href="#" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">المدونة</a>
             <Link to="/contact" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">تواصل معنا</Link>
             
