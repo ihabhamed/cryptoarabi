@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { generateMetaTags, generateHashtags } from '@/lib/utils/geminiApi';
 import { toast } from "@/lib/utils/toast-utils";
@@ -18,18 +19,20 @@ export function useAirdropMetaGeneration({ formData, setFormData }: UseAirdropMe
   const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
 
   const generateMetaContent = async () => {
-    if (!formData.title || !formData.description) {
+    if (!formData.title) {
       toast({
         variant: "destructive",
         title: "بيانات غير كافية",
-        description: "يرجى إضافة العنوان والوصف أولاً",
+        description: "يرجى إضافة العنوان على الأقل",
       });
       return;
     }
 
     try {
       setIsGeneratingMeta(true);
-      const metaData = await generateMetaTags(formData.title, formData.description);
+      // Use description if available, otherwise use an empty string for content
+      const description = formData.description || '';
+      const metaData = await generateMetaTags(formData.title, description);
       
       if (metaData && metaData.metaTitle && metaData.metaDescription) {
         setFormData(prev => ({
@@ -43,7 +46,12 @@ export function useAirdropMetaGeneration({ formData, setFormData }: UseAirdropMe
           description: "تم توليد عنوان ووصف الميتا بنجاح",
         });
       } else {
-        throw new Error("فشل في توليد بيانات الميتا");
+        console.warn("Missing meta data fields in response:", metaData);
+        toast({
+          variant: "destructive",
+          title: "نتائج غير مكتملة",
+          description: "تم توليد بيانات الميتا بشكل جزئي، يرجى المحاولة مرة أخرى",
+        });
       }
     } catch (error) {
       console.error("Error generating meta content:", error);

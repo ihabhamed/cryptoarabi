@@ -20,10 +20,10 @@ const SeoSection: React.FC<SeoSectionProps> = ({
   const [isGeneratingMeta, setIsGeneratingMeta] = React.useState(false);
 
   const generateMetaTagsWithAI = async () => {
-    if (!formData.title || !formData.content) {
+    if (!formData.title) {
       toast({
         title: "نقص في المعلومات",
-        description: "يرجى إضافة عنوان ومحتوى للمنشور أولاً",
+        description: "يرجى إضافة عنوان للمنشور أولاً",
         variant: "destructive"
       });
       return;
@@ -32,9 +32,11 @@ const SeoSection: React.FC<SeoSectionProps> = ({
     setIsGeneratingMeta(true);
     
     try {
+      // Use content if available, otherwise use an empty string
+      const content = formData.content || '';
       const { metaTitle, metaDescription } = await generateMetaTags(
         formData.title,
-        formData.content
+        content
       );
       
       // Update form data with generated meta tags

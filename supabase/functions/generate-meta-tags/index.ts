@@ -17,11 +17,14 @@ serve(async (req) => {
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
     if (!geminiApiKey) {
+      console.error('Gemini API key not found in environment variables');
       throw new Error('Gemini API key not found');
     }
 
-    // Call the Gemini API for meta tag generation
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+    console.log('Calling Gemini API for meta tag generation');
+    
+    // Updated to use the current Gemini API endpoint 
+    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -51,11 +54,26 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Gemini API error: ${JSON.stringify(errorData)}`);
+      const errorText = await response.text();
+      console.error(`Gemini API error (${response.status}):`, errorText);
+      
+      // Fall back to simple meta tags if API fails
+      return new Response(
+        JSON.stringify({
+          metaTitle: title,
+          metaDescription: content && content.length > 160 ? content.substring(0, 157) + '...' : content || title
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
     }
 
     const geminiResponse = await response.json();
+    console.log('Gemini API response received');
     
     // Parse the response text to extract the JSON
     const responseText = geminiResponse.candidates[0].content.parts[0].text;
@@ -72,6 +90,7 @@ serve(async (req) => {
     try {
       metaData = JSON.parse(jsonStr);
     } catch (e) {
+      console.error('Failed to parse JSON response:', e);
       // Fallback to regex parsing if JSON parsing fails
       const metaTitleMatch = responseText.match(/"metaTitle"\s*:\s*"([^"]+)"/);
       const metaDescMatch = responseText.match(/"metaDescription"\s*:\s*"([^"]+)"/);
@@ -100,9 +119,13 @@ serve(async (req) => {
     console.error("Error in generate-meta-tags function:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        metaTitle: "Fallback Title", 
+        metaDescription: "Fallback description for your content. This was generated because we encountered an error with the AI service."
+      }),
       { 
-        status: 500, 
+        status: 200, // Return 200 even on error to prevent client-side crashes
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 

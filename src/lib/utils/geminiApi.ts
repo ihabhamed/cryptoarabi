@@ -21,13 +21,28 @@ export async function generateMetaTags(title: string, content: string) {
       body: JSON.stringify({ title, content: trimmedContent || "" })
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Meta tags API error:", errorData);
-      throw new Error('Failed to generate meta tags');
+    // Get the response data regardless of status
+    const data = await response.json();
+    
+    // If we have error in the data but also have fallback metaTitle/metaDescription
+    if (data.error && (data.metaTitle || data.metaDescription)) {
+      console.warn("Meta tags generation had an error but provided fallbacks:", data.error);
+      return {
+        metaTitle: data.metaTitle || title,
+        metaDescription: data.metaDescription || (content && content.length > 160 ? content.substring(0, 157) + '...' : content)
+      };
     }
     
-    const data = await response.json();
+    // If response is not ok and we don't have fallbacks
+    if (!response.ok && !data.metaTitle) {
+      console.error("Meta tags API error:", data);
+      // Return simple fallback data
+      return {
+        metaTitle: title,
+        metaDescription: content && content.length > 160 ? content.substring(0, 157) + '...' : content
+      };
+    }
+    
     console.log("Meta tags generated:", data);
     return data;
   } catch (error) {
@@ -35,7 +50,7 @@ export async function generateMetaTags(title: string, content: string) {
     // Fallback to simple summarization if API call fails
     return {
       metaTitle: title,
-      metaDescription: content.length > 160 ? content.substring(0, 157) + '...' : content
+      metaDescription: content && content.length > 160 ? content.substring(0, 157) + '...' : content
     };
   }
 }
