@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to validate token
+const isValidToken = (token: string): boolean => {
+  // Check if token is valid
+  const expectedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRscGlxa2Jpd2NkeXpwcXF6c2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjE4MzgsImV4cCI6MjA1OTk5NzgzOH0.5KKw0L7Uo-lsFK0ovvhZXh-_LKYGPE9qq2SIE90acvg";
+  return token === expectedToken;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,24 +21,31 @@ serve(async (req) => {
 
   try {
     // Log all headers for debugging (don't log sensitive values)
-    console.log("Request headers:");
-    for (const [key, value] of req.headers.entries()) {
-      if (key.toLowerCase() !== 'authorization' && key.toLowerCase() !== 'apikey') {
-        console.log(`${key}: ${value}`);
-      } else {
-        console.log(`${key}: [REDACTED]`);
-      }
-    }
+    console.log("Request headers received");
     
-    // Verify the authorization token
+    // Extract and validate token from headers
     const authHeader = req.headers.get('Authorization');
     const apiKeyHeader = req.headers.get('apikey');
     
     // Check for authorization header or apikey (use either)
-    if (!authHeader && !apiKeyHeader) {
-      console.error("Missing Authorization header or apikey");
+    let isAuthenticated = false;
+    let token = '';
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+      isAuthenticated = isValidToken(token);
+      console.log("Auth validated via Authorization header:", isAuthenticated);
+    } 
+    
+    if (!isAuthenticated && apiKeyHeader) {
+      isAuthenticated = isValidToken(apiKeyHeader);
+      console.log("Auth validated via apikey header:", isAuthenticated);
+    }
+    
+    if (!isAuthenticated) {
+      console.error("Authentication failed - invalid or missing token");
       return new Response(
-        JSON.stringify({ error: "Missing authorization" }),
+        JSON.stringify({ error: "Authorization failed - invalid token" }),
         { 
           status: 401, 
           headers: { 
@@ -42,25 +56,31 @@ serve(async (req) => {
       );
     }
     
-    // Extract the token
-    let token = '';
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    } else if (apiKeyHeader) {
-      token = apiKeyHeader;
+    // Get request data
+    const requestData = await req.json();
+    const { title, content } = requestData;
+    
+    if (!title) {
+      return new Response(
+        JSON.stringify({ error: "Missing title in request" }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
     }
     
-    // Log token presence (don't log the actual token)
-    console.log("Token present:", !!token);
-    
-    const { title, content } = await req.json();
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
     if (!geminiApiKey) {
+      console.error("Gemini API key not found");
       throw new Error('Gemini API key not found');
     }
 
-    console.log("Processing request for hashtags with:", { title });
+    console.log("Processing request for hashtags with:", { title: title.substring(0, 30) + "..." });
 
     // Call the Gemini API for hashtag generation
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
@@ -95,13 +115,13 @@ serve(async (req) => {
     console.log("Gemini API response status:", response.status);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Gemini API error:", errorData);
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Gemini API error:", JSON.stringify(errorData));
       throw new Error(`Gemini API error: ${JSON.stringify(errorData)}`);
     }
 
     const geminiResponse = await response.json();
-    console.log("Gemini raw response:", JSON.stringify(geminiResponse).substring(0, 500) + "...");
+    console.log("Gemini response received");
     
     // Check if we have a valid response
     if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
@@ -110,7 +130,7 @@ serve(async (req) => {
     
     // Parse the response text to extract the hashtags
     const responseText = geminiResponse.candidates[0].content.parts[0].text;
-    console.log("Response text:", responseText);
+    console.log("Response text length:", responseText.length);
     
     // Extract JSON from the response (handling potential markdown formatting)
     let jsonStr = responseText;
@@ -123,7 +143,7 @@ serve(async (req) => {
     let hashtags = [];
     try {
       hashtags = JSON.parse(jsonStr);
-      console.log("Parsed hashtags:", hashtags);
+      console.log("Parsed hashtags count:", hashtags.length);
       
       // Ensure hashtags are not empty and are strings
       if (!Array.isArray(hashtags) || hashtags.length === 0) {
@@ -146,11 +166,11 @@ serve(async (req) => {
         hashtags = matches[1].split(',').map(tag => 
           tag.trim().replace(/"/g, '').replace(/'/g, '').replace(/^#/, '')
         );
-        console.log("Regex-parsed hashtags:", hashtags);
+        console.log("Regex-parsed hashtags count:", hashtags.length);
       } else {
         // Last resort: just extract words that look like they could be hashtags
         hashtags = responseText.match(/\b\w+\b/g)?.slice(0, 8) || [];
-        console.log("Last-resort hashtags:", hashtags);
+        console.log("Last-resort hashtags count:", hashtags.length);
       }
     }
     

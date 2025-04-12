@@ -35,15 +35,16 @@ export async function generateHashtags(title: string, content: string) {
   try {
     console.log("Generating hashtags for:", { title, content });
     
-    // Import the Supabase anon key directly from the client
-    const { supabase } = await import('@/integrations/supabase/client');
+    // Use the hardcoded API key for now
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRscGlxa2Jpd2NkeXpwcXF6c2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjE4MzgsImV4cCI6MjA1OTk5NzgzOH0.5KKw0L7Uo-lsFK0ovvhZXh-_LKYGPE9qq2SIE90acvg";
     
-    // Use the key from the client configuration
+    // Make the API request with proper authentication
     const response = await fetch(`https://tlpiqkbiwcdyzpqqzsbg.supabase.co/functions/v1/generate-hashtags`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRscGlxa2Jpd2NkeXpwcXF6c2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjE4MzgsImV4cCI6MjA1OTk5NzgzOH0.5KKw0L7Uo-lsFK0ovvhZXh-_LKYGPE9qq2SIE90acvg"
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // Send as Authorization header
+        'apikey': SUPABASE_ANON_KEY // Also send as apikey header for redundancy
       },
       body: JSON.stringify({ title, content })
     });
