@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAirdrops, useBlogPosts, useServices, useDeleteAirdrop, useDeleteBlogPost, useDeleteService } from '@/lib/hooks';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/lib/hooks';
 import { useAuth } from '@/context/AuthContext';
 import { 
   LayoutDashboard, 
@@ -20,7 +20,10 @@ import {
   Eye,
   Calendar,
   DollarSign,
-  Clock
+  Clock,
+  Settings,
+  Link2,
+  FileText
 } from "lucide-react";
 
 const Admin = () => {
@@ -106,21 +109,59 @@ const Admin = () => {
             <LayoutDashboard className="h-6 w-6 text-crypto-orange" />
             <h1 className="text-xl font-bold text-white">كريبتو بالعربي</h1>
           </div>
-          <Button 
-            variant="ghost" 
-            onClick={handleLogout}
-            className="text-white hover:text-crypto-orange transition-colors flex items-center gap-2"
-          >
-            <span>تسجيل الخروج</span>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin/site-settings')}
+              className="text-white border-white/20 hover:bg-white/10 hover:text-crypto-orange mr-3"
+            >
+              <Settings className="h-4 w-4 ml-2" />
+              <span>إعدادات الموقع</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin/links')}
+              className="text-white border-white/20 hover:bg-white/10 hover:text-crypto-orange mr-3"
+            >
+              <Link2 className="h-4 w-4 ml-2" />
+              <span>إدارة الروابط</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={handleLogout}
+              className="text-white hover:text-crypto-orange transition-colors flex items-center gap-2"
+            >
+              <span>تسجيل الخروج</span>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
       
       <main className="container mx-auto py-8 px-4">
         <Card className="mb-8 bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg">
           <CardHeader className="border-b border-white/10 pb-4">
-            <CardTitle className="text-2xl font-bold text-crypto-orange">لوحة التحكم</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-2xl font-bold text-crypto-orange">لوحة التحكم</CardTitle>
+              <div className="flex space-x-2">
+                <Button
+                  variant="default"
+                  className="bg-crypto-orange hover:bg-crypto-orange/80 text-white mr-2"
+                  onClick={() => navigate('/admin/site-settings')}
+                >
+                  <Settings className="h-4 w-4 ml-2" />
+                  إعدادات الموقع
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-white border-white/20 hover:bg-white/10"
+                  onClick={() => navigate('/admin/links')}
+                >
+                  <Link2 className="h-4 w-4 ml-2" />
+                  إدارة الروابط
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="pt-6">
             <Tabs defaultValue="airdrops" className="w-full">
