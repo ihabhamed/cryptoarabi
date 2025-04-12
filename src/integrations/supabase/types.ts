@@ -9,7 +9,126 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      airdrops: {
+        Row: {
+          claim_url: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          publish_date: string
+          start_date: string | null
+          status: string
+          title: string
+          twitter_link: string | null
+          updated_at: string
+          youtube_link: string | null
+        }
+        Insert: {
+          claim_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          publish_date?: string
+          start_date?: string | null
+          status: string
+          title: string
+          twitter_link?: string | null
+          updated_at?: string
+          youtube_link?: string | null
+        }
+        Update: {
+          claim_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          publish_date?: string
+          start_date?: string | null
+          status?: string
+          title?: string
+          twitter_link?: string | null
+          updated_at?: string
+          youtube_link?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author: string | null
+          category: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          publish_date: string
+          slug: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          publish_date?: string
+          slug?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          publish_date?: string
+          slug?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: string | null
+          id: string
+          image_url: string | null
+          price: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          price?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          price?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

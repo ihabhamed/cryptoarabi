@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -55,12 +56,20 @@ const AirdropFormSection = () => {
   function onSubmit(data: FormValues) {
     const currentDate = new Date();
     
-    // Add start_date and set status
+    // Add start_date and set status, convert dates to ISO strings
     const airdropData: Partial<Airdrop> = {
-      ...data,
+      title: data.title,
+      description: data.description || null,
+      twitter_link: data.twitter_link,
+      youtube_link: data.youtube_link || null,
       start_date: currentDate.toISOString(),
       status: 'active',
     };
+    
+    // Only add end_date if it exists
+    if (data.end_date) {
+      airdropData.end_date = data.end_date.toISOString();
+    }
     
     addAirdrop.mutate(airdropData, {
       onSuccess: () => {
