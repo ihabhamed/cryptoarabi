@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -209,9 +210,16 @@ const AdminBlogForm = () => {
       }
       
       if (isEditMode && id) {
+        // Ensure required fields are present in the update
+        const updateData = {
+          ...finalFormData,
+          title: finalFormData.title as string, // Type assertion since we've validated it's present
+          content: finalFormData.content as string // Type assertion since we've validated it's present
+        };
+        
         const { error } = await supabase
           .from('blog_posts')
-          .update(finalFormData)
+          .update(updateData)
           .eq('id', id);
         
         if (error) throw error;
@@ -221,21 +229,21 @@ const AdminBlogForm = () => {
           description: "تم تحديث المنشور بنجاح",
         });
       } else {
-        // Make sure we have the required fields for insertion
+        // For insertion, explicitly provide required fields
         const newPost = {
-          title: formData.title,
-          content: formData.content,
-          excerpt: formData.excerpt,
-          author: formData.author,
-          category: formData.category,
-          slug: formData.slug,
-          image_url: formData.image_url,
-          publish_date: formData.publish_date
+          title: finalFormData.title as string, // Already validated above
+          content: finalFormData.content as string, // Already validated above
+          excerpt: finalFormData.excerpt,
+          author: finalFormData.author,
+          category: finalFormData.category,
+          slug: finalFormData.slug,
+          image_url: finalFormData.image_url,
+          publish_date: finalFormData.publish_date
         };
         
         const { error } = await supabase
           .from('blog_posts')
-          .insert(finalFormData);
+          .insert(newPost);
         
         if (error) throw error;
         
