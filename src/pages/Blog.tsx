@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,42 +24,48 @@ const Blog = () => {
       title: "أساسيات الاستثمار في العملات المشفرة للمبتدئين",
       excerpt: "دليل شامل لكل من يرغب في دخول عالم العملات المشفرة، من اختيار المنصة المناسبة إلى استراتيجيات التداول الأساسية.",
       date: "١٢ أبريل ٢٠٢٥",
-      category: "أساسيات"
+      category: "أساسيات",
+      slug: "crypto-investment-basics"
     },
     {
       id: 2,
       title: "كيف تؤثر تقنية البلوكتشين على القطاع المالي في العالم العربي؟",
       excerpt: "تحليل معمق لتأثير تقنية البلوكتشين على القطاع المالي في العالم العربي والفرص المتاحة للمؤسسات المالية.",
       date: "٨ أبريل ٢٠٢٥",
-      category: "تكنولوجيا"
+      category: "تكنولوجيا",
+      slug: "blockchain-impact-arabic-finance"
     },
     {
       id: 3,
       title: "دليلك الشامل للـ NFTs وكيفية الاستثمار فيها",
       excerpt: "كل ما تحتاج معرفته عن الرموز غير القابلة للاستبدال (NFTs) وكيفية شرائها وبيعها والاستثمار فيها بنجاح.",
       date: "١ أبريل ٢٠٢٥",
-      category: "استثمار"
+      category: "استثمار",
+      slug: "nft-investment-guide"
     },
     {
       id: 4,
       title: "أفضل محافظ العملات المشفرة لعام ٢٠٢٥",
       excerpt: "مراجعة شاملة لأفضل محافظ العملات المشفرة من حيث الأمان وسهولة الاستخدام والميزات المتقدمة.",
       date: "٢٥ مارس ٢٠٢٥",
-      category: "أدوات"
+      category: "أدوات",
+      slug: "best-crypto-wallets-2025"
     },
     {
       id: 5,
       title: "كيف تتجنب عمليات الاحتيال في سوق العملات المشفرة؟",
       excerpt: "نصائح وإرشادات عملية لحماية استثماراتك من عمليات الاحتيال والمشاريع الوهمية في سوق العملات المشفرة.",
       date: "١٨ مارس ٢٠٢٥",
-      category: "أمان"
+      category: "أمان",
+      slug: "avoid-crypto-scams"
     },
     {
       id: 6,
       title: "مستقبل التمويل اللامركزي (DeFi) في المنطقة العربية",
       excerpt: "نظرة مستقبلية على تطور التمويل اللامركزي وتأثيره على القطاع المالي في المنطقة العربية خلال السنوات القادمة.",
       date: "١٠ مارس ٢٠٢٥",
-      category: "تحليلات"
+      category: "تحليلات",
+      slug: "defi-future-arabic-region"
     },
   ];
 
@@ -95,16 +102,18 @@ const Blog = () => {
                   <p className="text-gray-400 line-clamp-3">{post.excerpt}</p>
                 </CardContent>
                 <CardFooter>
-                  <Button className="text-crypto-orange hover:text-crypto-orange/80 bg-transparent hover:bg-crypto-darkBlue border border-crypto-orange hover:border-crypto-orange/80">
-                    قراءة المزيد
-                    <ArrowLeft className="mr-2 h-4 w-4 rtl-flip" />
-                  </Button>
+                  <Link to={`/blog/${post.slug}`}>
+                    <Button className="text-crypto-orange hover:text-crypto-orange/80 bg-transparent hover:bg-crypto-darkBlue border border-crypto-orange hover:border-crypto-orange/80">
+                      قراءة المزيد
+                      <ArrowLeft className="mr-2 h-4 w-4 rtl-flip" />
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             ))}
           </div>
 
-          {/* Pagination */}
+          {/* Pagination - Updated with Arabic labels */}
           <div className="mt-12">
             <Pagination>
               <PaginationContent>
@@ -115,12 +124,12 @@ const Blog = () => {
                 </PaginationItem>
                 <PaginationItem>
                   <PaginationLink href="#" isActive={currentPage === 1} onClick={() => setCurrentPage(1)}>
-                    ١
+                    1
                   </PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
                   <PaginationLink href="#" isActive={currentPage === 2} onClick={() => setCurrentPage(2)}>
-                    ٢
+                    2
                   </PaginationLink>
                 </PaginationItem>
                 <PaginationItem>

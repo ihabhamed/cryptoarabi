@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +12,8 @@ const BlogSection = () => {
       excerpt: "دليل شامل لكل من يرغب في دخول عالم العملات المشفرة، من اختيار المنصة المناسبة إلى استراتيجيات التداول الأساسية.",
       image: "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       date: "١٢ أبريل ٢٠٢٥",
-      category: "تداول"
+      category: "تداول",
+      slug: "crypto-investment-basics"
     },
     {
       id: 2,
@@ -19,7 +21,8 @@ const BlogSection = () => {
       excerpt: "تحليل معمق لتأثير تقنية البلوكتشين على القطاع المالي في العالم العربي والفرص المتاحة للمؤسسات المالية.",
       image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       date: "٨ أبريل ٢٠٢٥",
-      category: "تكنولوجيا"
+      category: "تكنولوجيا",
+      slug: "blockchain-impact-arabic-finance"
     },
     {
       id: 3,
@@ -27,7 +30,8 @@ const BlogSection = () => {
       excerpt: "استكشاف كيف يمكن للفنانين العرب الاستفادة من تقنية الرموز غير القابلة للاستبدال (NFTs) لتسويق أعمالهم الفنية.",
       image: "https://images.unsplash.com/photo-1646634685252-8db8a56f08b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       date: "١ أبريل ٢٠٢٥",
-      category: "فن"
+      category: "فن",
+      slug: "nft-investment-guide"
     }
   ];
 
@@ -47,10 +51,12 @@ const BlogSection = () => {
               استكشف أحدث المقالات والتحليلات في عالم العملات المشفرة والبلوكتشين
             </p>
           </div>
-          <Button className="mt-4 md:mt-0 bg-transparent hover:bg-crypto-darkBlue text-crypto-orange hover:text-crypto-orange border border-crypto-orange hover:border-crypto-orange">
-            جميع المقالات
-            <ArrowLeft className="mr-2 h-4 w-4 rtl-flip" />
-          </Button>
+          <Link to="/blog">
+            <Button className="mt-4 md:mt-0 bg-transparent hover:bg-crypto-darkBlue text-crypto-orange hover:text-crypto-orange border border-crypto-orange hover:border-crypto-orange">
+              جميع المقالات
+              <ArrowLeft className="mr-2 h-4 w-4 rtl-flip" />
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -73,15 +79,15 @@ const BlogSection = () => {
               </div>
               
               <h3 className="text-xl font-bold mb-3 hover:text-crypto-orange transition-colors">
-                <a href="#">{post.title}</a>
+                <Link to={`/blog/${post.slug}`}>{post.title}</Link>
               </h3>
               
               <p className="text-gray-400 mb-4 line-clamp-3">{post.excerpt}</p>
               
-              <a href="#" className="inline-flex items-center text-crypto-orange hover:text-crypto-orange/80 font-medium">
+              <Link to={`/blog/${post.slug}`} className="inline-flex items-center text-crypto-orange hover:text-crypto-orange/80 font-medium">
                 اقرأ المزيد
                 <ArrowLeft className="mr-1 h-4 w-4 rtl-flip" />
-              </a>
+              </Link>
             </article>
           ))}
         </div>
