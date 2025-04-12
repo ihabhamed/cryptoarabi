@@ -25,7 +25,7 @@ const ManageLinks = () => {
   
   return (
     <AdminLayout>
-      <div className="container mx-auto py-8 px-4">
+      <div dir="rtl" className="container mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-white">إدارة الروابط</h1>
           <p className="text-gray-400">قم بإدارة روابط التذييل والروابط الاجتماعية</p>

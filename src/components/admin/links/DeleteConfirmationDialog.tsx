@@ -15,21 +15,20 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
   onCancel,
   type
 }) => {
-  const title = type === 'footer' ? 'حذف الرابط' : 'حذف رابط التواصل الاجتماعي';
   const description = type === 'footer' 
     ? 'هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الرابط نهائيًا.'
     : 'هذا الإجراء لا يمكن التراجع عنه. سيتم حذف رابط التواصل الاجتماعي نهائيًا.';
 
   return (
     <AlertDialog open={isOpen}>
-      <AlertDialogContent className="bg-crypto-darkGray border border-white/10 text-white">
+      <AlertDialogContent dir="rtl" className="bg-crypto-darkGray border border-white/10 text-white">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-crypto-orange">هل أنت متأكد من الحذف؟</AlertDialogTitle>
           <AlertDialogDescription className="text-gray-400">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogFooter className="flex flex-row-reverse sm:flex-row gap-2">
           <AlertDialogCancel 
             className="bg-transparent border-white/20 text-white hover:bg-white/10"
             onClick={onCancel}
