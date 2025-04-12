@@ -6,7 +6,7 @@ import { toast } from "@/lib/utils/toast-utils";
 interface UseAirdropMetaGenerationProps {
   formData: {
     title: string;
-    description?: string; // Changed to optional to match NewAirdrop type
+    description?: string; // Optional to match NewAirdrop type
     meta_title?: string;
     meta_description?: string;
     hashtags?: string;
@@ -59,18 +59,20 @@ export function useAirdropMetaGeneration({ formData, setFormData }: UseAirdropMe
   };
 
   const generateHashtagsContent = async () => {
-    if (!formData.title || !formData.description) {
+    if (!formData.title) {
       toast({
         variant: "destructive",
         title: "بيانات غير كافية",
-        description: "يرجى إضافة العنوان والوصف أولاً",
+        description: "يرجى إضافة العنوان على الأقل",
       });
       return;
     }
 
     try {
       setIsGeneratingHashtags(true);
-      const hashtagsData = await generateHashtags(formData.title, formData.description);
+      // Use description if available, otherwise use an empty string
+      const description = formData.description || '';
+      const hashtagsData = await generateHashtags(formData.title, description);
       
       if (hashtagsData && hashtagsData.length > 0) {
         setFormData(prev => ({
@@ -83,14 +85,14 @@ export function useAirdropMetaGeneration({ formData, setFormData }: UseAirdropMe
           description: "تم توليد الهاشتاغات بنجاح",
         });
       } else {
-        throw new Error("فشل في توليد الهاشتاغات");
+        throw new Error("لم نتمكن من توليد هاشتاغات للمحتوى الحالي");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating hashtags:", error);
       toast({
         variant: "destructive",
         title: "خطأ في التوليد",
-        description: "حدث خطأ أثناء توليد الهاشتاغات",
+        description: error.message || "حدث خطأ أثناء توليد الهاشتاغات",
       });
     } finally {
       setIsGeneratingHashtags(false);

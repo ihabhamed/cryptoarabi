@@ -50,7 +50,7 @@ const TagsSection: React.FC<TagsSectionProps> = ({
           placeholder="أدخل الهاشتاغات مفصولة بمسافات"
         />
         <p className="text-xs text-gray-400 mt-1">
-          أدخل الهاشتاغات مفصولة بمسافات (مثال: #عملات_مشفرة #بيتكوين)
+          أدخل الهاشتاغات مفصولة بمسافات (مثال: عملات_مشفرة بيتكوين)
         </p>
       </div>
     </div>
