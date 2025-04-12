@@ -42,9 +42,10 @@ export function useAddAirdrop() {
   
   return useMutation({
     mutationFn: async (newAirdrop: Partial<Airdrop>): Promise<Airdrop> => {
+      // Ensure we're sending a single object, not an array
       const { data, error } = await supabase
         .from('airdrops')
-        .insert([newAirdrop])
+        .insert(newAirdrop) // Remove the array brackets
         .select()
         .maybeSingle();
       

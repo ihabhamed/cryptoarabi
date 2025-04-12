@@ -6,7 +6,7 @@ export interface Airdrop {
   start_date: string | null;
   end_date: string | null;
   publish_date: string;
-  status: 'active' | 'expired';
+  status: string; // Changed from 'active' | 'expired' to string to match what Supabase returns
   twitter_link: string | null;
   youtube_link: string | null;
   claim_url: string | null;

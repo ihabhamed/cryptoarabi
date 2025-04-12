@@ -63,7 +63,7 @@ const AirdropFormSection = () => {
       twitter_link: data.twitter_link,
       youtube_link: data.youtube_link || null,
       start_date: currentDate.toISOString(),
-      status: 'active',
+      status: 'active', // This will be treated as a string in our updated type
     };
     
     // Only add end_date if it exists
