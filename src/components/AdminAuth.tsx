@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Lock, Mail } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminAuth = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ const AdminAuth = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { checkIsAdmin } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,30 +25,49 @@ const AdminAuth = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Log in with credentials
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        throw error;
+      if (loginError) {
+        throw new Error(loginError.message);
       }
 
       if (data?.user) {
-        // Check if the user is an admin
-        const isAdmin = await checkIsAdmin();
+        console.log("User logged in successfully, checking if admin...");
         
-        if (!isAdmin) {
+        // Check if the user is an admin with retry logic
+        let isAdminUser = false;
+        let retries = 3;
+        
+        while (retries > 0 && !isAdminUser) {
+          isAdminUser = await checkIsAdmin();
+          console.log(`Admin check (retry ${4-retries}):`, isAdminUser);
+          if (!isAdminUser) {
+            // Wait a bit before retrying
+            await new Promise(resolve => setTimeout(resolve, 500));
+            retries--;
+          } else {
+            break;
+          }
+        }
+        
+        if (isAdminUser) {
+          toast({
+            title: "تم تسجيل الدخول بنجاح",
+            description: "مرحبا بك في لوحة التحكم",
+          });
+          navigate('/admin');
+        } else {
+          // Sign out if not admin
           await supabase.auth.signOut();
           throw new Error('ليس لديك صلاحية الوصول إلى لوحة التحكم');
         }
-        
-        toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحبا بك في لوحة التحكم",
-        });
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       setError(error.message || 'فشل تسجيل الدخول');
       toast({
         variant: "destructive",
