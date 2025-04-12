@@ -161,9 +161,13 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          about_button_text: string | null
+          about_button_url: string | null
           about_content: string
+          about_features: string | null
           about_image_url: string
           about_title: string
+          about_year_founded: string | null
           active_users_count: string
           cta_primary_text: string
           cta_secondary_text: string
@@ -179,9 +183,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          about_button_text?: string | null
+          about_button_url?: string | null
           about_content?: string
+          about_features?: string | null
           about_image_url?: string
           about_title?: string
+          about_year_founded?: string | null
           active_users_count?: string
           cta_primary_text?: string
           cta_secondary_text?: string
@@ -197,9 +205,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          about_button_text?: string | null
+          about_button_url?: string | null
           about_content?: string
+          about_features?: string | null
           about_image_url?: string
           about_title?: string
+          about_year_founded?: string | null
           active_users_count?: string
           cta_primary_text?: string
           cta_secondary_text?: string
