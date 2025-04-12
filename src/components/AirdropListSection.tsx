@@ -102,102 +102,106 @@ const AirdropListSection = () => {
             className="w-full"
           >
             <Card className={`bg-crypto-darkGray border-white/10 transition-all duration-300 hover:border-crypto-orange/50 ${airdrop.status !== 'active' ? 'opacity-80' : ''}`}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-white text-xl">{airdrop.title}</CardTitle>
-                  {airdrop.status === 'active' ? (
-                    <Badge className="bg-green-600 hover:bg-green-700">نشط</Badge>
-                  ) : (
-                    <Badge className="bg-gray-600 hover:bg-gray-700">منتهي</Badge>
-                  )}
-                </div>
-                {(airdrop.start_date || airdrop.end_date) && (
-                  <div className="flex items-center text-sm text-white/70 mt-2">
-                    <Calendar className="h-4 w-4 ml-1" />
-                    <span>
-                      {airdrop.start_date && new Date(airdrop.start_date).toLocaleDateString('ar-SA')}
-                      {airdrop.end_date && ` - ${new Date(airdrop.end_date).toLocaleDateString('ar-SA')}`}
-                    </span>
+              <div className="flex flex-col md:flex-row">
+                {airdrop.image_url && (
+                  <div className="w-full md:w-1/4 h-48 md:h-auto overflow-hidden">
+                    <img 
+                      src={airdrop.image_url} 
+                      alt={airdrop.title} 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
-              </CardHeader>
-              
-              <CardContent>
-                <p className="text-white/80 mb-4 line-clamp-2">{airdrop.description}</p>
-                
-                <CollapsibleTrigger asChild>
-                  <Button 
-                    variant="link" 
-                    className="text-crypto-orange hover:text-crypto-orange/80 px-0 flex items-center gap-1"
-                  >
-                    {expandedId === airdrop.id ? (
-                      <>
-                        <span>عرض أقل</span>
-                        <ChevronUp className="h-4 w-4" />
-                      </>
-                    ) : (
-                      <>
-                        <span>معرفة المزيد</span>
-                        <ChevronDown className="h-4 w-4" />
-                      </>
+                <div className={`flex-1 flex flex-col ${airdrop.image_url ? 'md:w-3/4' : 'w-full'}`}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-white text-xl">{airdrop.title}</CardTitle>
+                      {airdrop.status === 'active' ? (
+                        <Badge className="bg-green-600 hover:bg-green-700">نشط</Badge>
+                      ) : (
+                        <Badge className="bg-gray-600 hover:bg-gray-700">منتهي</Badge>
+                      )}
+                    </div>
+                    {(airdrop.start_date || airdrop.end_date) && (
+                      <div className="flex items-center text-sm text-white/70 mt-2">
+                        <Calendar className="h-4 w-4 ml-1" />
+                        <span>
+                          {airdrop.start_date && new Date(airdrop.start_date).toLocaleDateString('ar-SA')}
+                          {airdrop.end_date && ` - ${new Date(airdrop.end_date).toLocaleDateString('ar-SA')}`}
+                        </span>
+                      </div>
                     )}
-                  </Button>
-                </CollapsibleTrigger>
-                
-                <CollapsibleContent className="mt-4 space-y-3">
-                  <div className="flex flex-col gap-2">
-                    {airdrop.twitter_link && (
-                      <a 
-                        href={airdrop.twitter_link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-white/70 hover:text-crypto-orange flex items-center gap-2 text-sm"
-                      >
-                        <Twitter className="h-4 w-4" />
-                        <span>رابط تويتر</span>
-                        <ExternalLink className="h-3 w-3 mr-auto" />
-                      </a>
-                    )}
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <p className="text-white/80 mb-4 line-clamp-2">{airdrop.description}</p>
                     
-                    {airdrop.youtube_link && (
-                      <a 
-                        href={airdrop.youtube_link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-white/70 hover:text-crypto-orange flex items-center gap-2 text-sm"
+                    <CollapsibleTrigger asChild>
+                      <Button 
+                        variant="link" 
+                        className="text-crypto-orange hover:text-crypto-orange/80 px-0 flex items-center gap-1"
                       >
-                        <Youtube className="h-4 w-4" />
-                        <span>فيديو توضيحي</span>
-                        <ExternalLink className="h-3 w-3 mr-auto" />
-                      </a>
+                        {expandedId === airdrop.id ? (
+                          <>
+                            <span>عرض أقل</span>
+                            <ChevronUp className="h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            <span>معرفة المزيد</span>
+                            <ChevronDown className="h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="mt-4 space-y-3">
+                      <div className="flex flex-col gap-2">
+                        {airdrop.twitter_link && (
+                          <a 
+                            href={airdrop.twitter_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-white/70 hover:text-crypto-orange flex items-center gap-2 text-sm"
+                          >
+                            <Twitter className="h-4 w-4" />
+                            <span>رابط تويتر</span>
+                            <ExternalLink className="h-3 w-3 mr-auto" />
+                          </a>
+                        )}
+                        
+                        {airdrop.youtube_link && (
+                          <a 
+                            href={airdrop.youtube_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-white/70 hover:text-crypto-orange flex items-center gap-2 text-sm"
+                          >
+                            <Youtube className="h-4 w-4" />
+                            <span>فيديو توضيحي</span>
+                            <ExternalLink className="h-3 w-3 mr-auto" />
+                          </a>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </CardContent>
+                  
+                  <CardFooter>
+                    {airdrop.status === 'active' ? (
+                      <Link to={`/airdrop/${airdrop.id}`} className="w-full">
+                        <Button className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white">
+                          <Rocket className="h-4 w-4 ml-2" />
+                          المطالبة بالإيردروب
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white" disabled>
+                        انتهى الإيردروب
+                      </Button>
                     )}
-                  </div>
-                </CollapsibleContent>
-              </CardContent>
-              
-              <CardFooter>
-                {airdrop.status === 'active' ? (
-                  airdrop.claim_url ? (
-                    <a href={airdrop.claim_url} target="_blank" rel="noopener noreferrer" className="w-full">
-                      <Button className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white">
-                        <Rocket className="h-4 w-4 ml-2" />
-                        المطالبة بالإيردروب
-                      </Button>
-                    </a>
-                  ) : (
-                    <Link to={`/airdrop/${airdrop.id}`} className="w-full">
-                      <Button className="w-full bg-crypto-orange hover:bg-crypto-orange/80 text-white">
-                        <Rocket className="h-4 w-4 ml-2" />
-                        المطالبة بالإيردروب
-                      </Button>
-                    </Link>
-                  )
-                ) : (
-                  <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white" disabled>
-                    انتهى الإيردروب
-                  </Button>
-                )}
-              </CardFooter>
+                  </CardFooter>
+                </div>
+              </div>
             </Card>
           </Collapsible>
         ))}

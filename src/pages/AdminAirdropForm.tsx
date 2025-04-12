@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Copy, Link as LinkIcon } from "lucide-react";
 import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/supabase-hooks";
 import { NewAirdrop } from '@/types/supabase';
 
@@ -18,6 +19,7 @@ const AdminAirdropForm = () => {
   const { data: existingAirdrop, isLoading } = useAirdrop(id);
   const addAirdrop = useAddAirdrop();
   const updateAirdrop = useUpdateAirdrop();
+  const [linkCopied, setLinkCopied] = useState(false);
   
   const [formData, setFormData] = useState<NewAirdrop>({
     title: '',
@@ -28,6 +30,7 @@ const AdminAirdropForm = () => {
     claim_url: '',
     start_date: '',
     end_date: '',
+    image_url: '',
     publish_date: new Date().toISOString()
   });
   
@@ -45,6 +48,7 @@ const AdminAirdropForm = () => {
           claim_url: existingAirdrop.claim_url || '',
           start_date: existingAirdrop.start_date || '',
           end_date: existingAirdrop.end_date || '',
+          image_url: existingAirdrop.image_url || '',
           publish_date: existingAirdrop.publish_date
         };
         
@@ -74,6 +78,7 @@ const AdminAirdropForm = () => {
               claim_url: parsedData.claim_url || '',
               start_date: parsedData.start_date || '',
               end_date: parsedData.end_date || '',
+              image_url: parsedData.image_url || '',
               publish_date: parsedData.publish_date || new Date().toISOString()
             });
           } catch (e) {
@@ -155,6 +160,27 @@ const AdminAirdropForm = () => {
     const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
     localStorage.removeItem(storageKey);
     navigate('/admin');
+  };
+
+  // Copy link to clipboard
+  const copyAirdropLink = () => {
+    if (isEditMode && id) {
+      const link = `${window.location.origin}/airdrop/${id}`;
+      navigator.clipboard.writeText(link).then(() => {
+        setLinkCopied(true);
+        toast({
+          title: "تم النسخ",
+          description: "تم نسخ الرابط بنجاح",
+        });
+        setTimeout(() => setLinkCopied(false), 2000);
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "غير متاح",
+        description: "يجب حفظ الإيردروب أولاً قبل نسخ الرابط",
+      });
+    }
   };
   
   if (isLoading && isEditMode) {
@@ -249,6 +275,17 @@ const AdminAirdropForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <label className="block text-white mb-2">رابط الصورة</label>
+                <Input
+                  name="image_url"
+                  value={formData.image_url || ''}
+                  onChange={handleChange}
+                  placeholder="أدخل رابط صورة الإيردروب (اختياري)"
+                  className="bg-crypto-darkBlue/50 border-white/20 text-white"
+                />
+              </div>
               
               <div>
                 <label className="block text-white mb-2">رابط تويتر</label>
@@ -282,6 +319,30 @@ const AdminAirdropForm = () => {
                   className="bg-crypto-darkBlue/50 border-white/20 text-white"
                 />
               </div>
+
+              {isEditMode && id && (
+                <div className="mt-4 p-4 bg-crypto-darkBlue/30 rounded-md">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <LinkIcon className="h-5 w-5 text-crypto-orange mr-2" />
+                      <span className="text-white">رابط الإيردروب:</span>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-crypto-orange text-crypto-orange hover:bg-crypto-orange/10"
+                      onClick={copyAirdropLink}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      {linkCopied ? "تم النسخ" : "نسخ الرابط"}
+                    </Button>
+                  </div>
+                  <p className="text-gray-400 text-sm mt-2 truncate">
+                    {`${window.location.origin}/airdrop/${id}`}
+                  </p>
+                </div>
+              )}
             </form>
           </CardContent>
           <CardFooter className="border-t border-white/10 pt-4 flex justify-end gap-3">

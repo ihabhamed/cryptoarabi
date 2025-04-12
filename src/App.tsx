@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Contact from "./pages/Contact";
 import Airdrop from "./pages/Airdrop";
+import AirdropDetail from "./pages/AirdropDetail";
 import Services from "./pages/Services";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -38,6 +39,7 @@ const App: React.FC = () => {
               <Route path="/" element={<Index />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/airdrop" element={<Airdrop />} />
+              <Route path="/airdrop/:id" element={<AirdropDetail />} />
               <Route path="/services" element={<Services />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />

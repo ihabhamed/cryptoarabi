@@ -77,6 +77,15 @@ const AirdropSection = () => {
                 key={airdrop.id} 
                 className="bg-crypto-darkGray border-white/10 transition-all duration-300 hover:border-crypto-orange/50 hover:translate-y-[-5px]"
               >
+                {airdrop.image_url && (
+                  <div className="w-full h-40 overflow-hidden">
+                    <img 
+                      src={airdrop.image_url} 
+                      alt={airdrop.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-white text-lg line-clamp-1">{airdrop.title}</CardTitle>

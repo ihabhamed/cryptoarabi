@@ -10,6 +10,7 @@ export interface Airdrop {
   twitter_link: string | null;
   youtube_link: string | null;
   claim_url: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,7 @@ export interface NewAirdrop {
   twitter_link?: string | null;
   youtube_link?: string | null;
   claim_url?: string | null;
+  image_url?: string | null;
 }
 
 export interface BlogPost {
