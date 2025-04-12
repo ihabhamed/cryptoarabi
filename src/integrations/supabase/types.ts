@@ -96,6 +96,36 @@ export type Database = {
         }
         Relationships: []
       }
+      footer_links: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           created_at: string
@@ -126,6 +156,90 @@ export type Database = {
           price?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          about_content: string
+          about_image_url: string
+          about_title: string
+          active_users_count: string
+          cta_primary_text: string
+          cta_secondary_text: string
+          footer_description: string
+          hero_subtitle: string
+          hero_title: string
+          id: string
+          privacy_policy: string | null
+          site_name: string
+          successful_projects_count: string
+          support_hours: string
+          terms_conditions: string | null
+          updated_at: string
+        }
+        Insert: {
+          about_content?: string
+          about_image_url?: string
+          about_title?: string
+          active_users_count?: string
+          cta_primary_text?: string
+          cta_secondary_text?: string
+          footer_description?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          privacy_policy?: string | null
+          site_name?: string
+          successful_projects_count?: string
+          support_hours?: string
+          terms_conditions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          about_content?: string
+          about_image_url?: string
+          about_title?: string
+          active_users_count?: string
+          cta_primary_text?: string
+          cta_secondary_text?: string
+          footer_description?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          privacy_policy?: string | null
+          site_name?: string
+          successful_projects_count?: string
+          support_hours?: string
+          terms_conditions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      social_links: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          platform: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          icon: string
+          id?: string
+          platform: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          platform?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }

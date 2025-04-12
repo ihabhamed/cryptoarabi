@@ -16,6 +16,8 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminAirdropForm from "./pages/AdminAirdropForm";
 import AdminBlogForm from "./pages/AdminBlogForm";
 import AdminServiceForm from "./pages/AdminServiceForm";
+import SiteSettings from "./pages/admin/SiteSettings";
+import ManageLinks from "./pages/admin/ManageLinks";
 import NotFound from "./pages/NotFound";
 import React from "react";
 import { AuthProvider } from "./context/AuthContext";
@@ -49,6 +51,22 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/site-settings" 
+                element={
+                  <ProtectedRoute>
+                    <SiteSettings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/links" 
+                element={
+                  <ProtectedRoute>
+                    <ManageLinks />
                   </ProtectedRoute>
                 } 
               />

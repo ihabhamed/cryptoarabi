@@ -3,10 +3,12 @@ import React, { useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSiteSettings } from "@/lib/hooks/useSiteSettings";
 
 const HeroSection = () => {
   const backgroundRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const { data: siteSettings } = useSiteSettings();
   
   // Animation effect for background elements
   useEffect(() => {
@@ -77,24 +79,23 @@ const HeroSection = () => {
             className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 leading-tight animate-fade-in"
             style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.3)' }}
           >
-            مستقبل المال الرقمي <br />
-            يبدأ من <span className="text-gradient-primary glow-text">هنا</span>
+            {siteSettings?.hero_title || 'مستقبل المال الرقمي يبدأ من هنا'}
           </h1>
           <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            استكشف عالم العملات المشفرة والبلوكتشين مع منصتنا المتخصصة. نقدم لك أحدث المعلومات والتحليلات والاستشارات في عالم الويب 3.0
+            {siteSettings?.hero_subtitle || 'استكشف عالم العملات المشفرة والبلوكتشين مع منصتنا المتخصصة. نقدم لك أحدث المعلومات والتحليلات والاستشارات في عالم الويب 3.0'}
           </p>
           <div className="flex flex-wrap justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.5s' }}>
             <Button 
               className="bg-crypto-orange hover:bg-crypto-orange/80 text-white py-6 px-8 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]"
             >
-              ابدأ رحلتك
+              {siteSettings?.cta_primary_text || 'ابدأ رحلتك'}
               <ArrowLeft className="mr-2 h-5 w-5 rtl-flip" />
             </Button>
             <Button 
               variant="outline" 
               className="border-white/20 hover:border-white/40 text-white py-6 px-8 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]"
             >
-              تعلم المزيد
+              {siteSettings?.cta_secondary_text || 'تعلم المزيد'}
             </Button>
           </div>
         </div>
@@ -102,15 +103,21 @@ const HeroSection = () => {
         {/* Stats with animations */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 animate-fade-in" style={{ animationDelay: '0.4s' }}>
           <div className="glass-morphism p-6 rounded-xl text-center transition-transform duration-300 hover:scale-105 hover:bg-white/10">
-            <h3 className="text-4xl font-bold text-crypto-orange mb-2 counter-animation">+١٠٠ ألف</h3>
+            <h3 className="text-4xl font-bold text-crypto-orange mb-2 counter-animation">
+              {siteSettings?.active_users_count || '+١٠٠ ألف'}
+            </h3>
             <p className="text-gray-300">مستخدم نشط</p>
           </div>
           <div className="glass-morphism p-6 rounded-xl text-center transition-transform duration-300 hover:scale-105 hover:bg-white/10">
-            <h3 className="text-4xl font-bold text-crypto-orange mb-2 counter-animation">+٥٠</h3>
+            <h3 className="text-4xl font-bold text-crypto-orange mb-2 counter-animation">
+              {siteSettings?.successful_projects_count || '+٥٠'}
+            </h3>
             <p className="text-gray-300">مشروع ناجح</p>
           </div>
           <div className="glass-morphism p-6 rounded-xl text-center transition-transform duration-300 hover:scale-105 hover:bg-white/10">
-            <h3 className="text-4xl font-bold text-crypto-orange mb-2">٢٤/٧</h3>
+            <h3 className="text-4xl font-bold text-crypto-orange mb-2">
+              {siteSettings?.support_hours || '٢٤/٧'}
+            </h3>
             <p className="text-gray-300">دعم فني</p>
           </div>
         </div>

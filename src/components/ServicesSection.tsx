@@ -8,9 +8,13 @@ import {
   Code 
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useServices } from '@/lib/hooks';
 
 const ServicesSection = () => {
-  const services = [
+  const { data: servicesData, isLoading } = useServices();
+  
+  // Default services to show if data is loading or not available
+  const defaultServices = [
     {
       title: "تداول العملات المشفرة",
       description: "احصل على إرشادات وتحليلات متخصصة في تداول العملات المشفرة وإدارة المحافظ الاستثمارية الرقمية.",
@@ -32,6 +36,27 @@ const ServicesSection = () => {
       icon: Shield
     }
   ];
+
+  // Map database service icons to Lucide icons
+  const iconMap: Record<string, React.ElementType> = {
+    'wallet': Wallet,
+    'chart': BarChart3,
+    'layers': Layers,
+    'shield': Shield,
+    'code': Code,
+    // Default to Layers if no icon specified
+    'default': Layers
+  };
+
+  // Map database services to the format needed for rendering
+  const services = isLoading || !servicesData 
+    ? defaultServices 
+    : servicesData.map(service => ({
+        title: service.title,
+        description: service.description || '',
+        // Use the mapped icon or default to Layers
+        icon: iconMap[service.image_url || 'default'] || Layers
+      }));
 
   return (
     <section id="services" className="section-padding bg-crypto-darkGray relative">
