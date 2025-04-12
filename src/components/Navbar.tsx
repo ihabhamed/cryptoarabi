@@ -25,6 +25,7 @@ const Navbar = () => {
           <Link to="/airdrop" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">إيردروب</Link>
           <Link to="/blog" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">المدونة</Link>
           <Link to="/contact" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">تواصل معنا</Link>
+          <Link to="/admin" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">لوحة التحكم</Link>
         </div>
 
         {/* Call to action button */}
@@ -51,6 +52,7 @@ const Navbar = () => {
             <Link to="/airdrop" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">إيردروب</Link>
             <Link to="/blog" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">المدونة</Link>
             <Link to="/contact" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">تواصل معنا</Link>
+            <Link to="/admin" className="block px-3 py-2 text-white hover:text-crypto-orange transition-colors">لوحة التحكم</Link>
             <Button className="w-full mt-4 bg-crypto-orange hover:bg-crypto-orange/80 text-white">ابدأ الآن</Button>
           </div>
         </div>
