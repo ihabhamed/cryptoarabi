@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Save, Copy, Link as LinkIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Save, Copy, Link as LinkIcon, Upload, Image as ImageIcon, X } from "lucide-react";
 import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/hooks";
 import { NewAirdrop } from '@/types/supabase';
+import { uploadImage, validateImageFile } from '@/lib/utils/imageUpload';
 
 const AdminAirdropForm = () => {
   const { id } = useParams();
@@ -19,6 +20,9 @@ const AdminAirdropForm = () => {
   const addAirdrop = useAddAirdrop();
   const updateAirdrop = useUpdateAirdrop();
   const [linkCopied, setLinkCopied] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<NewAirdrop>({
     title: '',
@@ -89,6 +93,11 @@ const AdminAirdropForm = () => {
     };
     
     loadFormData();
+    
+    // If in edit mode and the airdrop has an image_url, set it as the preview
+    if (isEditMode && existingAirdrop?.image_url) {
+      setPreviewUrl(existingAirdrop.image_url);
+    }
   }, [existingAirdrop, id, isEditMode]);
   
   // Save form data to localStorage whenever it changes
@@ -115,6 +124,39 @@ const AdminAirdropForm = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const error = validateImageFile(file);
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في الصورة",
+        description: error,
+      });
+      return;
+    }
+    
+    setSelectedImage(file);
+    
+    // Create a preview URL
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    
+    // Clear the input value so the same file can be selected again if needed
+    e.target.value = '';
+  };
+  
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (previewUrl && !previewUrl.startsWith('http')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setFormData(prev => ({ ...prev, image_url: '' }));
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -124,17 +166,37 @@ const AdminAirdropForm = () => {
         throw new Error('العنوان والحالة مطلوبان');
       }
       
+      let finalFormData = { ...formData };
+      
+      // Upload image if selected
+      if (selectedImage) {
+        setUploadingImage(true);
+        const imageUrl = await uploadImage(selectedImage, 'airdrops');
+        setUploadingImage(false);
+        
+        if (!imageUrl) {
+          toast({
+            variant: "destructive",
+            title: "خطأ في رفع الصورة",
+            description: "حدث خطأ أثناء رفع الصورة، يرجى المحاولة مرة أخرى",
+          });
+          return;
+        }
+        
+        finalFormData = { ...finalFormData, image_url: imageUrl };
+      }
+      
       if (isEditMode && id) {
         await updateAirdrop.mutateAsync({
           id,
-          ...formData
+          ...finalFormData
         });
         toast({
           title: "تم التحديث بنجاح",
           description: "تم تحديث الإيردروب بنجاح",
         });
       } else {
-        await addAirdrop.mutateAsync(formData);
+        await addAirdrop.mutateAsync(finalFormData);
         toast({
           title: "تمت الإضافة بنجاح",
           description: "تم إضافة الإيردروب بنجاح",
@@ -276,14 +338,61 @@ const AdminAirdropForm = () => {
               </div>
 
               <div>
-                <label className="block text-white mb-2">رابط الصورة</label>
-                <Input
-                  name="image_url"
-                  value={formData.image_url || ''}
-                  onChange={handleChange}
-                  placeholder="أدخل رابط صورة الإيردروب (اختياري)"
-                  className="bg-crypto-darkBlue/50 border-white/20 text-white"
-                />
+                <label className="block text-white mb-2">صورة الإيردروب</label>
+                
+                {/* Image Preview */}
+                {previewUrl && (
+                  <div className="relative mt-2 mb-4 w-full max-w-xs mx-auto">
+                    <img 
+                      src={previewUrl} 
+                      alt="معاينة الصورة" 
+                      className="w-full h-auto rounded-md border border-white/20 object-cover aspect-video"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                
+                <div className="flex flex-col gap-3">
+                  {/* File Upload */}
+                  <div className="relative">
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <div className="flex items-center justify-center gap-2 p-4 bg-crypto-darkBlue/50 border-2 border-dashed border-white/20 rounded-md hover:bg-crypto-darkBlue/70 transition-colors">
+                        <Upload className="h-5 w-5 text-crypto-orange" />
+                        <span>اختر صورة للرفع أو اسحبها هنا</span>
+                      </div>
+                      <input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  </div>
+                  
+                  {/* URL Input */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-white text-sm">أو</span>
+                    <Input
+                      name="image_url"
+                      value={formData.image_url || ''}
+                      onChange={handleChange}
+                      placeholder="أدخل رابط صورة الإيردروب"
+                      className="bg-crypto-darkBlue/50 border-white/20 text-white"
+                      disabled={!!selectedImage}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">يسمح بالصور بحجم أقصى 2 ميغابايت، بصيغة JPG، PNG، GIF أو WEBP.</p>
               </div>
               
               <div>
@@ -356,10 +465,11 @@ const AdminAirdropForm = () => {
               type="submit"
               className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
               onClick={handleSubmit}
-              disabled={addAirdrop.isPending || updateAirdrop.isPending}
+              disabled={addAirdrop.isPending || updateAirdrop.isPending || uploadingImage}
             >
               <Save className="mr-2 h-4 w-4" />
               {isEditMode ? 'حفظ التغييرات' : 'إضافة الإيردروب'}
+              {uploadingImage && <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>}
             </Button>
           </CardFooter>
         </Card>
