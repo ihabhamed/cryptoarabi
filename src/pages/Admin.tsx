@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useAirdrops, useBlogPosts, useServices, useDeleteAirdrop, useDeleteBlogPost, useDeleteService } from '@/lib/supabase-hooks';
+import { useAirdrops, useBlogPosts, useServices, useDeleteAirdrop, useDeleteBlogPost, useDeleteService } from '@/lib/hooks';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
