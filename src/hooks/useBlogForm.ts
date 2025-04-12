@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useBlogFormState } from './blog/useBlogFormState';
 import { useBlogImage } from './blog/useBlogImage';
 import { useBlogApi } from './blog/useBlogApi';
-import { BlogPost } from '@/types/supabase';
+import { useBlogSubmit } from './blog/useBlogSubmit';
 
 interface UseBlogFormProps {
   id?: string;
@@ -16,8 +16,6 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     setFormData,
     isLoading,
     setIsLoading,
-    isSaving,
-    setIsSaving,
     isEditMode,
     handleChange,
     generateSlug,
@@ -35,9 +33,13 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
   } = useBlogImage();
 
   const {
-    fetchBlogPost,
-    saveBlogPost
+    fetchBlogPost
   } = useBlogApi({ id, onSuccess });
+
+  const {
+    isSaving,
+    handleSubmit
+  } = useBlogSubmit({ id, onSuccess });
 
   // Load blog post data if in edit mode
   useEffect(() => {
@@ -61,43 +63,6 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     
     loadBlogPost();
   }, [id, isEditMode]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    
-    try {
-      if (!formData.slug && formData.title) {
-        generateSlug();
-      }
-      
-      // Upload image if selected
-      let finalFormData: Partial<BlogPost> = { ...formData };
-      
-      if (selectedImage) {
-        const imageUrl = await uploadBlogImage();
-        
-        if (imageUrl) {
-          finalFormData = { 
-            ...finalFormData, 
-            image_url: imageUrl 
-          };
-        } else {
-          setIsSaving(false);
-          return;
-        }
-      }
-      
-      const success = await saveBlogPost(finalFormData);
-      
-      if (success) {
-        // Clear form data after successful submission
-        clearFormData();
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   return {
     formData,
