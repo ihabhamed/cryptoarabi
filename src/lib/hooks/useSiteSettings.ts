@@ -17,10 +17,6 @@ export interface SiteSettings {
   about_title: string;
   about_content: string;
   about_image_url: string;
-  about_features: string[];
-  about_year_founded: string;
-  about_button_text: string;
-  about_button_url: string;
   footer_description: string;
   privacy_policy: string | null;
   terms_conditions: string | null;
@@ -42,28 +38,6 @@ export const useSiteSettings = () => {
         throw error;
       }
 
-      // Parse string arrays if they exist
-      if (data && typeof data.about_features === 'string') {
-        try {
-          data.about_features = JSON.parse(data.about_features);
-        } catch (e) {
-          // If parsing fails, set default array
-          data.about_features = [
-            "فريق من الخبراء المتخصصين في البلوكتشين والعملات المشفرة",
-            "أكثر من 5 سنوات من الخبرة في مجال الويب 3.0",
-            "استشارات مخصصة لاحتياجات عملك الفريدة",
-            "دعم فني على مدار الساعة طوال أيام الأسبوع"
-          ];
-        }
-      } else if (!data.about_features) {
-        data.about_features = [
-          "فريق من الخبراء المتخصصين في البلوكتشين والعملات المشفرة",
-          "أكثر من 5 سنوات من الخبرة في مجال الويب 3.0",
-          "استشارات مخصصة لاحتياجات عملك الفريدة",
-          "دعم فني على مدار الساعة طوال أيام الأسبوع"
-        ];
-      }
-
       return data as SiteSettings;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -77,16 +51,9 @@ export const useUpdateSiteSettings = () => {
   
   return useMutation({
     mutationFn: async (updatedSettings: Partial<SiteSettings>) => {
-      // Handle arrays that need to be converted to JSON strings for storage
-      const processedSettings = { ...updatedSettings };
-      
-      if (processedSettings.about_features && Array.isArray(processedSettings.about_features)) {
-        processedSettings.about_features = JSON.stringify(processedSettings.about_features);
-      }
-      
       const { data, error } = await supabase
         .from('site_settings')
-        .update(processedSettings)
+        .update(updatedSettings)
         .eq('id', updatedSettings.id)
         .select()
         .single();
