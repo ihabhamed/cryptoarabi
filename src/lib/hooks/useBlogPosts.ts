@@ -13,7 +13,16 @@ export function useBlogPosts() {
         .order('publish_date', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Ensure we have all required fields for the BlogPost type
+      const posts = data?.map(post => ({
+        ...post,
+        meta_title: post.meta_title || null,
+        meta_description: post.meta_description || null,
+        hashtags: post.hashtags || null
+      })) || [];
+      
+      return posts;
     },
   });
 }
@@ -30,7 +39,17 @@ export function useBlogPost(slug: string | undefined) {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      
+      if (data) {
+        return {
+          ...data,
+          meta_title: data.meta_title || null,
+          meta_description: data.meta_description || null,
+          hashtags: data.hashtags || null
+        };
+      }
+      
+      return null;
     },
     enabled: !!slug,
   });
@@ -54,7 +73,16 @@ export function useRelatedBlogPosts(currentPostId: string | undefined, hashtags:
         .limit(4);
       
       if (error) throw error;
-      return data || [];
+      
+      // Ensure we have all required fields for the BlogPost type
+      const posts = data?.map(post => ({
+        ...post,
+        meta_title: post.meta_title || null,
+        meta_description: post.meta_description || null,
+        hashtags: post.hashtags || null
+      })) || [];
+      
+      return posts;
     },
     enabled: !!currentPostId && !!hashtags,
   });
