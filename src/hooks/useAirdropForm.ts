@@ -1,13 +1,13 @@
 
-import { useState, useEffect } from 'react';
-import { useAirdrop, useAddAirdrop, useUpdateAirdrop } from "@/lib/hooks";
-import { toast } from "@/lib/utils/toast-utils";
-import { NewAirdrop } from '@/types/supabase';
+import { useState } from 'react';
+import { useAirdrop } from "@/lib/hooks";
+import { formatAirdropData } from '@/lib/utils/airdropFormUtils';
 import { useAirdropImage } from '@/hooks/useAirdropImage';
 import { useAirdropLink } from '@/hooks/useAirdropLink';
 import { useAirdropMetaGeneration } from '@/hooks/useAirdropMetaGeneration';
-import { formatAirdropData, validateAirdropData } from '@/lib/utils/airdropFormUtils';
-import { saveFormData, clearFormData, getFormData, getStorageKey } from '@/lib/utils/formStorage';
+import { useAirdropStorage } from '@/hooks/airdrop/useAirdropStorage';
+import { useAirdropFormHandlers } from '@/hooks/airdrop/useAirdropFormHandlers';
+import { useAirdropSubmission } from '@/hooks/airdrop/useAirdropSubmission';
 
 interface UseAirdropFormProps {
   id?: string;
@@ -17,8 +17,6 @@ interface UseAirdropFormProps {
 export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   const isEditMode = !!id;
   const { data: existingAirdrop, isLoading } = useAirdrop(id);
-  const addAirdrop = useAddAirdrop();
-  const updateAirdrop = useUpdateAirdrop();
   const { linkCopied, copyAirdropLink: baseCopyAirdropLink } = useAirdropLink();
   
   // Create a wrapper function that passes the ID to copyAirdropLink
@@ -29,23 +27,25 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
       baseCopyAirdropLink();
     }
   };
+
+  // Get formatted data for storage
+  const formattedAirdropData = existingAirdrop ? formatAirdropData(existingAirdrop) : undefined;
   
-  const [formData, setFormData] = useState<NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string }>({
-    title: '',
-    description: '',
-    status: 'upcoming',
-    twitter_link: '',
-    youtube_link: '',
-    claim_url: '',
-    start_date: '',
-    end_date: '',
-    image_url: '',
-    publish_date: new Date().toISOString(),
-    meta_title: '',
-    meta_description: '',
-    hashtags: ''
+  // Use the storage hook
+  const {
+    formData,
+    setFormData,
+    clearAirdropFormData
+  } = useAirdropStorage({
+    id,
+    isEditMode,
+    initialData: formattedAirdropData
   });
+
+  // Use the form handlers hook
+  const { handleChange, handleSelectChange } = useAirdropFormHandlers(setFormData);
   
+  // Use the image management hook
   const {
     uploadingImage,
     previewUrl,
@@ -56,7 +56,12 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   } = useAirdropImage({ 
     initialImageUrl: isEditMode && existingAirdrop?.image_url ? existingAirdrop.image_url : null 
   });
+
+  // Custom handlers that pass the state setter
+  const handleImageUrlChange = (url: string) => handleImageUrlChangeBase(url, setFormData);
+  const handleRemoveImage = () => handleRemoveImageBase(setFormData);
   
+  // Use the meta generation hook
   const {
     isGeneratingMeta,
     isGeneratingHashtags,
@@ -67,132 +72,16 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     setFormData
   });
   
-  // Custom handlers that pass the state setter
-  const handleImageUrlChange = (url: string) => handleImageUrlChangeBase(url, setFormData);
-  const handleRemoveImage = () => handleRemoveImageBase(setFormData);
-  
-  // Load data from localStorage or API
-  useEffect(() => {
-    const loadFormData = async () => {
-      const storageKey = getStorageKey("airdrop", isEditMode, id);
-      
-      if (isEditMode && existingAirdrop) {
-        // For edit mode, use the data from useAirdrop hook
-        const airdropData = formatAirdropData(existingAirdrop);
-        setFormData({
-          ...airdropData,
-          meta_title: existingAirdrop.meta_title || airdropData.title,
-          meta_description: existingAirdrop.meta_description || airdropData.description,
-          hashtags: existingAirdrop.hashtags || ''
-        });
-        
-        // Save to localStorage in edit mode with unique key
-        saveFormData(storageKey, { 
-          ...airdropData, 
-          meta_title: existingAirdrop.meta_title || airdropData.title,
-          meta_description: existingAirdrop.meta_description || airdropData.description,
-          hashtags: existingAirdrop.hashtags || '',
-          id 
-        });
-      } else if (!isEditMode) {
-        // For new entry, check localStorage
-        const savedData = getFormData<NewAirdrop & { 
-          id?: string; 
-          meta_title?: string; 
-          meta_description?: string;
-          hashtags?: string;
-        }>(storageKey);
-        
-        if (savedData) {
-          setFormData({
-            title: savedData.title || '',
-            description: savedData.description || '',
-            status: savedData.status || 'upcoming',
-            twitter_link: savedData.twitter_link || '',
-            youtube_link: savedData.youtube_link || '',
-            claim_url: savedData.claim_url || '',
-            start_date: savedData.start_date || '',
-            end_date: savedData.end_date || '',
-            image_url: savedData.image_url || '',
-            publish_date: savedData.publish_date || new Date().toISOString(),
-            meta_title: savedData.meta_title || '',
-            meta_description: savedData.meta_description || '',
-            hashtags: savedData.hashtags || ''
-          });
-        }
-      }
-    };
-    
-    loadFormData();
-  }, [existingAirdrop, id, isEditMode]);
-  
-  // Save form data to localStorage whenever it changes
-  useEffect(() => {
-    // Only save if there's actual data
-    if (formData.title) {
-      const storageKey = getStorageKey("airdrop", isEditMode, id);
-      saveFormData(storageKey, { ...formData, id });
-    }
-  }, [formData, id, isEditMode]);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      // Validate required fields
-      const validationError = validateAirdropData(formData);
-      if (validationError) {
-        throw new Error(validationError);
-      }
-      
-      let finalFormData = { ...formData };
-      
-      // Upload image if selected
-      const imageUrl = await uploadSelectedImage();
-      if (imageUrl) {
-        finalFormData = { ...finalFormData, image_url: imageUrl };
-      }
-      
-      if (isEditMode && id) {
-        await updateAirdrop.mutateAsync({
-          id,
-          ...finalFormData
-        });
-        toast({
-          title: "تم التحديث بنجاح",
-          description: "تم تحديث الإيردروب بنجاح",
-        });
-      } else {
-        await addAirdrop.mutateAsync(finalFormData);
-        toast({
-          title: "تمت الإضافة بنجاح",
-          description: "تم إضافة الإيردروب بنجاح",
-        });
-      }
-      
-      // Clear form data after successful submission
-      const storageKey = getStorageKey("airdrop", isEditMode, id);
-      clearFormData(storageKey);
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "حدث خطأ",
-        description: error.message || "حدث خطأ أثناء حفظ الإيردروب",
-      });
-    }
+  // Use the submission hook
+  const { handleSubmit: submitForm, isSaving } = useAirdropSubmission({
+    id,
+    onSuccess,
+    clearAirdropFormData
+  });
+
+  // Create the main handleSubmit function that combines the pieces
+  const handleSubmit = (e: React.FormEvent) => {
+    submitForm(e, formData, uploadSelectedImage);
   };
 
   return {
@@ -213,6 +102,6 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     copyAirdropLink,
     generateMetaContent,
     generateHashtagsContent,
-    isSaving: addAirdrop.isPending || updateAirdrop.isPending
+    isSaving
   };
 }
