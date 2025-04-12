@@ -15,24 +15,31 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
     if (!isEditMode || !id) return null;
     
     try {
+      console.log("Fetching blog post with ID:", id);
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('id', id)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching blog post:", error);
+        throw error;
+      }
+      
+      console.log("Fetched blog post data:", data);
       
       if (data) {
         return {
-          title: data.title,
-          content: data.content,
+          id: data.id,
+          title: data.title || '',
+          content: data.content || '',
           excerpt: data.excerpt || '',
           author: data.author || '',
           category: data.category || '',
           slug: data.slug || '',
           image_url: data.image_url || '',
-          publish_date: data.publish_date,
+          publish_date: data.publish_date || new Date().toISOString(),
           meta_title: data.meta_title || '',
           meta_description: data.meta_description || '',
           hashtags: data.hashtags || ''
@@ -41,6 +48,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
       
       return null;
     } catch (error: any) {
+      console.error("Error in fetchBlogPost:", error);
       toast({
         variant: "destructive",
         title: "خطأ في جلب البيانات",
@@ -52,14 +60,25 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
 
   const saveBlogPost = async (blogData: Partial<BlogPost>): Promise<boolean> => {
     try {
+      console.log("Saving blog post, original data:", blogData);
+      
       // Validate that required fields are present
       if (!blogData.title || !blogData.content) {
+        console.error("Missing required fields. Title:", blogData.title, "Content length:", blogData.content?.length);
         toast({
           variant: "destructive",
           title: "بيانات غير مكتملة",
           description: "العنوان والمحتوى مطلوبان",
         });
         return false;
+      }
+      
+      // Ensure slug is not empty
+      if (!blogData.slug) {
+        // Generate a timestamp-based slug if title doesn't provide one
+        const timestamp = new Date().getTime().toString().slice(-6);
+        blogData.slug = `post-${timestamp}`;
+        console.log("Generated fallback slug:", blogData.slug);
       }
       
       // Create a clean data object with only the fields that exist in the database
@@ -77,7 +96,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         hashtags: blogData.hashtags || null
       };
       
-      console.log("Saving blog post with data:", cleanData);
+      console.log("Saving blog post with clean data:", cleanData);
       
       if (isEditMode && id) {
         const { error } = await supabase
@@ -116,6 +135,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
       
       return true;
     } catch (error: any) {
+      console.error("Error in saveBlogPost:", error);
       toast({
         variant: "destructive",
         title: "حدث خطأ",

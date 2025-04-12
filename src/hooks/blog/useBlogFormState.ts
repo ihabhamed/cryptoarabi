@@ -32,32 +32,28 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
   // Load data from localStorage or initial data
   useEffect(() => {
     const loadFormData = () => {
-      if (initialData) {
-        setFormData(initialData);
+      if (initialData && Object.keys(initialData).length > 0) {
+        console.log("Loading initial data:", initialData);
+        setFormData({
+          ...formData,
+          ...initialData
+        });
       } else {
         // Check localStorage based on edit mode
         const savedData = getFormData<Partial<BlogPost>>(storageKey);
         
         if (savedData) {
+          console.log("Loading data from localStorage:", savedData);
           setFormData({
-            title: savedData.title || '',
-            content: savedData.content || '',
-            excerpt: savedData.excerpt || '',
-            author: savedData.author || '',
-            category: savedData.category || '',
-            slug: savedData.slug || '',
-            image_url: savedData.image_url || '',
-            meta_title: savedData.meta_title || '',
-            meta_description: savedData.meta_description || '',
-            hashtags: savedData.hashtags || '',
-            publish_date: savedData.publish_date || new Date().toISOString()
+            ...formData,
+            ...savedData
           });
         }
       }
     };
     
     loadFormData();
-  }, [id, isEditMode, initialData, storageKey]);
+  }, [id, initialData, storageKey]);
   
   // Save form data to localStorage whenever it changes
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,64 +16,60 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   handleChange,
   generateSlug,
 }) => {
-  // Function to generate slug from title that properly handles Arabic text
+  // Function to generate a robust slug that works for both Arabic and Latin text
   const handleGenerateSlug = () => {
-    if (formData.title) {
-      // For Arabic or other non-Latin text, we:
-      // 1. Use a more secure transliteration method
-      // 2. Handle special characters better
-      
-      try {
-        // Convert to lowercase if not Arabic (Arabic has no case)
-        let slugText = formData.title;
-        
-        // Replace Arabic/special chars with descriptive Latin equivalents
-        // This uses a simple approach that preserves meaning while creating valid URLs
-        const timestamp = new Date().getTime().toString().slice(-4);
-        const randomSlug = `post-${timestamp}-${Math.floor(Math.random() * 1000)}`;
-        
-        // If title contains primarily Arabic characters, create a generic slug with timestamp
-        if (/[\u0600-\u06FF]/.test(slugText)) {
-          // Save the generated slug to form state
-          const event = {
-            target: {
-              name: 'slug',
-              value: randomSlug
-            }
-          } as React.ChangeEvent<HTMLInputElement>;
-          
-          handleChange(event);
-          
-          // Also save to localStorage
-          const storageKey = formData.id ? `blogFormData_${formData.id}` : 'blogFormData_new';
-          const savedData = localStorage.getItem(storageKey);
-          if (savedData) {
-            const parsedData = JSON.parse(savedData);
-            localStorage.setItem(storageKey, JSON.stringify({
-              ...parsedData,
-              slug: randomSlug
-            }));
-          }
-          
-          toast({
-            title: "تم إنشاء الرابط",
-            description: "تم إنشاء رابط ثابت للمحتوى العربي"
-          });
-        } else {
-          // For non-Arabic text, use the existing slug generator
-          generateSlug();
-        }
-      } catch (error) {
-        console.error("Error generating slug:", error);
-        generateSlug(); // Fallback to the default slug generator
-      }
-    } else {
+    if (!formData.title) {
       toast({
         title: "نقص في المعلومات",
         description: "يرجى إضافة عنوان للمنشور أولاً",
         variant: "destructive"
       });
+      return;
     }
+
+    // Generate a timestamp-based component for uniqueness
+    const timestamp = new Date().getTime().toString().slice(-6);
+    let slug = '';
+    
+    // Check if title contains Arabic characters
+    if (/[\u0600-\u06FF]/.test(formData.title)) {
+      // For Arabic text, create a transliterated slug with timestamp
+      // Get the first few Latin characters from the title if any exist
+      const latinChars = formData.title.replace(/[^\w\s]/g, '').replace(/[\u0600-\u06FF]/g, '').trim();
+      
+      if (latinChars.length > 0) {
+        // If there are Latin characters, use them in the slug
+        slug = `${latinChars.toLowerCase().replace(/\s+/g, '-')}-${timestamp}`;
+      } else {
+        // Otherwise, use a generic post slug with timestamp
+        slug = `post-${timestamp}`;
+      }
+    } else {
+      // For Latin text, use the standard slug generator with timestamp appended
+      slug = formData.title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')  // Remove special characters except hyphens
+        .replace(/\s+/g, '-')      // Replace spaces with hyphens
+        .concat(`-${timestamp}`);  // Add timestamp for uniqueness
+    }
+    
+    // Ensure the slug doesn't have double hyphens and trim any leading/trailing hyphens
+    slug = slug.replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+    
+    // Update the form data with the new slug
+    const event = {
+      target: {
+        name: 'slug',
+        value: slug
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleChange(event);
+    
+    toast({
+      title: "تم إنشاء الرابط",
+      description: "تم إنشاء رابط ثابت للمنشور بنجاح"
+    });
   };
   
   return (

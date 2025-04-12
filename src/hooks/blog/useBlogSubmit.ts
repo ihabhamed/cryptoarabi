@@ -23,8 +23,25 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
     setIsSaving(true);
     
     try {
+      // Validate required fields before proceeding
+      if (!formData.title || !formData.content) {
+        toast({
+          variant: "destructive",
+          title: "بيانات غير مكتملة",
+          description: "العنوان والمحتوى مطلوبان"
+        });
+        setIsSaving(false);
+        return;
+      }
+      
+      console.log("Form data before submission:", formData);
+      
+      // Ensure we have a slug
       if (!formData.slug && formData.title) {
-        generateSlug();
+        // Generate a timestamp-based slug
+        const timestamp = new Date().getTime().toString().slice(-6);
+        formData.slug = `post-${timestamp}`;
+        console.log("Generated fallback slug for submission:", formData.slug);
       }
       
       // Generate meta title and description if not provided
