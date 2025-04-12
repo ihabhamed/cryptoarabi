@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { 
   Home, Settings, FileText, Link2, Database, BookOpen, Zap
 } from 'lucide-react';
@@ -10,13 +10,6 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ handleSignOut }) => {
-  const location = useLocation();
-  
-  // Nav item active style
-  const isActive = (path: string) => {
-    return location.pathname === path ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50";
-  };
-
   return (
     <div className="hidden md:flex flex-col w-64 bg-crypto-darkGray border-r border-white/10 h-screen fixed">
       <div className="p-4 border-b border-white/10">
@@ -26,49 +19,77 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ handleSignOut }) => {
         <NavLink
           to="/admin"
           end
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <Home size={18} />
           <span>الرئيسية</span>
         </NavLink>
         <NavLink
           to="/admin/site-settings"
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/site-settings')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <Settings size={18} />
           <span>إعدادات الموقع</span>
         </NavLink>
         <NavLink
           to="/admin/links"
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/links')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <Link2 size={18} />
           <span>إدارة الروابط</span>
         </NavLink>
         <NavLink
           to="/admin/legal"
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/legal')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <FileText size={18} />
           <span>الصفحات القانونية</span>
         </NavLink>
         <NavLink
           to="/admin/services"
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/services')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <Zap size={18} />
           <span>الخدمات</span>
         </NavLink>
         <NavLink
           to="/admin/blog"
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/blog')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <BookOpen size={18} />
           <span>المدونة</span>
         </NavLink>
         <NavLink
           to="/admin/airdrops"
-          className={`flex items-center gap-3 p-3 rounded-md transition-colors ${isActive('/admin/airdrops')}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-3 rounded-md transition-colors ${
+              isActive ? "bg-crypto-orange text-white" : "text-gray-300 hover:bg-crypto-darkBlue/50"
+            }`
+          }
         >
           <Database size={18} />
           <span>الإيردروب</span>

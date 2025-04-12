@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminLayout from '@/components/admin/AdminLayout';
 import AirdropTab from '@/components/admin/dashboard/AirdropTab';
@@ -7,7 +7,21 @@ import BlogTab from '@/components/admin/dashboard/BlogTab';
 import ServicesTab from '@/components/admin/dashboard/ServicesTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Key for storing the active tab in localStorage
+const ACTIVE_TAB_STORAGE_KEY = 'admin_dashboard_active_tab';
+
 const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    // Try to get the saved tab from localStorage on initial load
+    const savedTab = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+    return savedTab || 'airdrops'; // Default to 'airdrops' if no saved tab
+  });
+  
+  // Update localStorage when active tab changes
+  useEffect(() => {
+    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab);
+  }, [activeTab]);
+  
   return (
     <AdminLayout>
       <main className="container mx-auto py-8 px-4">
@@ -16,7 +30,11 @@ const Dashboard = () => {
             <CardTitle className="text-2xl font-bold text-crypto-orange">لوحة التحكم</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <Tabs defaultValue="airdrops" className="w-full">
+            <Tabs 
+              value={activeTab} 
+              onValueChange={setActiveTab} 
+              className="w-full"
+            >
               <TabsList className="mb-6 w-full bg-crypto-darkBlue/50 p-1">
                 <TabsTrigger value="airdrops" className="data-[state=active]:bg-crypto-orange data-[state=active]:text-white">الإيردروب</TabsTrigger>
                 <TabsTrigger value="blog" className="data-[state=active]:bg-crypto-orange data-[state=active]:text-white">المدونة</TabsTrigger>

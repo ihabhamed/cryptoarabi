@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,8 +8,21 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import FooterLinksTab from '@/components/admin/links/FooterLinksTab';
 import SocialLinksTab from '@/components/admin/links/SocialLinksTab';
 
+// Key for storing the active tab in localStorage
+const ACTIVE_TAB_STORAGE_KEY = 'admin_links_active_tab';
+
 const ManageLinks = () => {
   const { user, loading, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    // Try to get the saved tab from localStorage on initial load
+    const savedTab = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+    return savedTab || 'footer'; // Default to 'footer' if no saved tab
+  });
+  
+  // Update localStorage when active tab changes
+  useEffect(() => {
+    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab);
+  }, [activeTab]);
   
   if (loading) {
     return (
@@ -31,7 +44,11 @@ const ManageLinks = () => {
           <p className="text-gray-400">قم بإدارة روابط التذييل والروابط الاجتماعية</p>
         </div>
         
-        <Tabs defaultValue="footer" className="space-y-6">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="mb-8 border border-white/10 rounded-lg p-1 bg-crypto-darkGray/80 backdrop-blur-md">
             <TabsTrigger value="footer" className="flex items-center gap-2 data-[state=active]:bg-crypto-orange/20 data-[state=active]:text-crypto-orange">
               <Link2 size={16} />
