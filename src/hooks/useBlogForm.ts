@@ -19,7 +19,8 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     isEditMode,
     handleChange,
     generateSlug,
-    clearFormData
+    clearFormData,
+    saveFormState
   } = useBlogFormState({ id });
 
   const {
@@ -56,7 +57,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     const loadBlogPost = async () => {
       if (isEditMode && id) {
         setIsLoading(true);
-        const blogData = await fetchBlogPost(id); // Pass id as argument here
+        const blogData = await fetchBlogPost(id);
         
         if (blogData) {
           console.log("[useBlogForm] Loaded blog data for editing:", blogData);
@@ -95,6 +96,22 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     console.log(`[useBlogForm] Current form.image_url: "${formData.image_url || 'NULL'}"`);
     console.log(`[useBlogForm] Current previewUrl: "${previewUrl || 'NULL'}"`);
   }, [formData.image_url, previewUrl]);
+
+  // Save form state when tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Save form state when tab is hidden
+        saveFormState();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [saveFormState]);
 
   // Clear blogImageUrl from sessionStorage when component unmounts
   useEffect(() => {
