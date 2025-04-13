@@ -3,6 +3,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from '@/types/supabase';
 
+/**
+ * Processes a blog post to ensure all fields are properly typed and handled
+ */
+const processBlogPost = (post: any): BlogPost => {
+  // Verify and log image URL for debugging
+  console.log(`[useBlogPosts] Processing post: ${post.id}, Image URL: "${post.image_url || 'NULL'}"`);
+  
+  return {
+    ...post,
+    meta_title: post.meta_title || null,
+    meta_description: post.meta_description || null,
+    hashtags: post.hashtags || null,
+    image_url: post.image_url || null // Ensure null for empty URLs
+  };
+};
+
 export function useBlogPosts() {
   return useQuery({
     queryKey: ['blog_posts'],
@@ -25,13 +41,8 @@ export function useBlogPosts() {
         console.log(`[useBlogPosts] Post: ${post.id}, Image URL: ${post.image_url || 'NULL'}`);
       });
       
-      // Ensure we have all required fields for the BlogPost type
-      const posts = data?.map(post => ({
-        ...post,
-        meta_title: post.meta_title || null,
-        meta_description: post.meta_description || null,
-        hashtags: post.hashtags || null
-      })) || [];
+      // Process posts to ensure consistent typing
+      const posts = data?.map(processBlogPost) || [];
       
       return posts;
     },
@@ -61,12 +72,7 @@ export function useBlogPost(slug: string | undefined) {
         console.log(`[useBlogPost] Successfully fetched blog post: ${data.id}`);
         console.log(`[useBlogPost] Post image URL: ${data.image_url || 'NULL'}`);
         
-        return {
-          ...data,
-          meta_title: data.meta_title || null,
-          meta_description: data.meta_description || null,
-          hashtags: data.hashtags || null
-        };
+        return processBlogPost(data);
       }
       
       console.log(`[useBlogPost] No blog post found with slug: ${slug}`);

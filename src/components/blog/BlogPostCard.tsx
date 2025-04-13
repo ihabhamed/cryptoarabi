@@ -24,7 +24,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   // Determine the image URL when the component mounts or when post changes
   useEffect(() => {
     console.log(`[BlogPostCard] Initializing for post: ${post.title} (ID: ${post.id})`);
-    console.log(`[BlogPostCard] Raw image URL from DB: "${post.image_url}"`);
+    console.log(`[BlogPostCard] Raw image URL from DB: "${post.image_url || 'NULL'}"`);
     
     // Always reset image error state when post changes to allow new attempt
     setImageError(false);
