@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -171,11 +172,11 @@ export interface BlogPost {
 export interface SiteSettings {
   id: string;
   site_name: string;
-  site_description: string;
+  site_description: string | null;
   logo_url: string | null;
   show_about_section: boolean;
   show_testimonials_section: boolean;
-  show_blog_section: boolean; // New field for blog visibility
+  show_blog_section: boolean; // Field for blog visibility
   footer_about_text: string | null;
   footer_links_title: string | null;
   copyright_text: string | null;

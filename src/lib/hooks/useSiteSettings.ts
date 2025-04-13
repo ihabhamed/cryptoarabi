@@ -20,6 +20,10 @@ export interface SiteSettings {
   site_name: string;
   hero_title: string;
   hero_subtitle: string;
+  hero_headline: string | null;
+  hero_description: string | null;
+  hero_cta_text: string | null;
+  hero_video_url: string | null;
   cta_primary_text: string;
   cta_secondary_text: string;
   active_users_count: string;
@@ -38,6 +42,7 @@ export interface SiteSettings {
   updated_at: string;
   show_about_section: boolean;
   show_testimonials_section: boolean;
+  show_blog_section: boolean;
 }
 
 /**

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -107,11 +106,7 @@ const SettingsTabs = ({ formData, handleInputChange, updateSettings, handleSubmi
         </TabsContent>
         
         <TabsContent value="home">
-          <HomeTab 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-            updateSettings={updateSettings}
-          />
+          <HomeTab />
         </TabsContent>
         
         <TabsContent value="about">

@@ -13,14 +13,17 @@ const HomeTab = () => {
 
   const handleToggleSection = async (sectionName: string, value: boolean) => {
     try {
-      await updateSiteSettings({
-        [sectionName]: value
-      });
-      
-      toast({
-        title: "تم التحديث",
-        description: `تم ${value ? 'تفعيل' : 'إخفاء'} القسم بنجاح`,
-      });
+      if (settings) {
+        updateSiteSettings.mutate({
+          id: settings.id,
+          [sectionName]: value
+        });
+        
+        toast({
+          title: "تم التحديث",
+          description: `تم ${value ? 'تفعيل' : 'إخفاء'} القسم بنجاح`,
+        });
+      }
     } catch (error) {
       console.error('Error updating section visibility:', error);
       toast({
