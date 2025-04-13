@@ -1,26 +1,45 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminLayout from '@/components/admin/AdminLayout';
 import AirdropTab from '@/components/admin/dashboard/AirdropTab';
 import BlogTab from '@/components/admin/dashboard/BlogTab';
 import ServicesTab from '@/components/admin/dashboard/ServicesTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Key for storing the active tab in localStorage
-const ACTIVE_TAB_STORAGE_KEY = 'admin_dashboard_active_tab';
+import { useTabState } from '@/hooks/useTabState';
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    // Try to get the saved tab from localStorage on initial load
-    const savedTab = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
-    return savedTab || 'airdrops'; // Default to 'airdrops' if no saved tab
-  });
+  const { activeTab, handleTabChange } = useTabState('admin_dashboard_active_tab', 'airdrops');
   
-  // Update localStorage when active tab changes
-  useEffect(() => {
-    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab);
-  }, [activeTab]);
+  // Save form data states for each tab when switching
+  const handleTabSwitch = (newTab: string) => {
+    // Before changing tabs, make sure to force save any form data currently in the DOM to localStorage
+    if (activeTab === 'blog') {
+      const blogFormData = document.querySelector('form[data-tab="blog"]');
+      if (blogFormData) {
+        // Trigger form save event for blog tab
+        const event = new Event('forcesave', { bubbles: true });
+        blogFormData.dispatchEvent(event);
+      }
+    } else if (activeTab === 'airdrops') {
+      const airdropFormData = document.querySelector('form[data-tab="airdrops"]');
+      if (airdropFormData) {
+        // Trigger form save event for airdrop tab
+        const event = new Event('forcesave', { bubbles: true });
+        airdropFormData.dispatchEvent(event);
+      }
+    } else if (activeTab === 'services') {
+      const servicesFormData = document.querySelector('form[data-tab="services"]');
+      if (servicesFormData) {
+        // Trigger form save event for services tab
+        const event = new Event('forcesave', { bubbles: true });
+        servicesFormData.dispatchEvent(event);
+      }
+    }
+    
+    // Change the tab
+    handleTabChange(newTab);
+  };
   
   return (
     <AdminLayout>
@@ -32,7 +51,7 @@ const Dashboard = () => {
           <CardContent className="pt-6">
             <Tabs 
               value={activeTab} 
-              onValueChange={setActiveTab} 
+              onValueChange={handleTabSwitch} 
               className="w-full"
             >
               <TabsList className="mb-6 w-full bg-crypto-darkBlue/50 p-1">

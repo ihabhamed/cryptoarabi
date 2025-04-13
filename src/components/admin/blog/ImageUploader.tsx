@@ -32,6 +32,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
     }
   }, [imageUrl, previewUrl, onImageUrlChange]);
+  
+  // When tab visibility changes, ensure the image is still displayed
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && imageUrl && !previewUrl) {
+        // Re-apply the image URL when tab becomes visible again
+        if (imageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
+          onImageUrlChange(imageUrl);
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [imageUrl, previewUrl, onImageUrlChange]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,6 +78,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     // If URL is cleared, remove the image
     if (!url.trim()) {
       onRemoveImage();
+    }
+    
+    // Store in localStorage to persist across tab changes
+    if (url.trim()) {
+      sessionStorage.setItem('lastImageUrl', url);
+    } else {
+      sessionStorage.removeItem('lastImageUrl');
     }
   };
 

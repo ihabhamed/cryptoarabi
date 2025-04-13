@@ -10,6 +10,7 @@ import AboutTab from './AboutTab';
 import FooterTab from './FooterTab';
 import LegalTab from './LegalTab';
 import TestimonialsTab from './TestimonialsTab';
+import { saveScrollPosition, restoreScrollPosition } from '@/lib/utils/formStorage';
 
 interface SettingsTabsProps {
   formData: any;
@@ -25,13 +26,50 @@ const SettingsTabs = ({ formData, handleInputChange, updateSettings, handleSubmi
     return savedTab || 'general';
   });
 
+  // Handle tab switching with persistence
+  const handleTabChange = (newTab: string) => {
+    // Save current tab's scroll position before switching
+    saveScrollPosition(`adminSettings_${activeTab}`);
+    
+    // Update active tab
+    setActiveTab(newTab);
+    
+    // Store in localStorage
+    localStorage.setItem('adminSettingsActiveTab', newTab);
+    
+    // Schedule restoration of the new tab's scroll position
+    setTimeout(() => {
+      restoreScrollPosition(`adminSettings_${newTab}`);
+    }, 100);
+  };
+
   // Save active tab to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('adminSettingsActiveTab', activeTab);
   }, [activeTab]);
+  
+  // Restore scroll position when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        restoreScrollPosition(`adminSettings_${activeTab}`);
+      } else {
+        saveScrollPosition(`adminSettings_${activeTab}`);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Initial scroll position restoration
+    restoreScrollPosition(`adminSettings_${activeTab}`);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeTab]);
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <Tabs value={activeTab} onValueChange={handleTabChange}>
       <TabsList className="mb-8 border border-white/10 rounded-lg p-1 bg-crypto-darkBlue/50">
         <TabsTrigger value="general" className="flex items-center gap-2 data-[state=active]:bg-crypto-orange data-[state=active]:text-white">
           <Settings size={16} />
@@ -59,7 +97,7 @@ const SettingsTabs = ({ formData, handleInputChange, updateSettings, handleSubmi
         </TabsTrigger>
       </TabsList>
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} data-tab-content={activeTab}>
         <TabsContent value="general">
           <GeneralTab 
             formData={formData} 

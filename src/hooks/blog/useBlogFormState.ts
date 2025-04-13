@@ -29,51 +29,94 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<number>(Date.now());
 
-  // Save scroll position when component loses focus
+  // Save scroll position when component loses focus or tab is switched
   useEffect(() => {
     const saveScrollPosition = () => {
       scrollPositionRef.current = window.scrollY;
+      localStorage.setItem(`${storageKey}_scrollPos`, scrollPositionRef.current.toString());
+      
+      // Force save form data when tab/window loses focus
+      saveFormData(storageKey, {
+        ...formData,
+        id: id
+      });
+      setLastSavedTimestamp(Date.now());
     };
 
-    // Save scroll position when window loses focus
+    // Save when window/tab loses focus
     window.addEventListener('blur', saveScrollPosition);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        saveScrollPosition();
+      }
+    });
 
-    // Save scroll position when switching tabs
-    document.addEventListener('visibilitychange', saveScrollPosition);
+    // Also add a listener for the custom 'forcesave' event
+    const handleForceSave = () => {
+      saveScrollPosition();
+    };
+    
+    document.addEventListener('forcesave', handleForceSave);
 
     return () => {
       window.removeEventListener('blur', saveScrollPosition);
       document.removeEventListener('visibilitychange', saveScrollPosition);
+      document.removeEventListener('forcesave', handleForceSave);
     };
-  }, []);
+  }, [formData, id, storageKey]);
 
   // Restore scroll position when component regains focus
   useEffect(() => {
     const restoreScrollPosition = () => {
-      // Only restore if we have a saved position
-      if (scrollPositionRef.current > 0) {
+      // Try to get saved position from localStorage first
+      const savedPos = localStorage.getItem(`${storageKey}_scrollPos`);
+      
+      if (savedPos) {
+        const parsedPos = parseInt(savedPos, 10);
+        scrollPositionRef.current = parsedPos;
+        
+        setTimeout(() => {
+          window.scrollTo(0, parsedPos);
+        }, 100);
+      } else if (scrollPositionRef.current > 0) {
+        // Fallback to ref if localStorage doesn't have the value
         setTimeout(() => {
           window.scrollTo(0, scrollPositionRef.current);
         }, 100);
       }
     };
 
-    // Restore scroll position when window regains focus
+    // Restore when window/tab regains focus
     window.addEventListener('focus', restoreScrollPosition);
-
-    // Restore scroll position when switching back to tab
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
         restoreScrollPosition();
+        
+        // Check if we need to reload data from localStorage
+        const savedTimestamp = localStorage.getItem(`${storageKey}_timestamp`);
+        if (savedTimestamp && parseInt(savedTimestamp, 10) > lastSavedTimestamp) {
+          const savedData = getFormData<Partial<BlogPost>>(storageKey);
+          if (savedData) {
+            setFormData(prevData => ({
+              ...prevData,
+              ...savedData
+            }));
+            setLastSavedTimestamp(parseInt(savedTimestamp, 10));
+          }
+        }
       }
     });
+
+    // Initial restoration when component mounts
+    restoreScrollPosition();
 
     return () => {
       window.removeEventListener('focus', restoreScrollPosition);
       document.removeEventListener('visibilitychange', restoreScrollPosition);
     };
-  }, []);
+  }, [storageKey, lastSavedTimestamp]);
 
   // Load data from localStorage or initial data
   useEffect(() => {
@@ -134,6 +177,9 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
         ...dataToSave,
         id: id
       });
+      
+      // Save timestamp of last save for comparison
+      localStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
     }
   }, [formData, id, storageKey]);
   
@@ -177,6 +223,8 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
 
   const clearFormDataState = () => {
     clearFormData(storageKey);
+    localStorage.removeItem(`${storageKey}_scrollPos`);
+    localStorage.removeItem(`${storageKey}_timestamp`);
   };
 
   return {
