@@ -14,6 +14,8 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   
+  const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+  
   // Extract hashtags if present
   const hashtags = post.hashtags 
     ? post.hashtags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3) 
@@ -21,9 +23,13 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
 
   // Determine the image URL when the component mounts or when post changes
   useEffect(() => {
+    console.log(`[BlogPostCard] Determining image for post: ${post.title} (ID: ${post.id})`);
+    console.log(`[BlogPostCard] Image URL from DB: "${post.image_url}"`);
+    
     if (imageError) {
       // If we've already had an error, use fallback
-      setImageUrl('https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80');
+      console.log(`[BlogPostCard] Using fallback due to previous error for post: ${post.id}`);
+      setImageUrl(FALLBACK_IMAGE);
       return;
     }
     
@@ -32,19 +38,27 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         post.image_url !== 'null' && 
         post.image_url !== 'undefined' && 
         post.image_url.trim() !== '') {
-      console.log(`Using post image: ${post.image_url} for post: ${post.title} (ID: ${post.id}) in BlogPostCard`);
+      console.log(`[BlogPostCard] Using post image: ${post.image_url} for post: ${post.title}`);
       setImageUrl(post.image_url);
     } else {
       // Use fallback image if no valid image exists
-      console.log(`Using fallback image for post: ${post.title} (ID: ${post.id}) in BlogPostCard`);
-      setImageUrl('https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80');
+      console.log(`[BlogPostCard] No valid image found for post: ${post.title}, using fallback`);
+      setImageUrl(FALLBACK_IMAGE);
     }
-  }, [post, imageError]);
+  }, [post, imageError, post.id, post.title, post.image_url]);
 
   const handleImageError = () => {
-    console.error(`Image load error for post ID ${post.id}, URL: ${post.image_url}`);
+    console.error(`[BlogPostCard] Image load error for post ID ${post.id}, URL: ${post.image_url}`);
     setImageError(true);
     // This will trigger the useEffect to set the fallback URL
+  };
+
+  // Force image reload if URL is already the fallback
+  const forceImageReload = (url: string) => {
+    if (url === FALLBACK_IMAGE) {
+      return `${url}?t=${new Date().getTime()}`;
+    }
+    return url;
   };
 
   return (
@@ -52,7 +66,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
       <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48">
         {imageUrl && (
           <img 
-            src={imageUrl} 
+            src={forceImageReload(imageUrl)} 
             alt={post.title} 
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
             onError={handleImageError}

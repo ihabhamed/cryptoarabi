@@ -105,7 +105,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
       // CRITICAL IMAGE URL HANDLING: Log and validate the image URL before saving
       console.log(`Raw image URL before processing: '${blogData.image_url}'`);
       
-      // If image_url is explicitly set to an empty string, null, undefined, or "null"/"undefined" strings, 
+      // If image_url is an empty string, null, undefined, or "null"/"undefined" strings, 
       // make sure we set it to null in the database
       if (!blogData.image_url || 
           blogData.image_url === 'null' || 
@@ -139,8 +139,8 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         hashtags: blogData.hashtags || null
       };
       
-      // Log the final image URL being saved
-      console.log(`Final image URL being saved to database: '${cleanData.image_url}'`);
+      // LOG THE FINAL IMAGE URL BEING SAVED FOR DEBUGGING
+      console.log(`FINAL IMAGE URL BEING SAVED TO DATABASE: '${cleanData.image_url}'`);
       
       let result;
       
@@ -202,8 +202,30 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
     }
   };
 
+  // Add direct inspection of database image URLs for debugging
+  const inspectImageUrls = async (): Promise<void> => {
+    if (!isEditMode) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('id, title, image_url')
+        .limit(10);
+        
+      if (error) throw error;
+      
+      console.log("IMAGE URL INSPECTION RESULTS:");
+      data.forEach(post => {
+        console.log(`ID: ${post.id}, Title: ${post.title}, Image URL: ${post.image_url || 'NULL'}`);
+      });
+    } catch (err) {
+      console.error("Error inspecting image URLs:", err);
+    }
+  };
+
   return {
     fetchBlogPost,
-    saveBlogPost
+    saveBlogPost,
+    inspectImageUrls
   };
 }

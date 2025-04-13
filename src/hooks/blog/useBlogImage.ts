@@ -11,14 +11,13 @@ export function useBlogImage() {
   // Store image data in sessionStorage to persist across tab switches
   const persistImageData = (imageUrl: string | null, isFile: boolean = false) => {
     if (imageUrl) {
+      console.log(`[useBlogImage] Persisting image to sessionStorage: ${imageUrl}`);
       sessionStorage.setItem('blogImageUrl', imageUrl);
       sessionStorage.setItem('blogImageIsFile', isFile ? 'true' : 'false');
-      // Log the image URL being saved to sessionStorage
-      console.log(`Persisting image to sessionStorage: ${imageUrl}`);
     } else {
+      console.log('[useBlogImage] Clearing image from sessionStorage');
       sessionStorage.removeItem('blogImageUrl');
       sessionStorage.removeItem('blogImageIsFile');
-      console.log('Clearing image from sessionStorage');
     }
   };
 
@@ -29,20 +28,20 @@ export function useBlogImage() {
     
     // Create a preview URL
     const objectUrl = URL.createObjectURL(file);
+    console.log(`[useBlogImage] New image selected, preview URL: ${objectUrl}`);
     setPreviewUrl(objectUrl);
-    console.log(`New image selected, preview URL: ${objectUrl}`);
     
     // Persist in session storage
     persistImageData(objectUrl, true);
   };
   
   const handleRemoveImage = () => {
+    console.log('[useBlogImage] Removing image from preview');
     setSelectedImage(null);
     if (previewUrl && !previewUrl.startsWith('http')) {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(null);
-    console.log('Image removed from preview');
     
     // Remove from session storage
     persistImageData(null);
@@ -53,7 +52,7 @@ export function useBlogImage() {
     
     try {
       setUploadingImage(true);
-      console.log(`Uploading image: ${selectedImage.name}`);
+      console.log(`[useBlogImage] Uploading image: ${selectedImage.name}`);
       const imageUrl = await uploadImage(selectedImage, 'blog');
       
       if (!imageUrl) {
@@ -65,7 +64,7 @@ export function useBlogImage() {
         return null;
       }
       
-      console.log(`Image uploaded successfully: ${imageUrl}`);
+      console.log(`[useBlogImage] Image uploaded successfully: ${imageUrl}`);
       
       // Remove any query parameters from the URL to prevent caching issues
       const cleanImageUrl = imageUrl.includes('?') ? imageUrl.split('?')[0] : imageUrl;
@@ -75,7 +74,7 @@ export function useBlogImage() {
       
       return cleanImageUrl;
     } catch (error) {
-      console.error("Error uploading blog image:", error);
+      console.error("[useBlogImage] Error uploading blog image:", error);
       return null;
     } finally {
       setUploadingImage(false);
@@ -83,18 +82,18 @@ export function useBlogImage() {
   };
 
   const setInitialImagePreview = (url: string | null) => {
+    console.log(`[useBlogImage] setInitialImagePreview called with: ${url || 'NULL'}`);
     if (url && url !== 'null' && url !== 'undefined' && url.trim() !== '') {
-      console.log(`Setting initial image preview: ${url}`);
-      
       // Remove any query parameters to prevent caching issues
       const cleanUrl = url.includes('?') ? url.split('?')[0] : url;
+      console.log(`[useBlogImage] Setting initial image preview: ${cleanUrl}`);
       
       setPreviewUrl(cleanUrl);
       
       // Persist in session storage
       persistImageData(cleanUrl);
     } else {
-      console.log(`Invalid URL provided to setInitialImagePreview: ${url}`);
+      console.log(`[useBlogImage] Invalid URL provided to setInitialImagePreview: ${url || 'NULL'}`);
     }
   };
 
@@ -106,7 +105,7 @@ export function useBlogImage() {
         const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
         
         if (savedImageUrl && !previewUrl) {
-          console.log(`Restoring image from sessionStorage: ${savedImageUrl}`);
+          console.log(`[useBlogImage] Restoring image from sessionStorage: ${savedImageUrl}`);
           
           // For both file URLs and normal URLs, restore the preview
           setPreviewUrl(savedImageUrl);
@@ -134,6 +133,27 @@ export function useBlogImage() {
     };
   }, [previewUrl]);
 
+  // Test for direct validating if the image can be loaded
+  const validateImageUrl = async (url: string): Promise<boolean> => {
+    if (!url || url === 'null' || url === 'undefined' || url.trim() === '') {
+      console.log('[useBlogImage] validateImageUrl: URL is invalid or empty');
+      return false;
+    }
+    
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        console.log(`[useBlogImage] validateImageUrl: Image loaded successfully: ${url}`);
+        resolve(true);
+      };
+      img.onerror = () => {
+        console.log(`[useBlogImage] validateImageUrl: Image failed to load: ${url}`);
+        resolve(false);
+      };
+      img.src = url;
+    });
+  };
+
   return {
     uploadingImage,
     selectedImage, 
@@ -141,6 +161,7 @@ export function useBlogImage() {
     handleImageChange,
     handleRemoveImage,
     uploadBlogImage,
-    setInitialImagePreview
+    setInitialImagePreview,
+    validateImageUrl
   };
 }

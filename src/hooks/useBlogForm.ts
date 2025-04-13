@@ -29,17 +29,27 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     handleImageChange,
     handleRemoveImage,
     uploadBlogImage,
-    setInitialImagePreview
+    setInitialImagePreview,
+    validateImageUrl
   } = useBlogImage();
 
   const {
-    fetchBlogPost
+    fetchBlogPost,
+    inspectImageUrls
   } = useBlogApi({ id, onSuccess });
 
   const {
     isSaving,
     handleSubmit
   } = useBlogSubmit({ id, onSuccess });
+
+  // Validate image URLs for debugging
+  useEffect(() => {
+    if (isEditMode && id) {
+      // Run a direct inspection of image URLs in the database
+      inspectImageUrls();
+    }
+  }, [isEditMode, id, inspectImageUrls]);
 
   // Load blog post data if in edit mode
   useEffect(() => {
@@ -49,8 +59,8 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
         const blogData = await fetchBlogPost();
         
         if (blogData) {
-          console.log("Loaded blog data for editing:", blogData);
-          console.log(`Original image URL from database: ${blogData.image_url}`);
+          console.log("[useBlogForm] Loaded blog data for editing:", blogData);
+          console.log(`[useBlogForm] Original image URL from database: "${blogData.image_url || 'NULL'}"`);
           
           setFormData(blogData);
           
@@ -59,10 +69,17 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
               blogData.image_url !== 'null' && 
               blogData.image_url !== 'undefined' && 
               blogData.image_url.trim() !== '') {
-            console.log(`Setting initial image preview from blogData: ${blogData.image_url}`);
+            console.log(`[useBlogForm] Setting initial image preview from blogData: ${blogData.image_url}`);
             setInitialImagePreview(blogData.image_url);
+            
+            // Validate if the image URL is actually loadable
+            validateImageUrl(blogData.image_url).then(isValid => {
+              if (!isValid) {
+                console.log(`[useBlogForm] WARNING: Image URL validation failed for: ${blogData.image_url}`);
+              }
+            });
           } else {
-            console.log(`No valid image URL found in blogData: ${blogData.image_url}`);
+            console.log(`[useBlogForm] No valid image URL found in blogData: ${blogData.image_url || 'NULL'}`);
           }
         }
         
@@ -71,33 +88,19 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     };
     
     loadBlogPost();
-  }, [id, isEditMode]);
+  }, [id, isEditMode, fetchBlogPost, setFormData, setInitialImagePreview, validateImageUrl, setIsLoading]);
 
-  // Add a useEffect to update image URL when form data changes
+  // Debug image URL state when form data changes
   useEffect(() => {
-    if (formData.image_url && !previewUrl) {
-      // Only if image URL is valid and preview is not set yet
-      if (formData.image_url !== 'null' && 
-          formData.image_url !== 'undefined' && 
-          formData.image_url.trim() !== '') {
-        console.log(`Setting image preview from form data: ${formData.image_url}`);
-        setInitialImagePreview(formData.image_url);
-      }
-    }
+    console.log(`[useBlogForm] Current form.image_url: "${formData.image_url || 'NULL'}"`);
+    console.log(`[useBlogForm] Current previewUrl: "${previewUrl || 'NULL'}"`);
   }, [formData.image_url, previewUrl]);
-
-  // Add a debug useEffect to log any image URL changes
-  useEffect(() => {
-    if (formData.image_url) {
-      console.log(`Form data image URL updated: ${formData.image_url}`);
-    }
-  }, [formData.image_url]);
 
   // Clear blogImageUrl from sessionStorage when component unmounts
   useEffect(() => {
     return () => {
       if (!isEditMode) {
-        console.log('Cleaning up image data from sessionStorage on unmount');
+        console.log('[useBlogForm] Cleaning up image data from sessionStorage on unmount');
         sessionStorage.removeItem('blogImageUrl');
         sessionStorage.removeItem('blogImageIsFile');
       }

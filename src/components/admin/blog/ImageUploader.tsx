@@ -25,18 +25,37 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const [internalImageUrl, setInternalImageUrl] = useState(imageUrl);
 
+  // Debug when imageUrl or previewUrl changes
+  useEffect(() => {
+    console.log(`[ImageUploader] imageUrl prop: "${imageUrl || 'NULL'}", previewUrl: "${previewUrl || 'NULL'}"`);
+  }, [imageUrl, previewUrl]);
+
   // Update internal state when external imageUrl changes
   useEffect(() => {
+    console.log(`[ImageUploader] External imageUrl changed to: "${imageUrl || 'NULL'}"`);
     setInternalImageUrl(imageUrl);
   }, [imageUrl]);
 
   // Set image URL from input if no file is selected but URL is provided
   useEffect(() => {
     if (internalImageUrl && !previewUrl) {
-      console.log(`Setting image URL from input: ${internalImageUrl}`);
+      console.log(`[ImageUploader] Setting image URL from input: "${internalImageUrl}"`);
       // Only set preview URL if it's a valid image URL and not already set
       if (internalImageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
+        console.log('[ImageUploader] URL appears to be a valid image, applying change');
         onImageUrlChange(internalImageUrl);
+      } else {
+        console.log('[ImageUploader] URL does not appear to be an image, will validate by loading');
+        // Try to validate the URL by creating an image
+        const img = new Image();
+        img.onload = () => {
+          console.log('[ImageUploader] Image loaded successfully, applying URL');
+          onImageUrlChange(internalImageUrl);
+        };
+        img.onerror = () => {
+          console.log('[ImageUploader] Failed to load image, URL may not be valid');
+        };
+        img.src = internalImageUrl;
       }
     }
   }, [internalImageUrl, previewUrl, onImageUrlChange]);
@@ -45,7 +64,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && internalImageUrl && !previewUrl) {
-        console.log('Tab visible again, checking image URL');
+        console.log('[ImageUploader] Tab visible again, checking image URL');
         // Re-apply the image URL when tab becomes visible again
         if (internalImageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
           onImageUrlChange(internalImageUrl);
@@ -74,7 +93,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
     
-    console.log(`File selected: ${file.name}`);
+    console.log(`[ImageUploader] File selected: ${file.name}`);
     onImageChange(file);
     
     // Clear the input value so the same file can be selected again if needed
@@ -84,17 +103,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
     setInternalImageUrl(url);
-    onImageUrlChange(url);
     
     // If URL is cleared, remove the image
     if (!url.trim()) {
       onRemoveImage();
-      console.log('Image URL cleared');
+      console.log('[ImageUploader] Image URL cleared');
     } else {
-      console.log(`Image URL changed to: ${url}`);
+      console.log(`[ImageUploader] Image URL changed to: "${url}"`);
+      
+      // Don't apply the URL change immediately - wait for the useEffect to validate and apply it
+      // This happens in the useEffect watching internalImageUrl
     }
     
-    // Store in localStorage to persist across tab changes
+    // Store in sessionStorage to persist across tab changes
     if (url.trim()) {
       sessionStorage.setItem('lastImageUrl', url);
     } else {
@@ -113,6 +134,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             src={previewUrl} 
             alt="معاينة الصورة" 
             className="w-full h-auto rounded-md border border-white/20 object-cover aspect-video"
+            onError={() => {
+              console.error(`[ImageUploader] Error loading preview image: ${previewUrl}`);
+              toast({
+                variant: "destructive",
+                title: "خطأ في تحميل الصورة",
+                description: "تعذر تحميل الصورة. يرجى التحقق من صحة الرابط.",
+              });
+            }}
           />
           <Button
             type="button"

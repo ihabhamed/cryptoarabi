@@ -15,16 +15,19 @@ const BlogPost = () => {
   const [imageError, setImageError] = useState(false);
   // State for the determined image URL
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
 
   // Log post data and set the image URL when post data is loaded
   useEffect(() => {
     if (post) {
-      console.log(`Blog post loaded: ${post.title} (ID: ${post.id})`);
-      console.log(`Image URL from database: ${post.image_url}`);
+      console.log(`[BlogPost] Blog post loaded: ${post.title} (ID: ${post.id})`);
+      console.log(`[BlogPost] Image URL from database: "${post.image_url || 'NULL'}"`);
       
       if (imageError) {
         // If we've already had an error, use fallback
-        setImageUrl("https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
+        console.log(`[BlogPost] Using fallback due to previous error`);
+        setImageUrl(FALLBACK_IMAGE);
         return;
       }
       
@@ -33,20 +36,28 @@ const BlogPost = () => {
           post.image_url !== 'null' && 
           post.image_url !== 'undefined' && 
           post.image_url.trim() !== '') {
-        console.log(`Using post image in BlogPost: ${post.image_url} for post: ${post.title} (ID: ${post.id})`);
+        console.log(`[BlogPost] Using post image: ${post.image_url}`);
         setImageUrl(post.image_url);
       } else {
         // Use fallback image if no valid image exists
-        console.log(`Using fallback image in BlogPost for post: ${post.title} (ID: ${post.id})`);
-        setImageUrl("https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
+        console.log(`[BlogPost] No valid image URL found, using fallback`);
+        setImageUrl(FALLBACK_IMAGE);
       }
     }
   }, [post, imageError]);
 
   const handleImageError = () => {
-    console.error(`Image load error in BlogPost for: ${post?.image_url}`);
+    console.error(`[BlogPost] Image load error for: ${post?.image_url || 'undefined image URL'}`);
     setImageError(true);
-    setImageUrl("https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
+    setImageUrl(FALLBACK_IMAGE);
+  };
+
+  // Force image reload if URL is already the fallback
+  const forceImageReload = (url: string) => {
+    if (url === FALLBACK_IMAGE) {
+      return `${url}?t=${new Date().getTime()}`;
+    }
+    return url;
   };
 
   if (isLoading) {
@@ -79,7 +90,7 @@ const BlogPost = () => {
   }
 
   if (error || !post) {
-    console.error('Error loading blog post:', error);
+    console.error('[BlogPost] Error loading blog post:', error);
     return (
       <div className="min-h-screen bg-crypto-darkBlue">
         <Navbar />
@@ -128,7 +139,7 @@ const BlogPost = () => {
           <div className="mb-8 rounded-lg overflow-hidden">
             {imageUrl && (
               <img 
-                src={imageUrl} 
+                src={forceImageReload(imageUrl)} 
                 alt={post.title} 
                 className="w-full h-auto object-cover"
                 onError={handleImageError}

@@ -24,9 +24,9 @@ const Blog = () => {
   // Log data to help debug image issues
   useEffect(() => {
     if (blogPosts.length > 0) {
-      console.log('Blog posts loaded:', blogPosts.length);
+      console.log('[Blog] Blog posts loaded:', blogPosts.length);
       blogPosts.forEach(post => {
-        console.log(`Post: ${post.title}, Image URL: ${post.image_url}`);
+        console.log(`[Blog] Post: ${post.title}, ID: ${post.id}, Image URL: "${post.image_url || 'NULL'}"`);
       });
     }
   }, [blogPosts]);

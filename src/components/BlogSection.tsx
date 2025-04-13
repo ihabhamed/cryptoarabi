@@ -15,16 +15,32 @@ const BlogSection = () => {
   
   // Show only 3 latest blog posts for homepage
   const latestPosts = blogPosts.slice(0, 3);
+  
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+
+  // Debug logging of all blog posts at load time
+  useEffect(() => {
+    if (blogPosts.length > 0) {
+      console.log('[BlogSection] All blog posts loaded:');
+      blogPosts.forEach(post => {
+        console.log(`[BlogSection] Post: ${post.title}, ID: ${post.id}, Image URL: "${post.image_url || 'NULL'}"`);
+      });
+    }
+  }, [blogPosts]);
 
   // Determine image URLs for all posts when they load
   useEffect(() => {
     if (latestPosts.length > 0) {
+      console.log(`[BlogSection] Processing ${latestPosts.length} latest posts for display`);
       const newImageUrls: Record<string, string> = {};
       
       latestPosts.forEach(post => {
+        console.log(`[BlogSection] Processing image for post: ${post.title} (ID: ${post.id})`);
+        
         // If we already know this image errors, use fallback
         if (imageErrors[post.id]) {
-          newImageUrls[post.id] = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+          console.log(`[BlogSection] Using fallback due to previous error for post: ${post.id}`);
+          newImageUrls[post.id] = FALLBACK_IMAGE;
           return;
         }
         
@@ -33,12 +49,12 @@ const BlogSection = () => {
             post.image_url !== 'null' && 
             post.image_url !== 'undefined' && 
             post.image_url.trim() !== '') {
-          console.log(`Using post image in BlogSection: ${post.image_url} for post: ${post.title} (ID: ${post.id})`);
+          console.log(`[BlogSection] Using post image: ${post.image_url} for post: ${post.title}`);
           newImageUrls[post.id] = post.image_url;
         } else {
           // Use fallback image if no valid image exists
-          console.log(`Using fallback image in BlogSection for post: ${post.title} (ID: ${post.id})`);
-          newImageUrls[post.id] = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+          console.log(`[BlogSection] No valid image found for post: ${post.title}, using fallback`);
+          newImageUrls[post.id] = FALLBACK_IMAGE;
         }
       });
       
@@ -48,7 +64,7 @@ const BlogSection = () => {
 
   // Handle image loading errors
   const handleImageError = (postId: string) => {
-    console.error(`Image loading error for post ID: ${postId}`);
+    console.error(`[BlogSection] Image loading error for post ID: ${postId}`);
     setImageErrors(prev => ({
       ...prev,
       [postId]: true
@@ -57,8 +73,16 @@ const BlogSection = () => {
     // This will trigger the useEffect to update the image URL to the fallback
     setImageUrls(prev => ({
       ...prev,
-      [postId]: "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      [postId]: FALLBACK_IMAGE
     }));
+  };
+
+  // Force image reload if URL is already the fallback
+  const forceImageReload = (url: string) => {
+    if (url === FALLBACK_IMAGE) {
+      return `${url}?t=${new Date().getTime()}`;
+    }
+    return url;
   };
 
   if (isLoading) {
@@ -95,7 +119,7 @@ const BlogSection = () => {
   }
 
   if (error) {
-    console.error('Error loading blog posts:', error);
+    console.error('[BlogSection] Error loading blog posts:', error);
     return (
       <section id="blog" className="section-padding bg-crypto-darkGray relative">
         <div className="container-custom relative z-10">
@@ -141,7 +165,7 @@ const BlogSection = () => {
                 <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
                   {imageUrls[post.id] && (
                     <img 
-                      src={imageUrls[post.id]} 
+                      src={forceImageReload(imageUrls[post.id])} 
                       alt={post.title} 
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       onError={() => handleImageError(post.id)}
