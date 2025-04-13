@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { NewAirdrop } from '@/types/airdrop';
 import { saveFormData, getFormData, getStorageKey, clearFormData } from '@/lib/utils/formStorage';
+import { toast } from '@/lib/utils/toast-utils';
 
 interface UseAirdropStorageProps {
   id?: string;
@@ -64,6 +65,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     
     const storageKey = getStorageKey("airdrop", isEditMode, id);
     
+    if (DEBUG) console.log('Initial load with key:', storageKey, 'isEditMode:', isEditMode, 'id:', id);
+    
     if (initialData && Object.keys(initialData).length > 0) {
       if (DEBUG) console.log('Loading from initialData:', initialData);
       
@@ -81,6 +84,12 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
       lastSavedDataRef.current = JSON.stringify({ ...initialData, id });
       
       if (DEBUG) console.log('Saved initial data to localStorage:', storageKey);
+      
+      // Show confirmation toast
+      toast({
+        title: "تم تحميل البيانات",
+        description: "تم تحميل بيانات الإيردروب بنجاح",
+      });
     } else {
       // For new entry or edit mode without initialData, check localStorage
       const savedData = getFormData<NewAirdrop & { 
@@ -113,6 +122,14 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         
         setFormData(loadedData);
         lastSavedDataRef.current = JSON.stringify({ ...loadedData, id });
+        
+        // Show confirmation toast if in edit mode
+        if (isEditMode) {
+          toast({
+            title: "تم تحميل البيانات المحفوظة",
+            description: "تم استعادة بيانات الإيردروب من الجلسة السابقة",
+          });
+        }
       } else if (DEBUG) {
         console.log('No data found in localStorage for key:', storageKey);
       }
