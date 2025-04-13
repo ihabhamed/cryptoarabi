@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/utils/toast-utils";
 import { X, Upload, AlertTriangle } from "lucide-react";
 import { validateImageFile } from '@/lib/utils/imageUpload';
-import { isValidImageUrl, getFallbackImageUrl } from '@/hooks/blog/utils/blogImageUtils';
+import { isValidImageUrl, getFallbackImageUrl, shouldClearImageUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 interface ImageUploaderProps {
   previewUrl: string | null;
@@ -40,7 +40,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   useEffect(() => {
     console.log(`[ImageUploader] External imageUrl changed to: "${imageUrl || 'NULL'}"`);
     // Only update if the imageUrl is not null/undefined/empty
-    if (imageUrl && imageUrl !== 'null' && imageUrl !== 'undefined' && imageUrl.trim() !== '') {
+    if (!shouldClearImageUrl(imageUrl)) {
       setInternalImageUrl(imageUrl);
     } else {
       setInternalImageUrl('');

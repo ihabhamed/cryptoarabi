@@ -1,4 +1,3 @@
-
 import { useState, FormEvent } from 'react';
 import { BlogPost } from '@/types/supabase';
 import { useBlogApi } from './useBlogApi';
@@ -6,6 +5,7 @@ import { useBlogImage } from './useBlogImage';
 import { useBlogFormState } from './useBlogFormState';
 import { generateMetaTags } from '@/lib/utils/geminiApi';
 import { toast } from '@/lib/utils/toast-utils';
+import { processImageUrlForStorage, shouldClearImageUrl } from './utils/blogImageUtils';
 
 interface UseBlogSubmitProps {
   id?: string;
@@ -124,18 +124,14 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         }
       }
       
+      // Process the image URL for storage
+      finalFormData.image_url = processImageUrlForStorage(finalFormData.image_url);
+      
       // CRITICAL: Ensure image_url is properly set or cleared
-      // If we still have no image URL but form data has one, preserve it
-      if (!finalFormData.image_url && formData.image_url) {
-        if (formData.image_url !== 'null' && 
-            formData.image_url !== 'undefined' && 
-            formData.image_url.trim() !== '') {
-          console.log("Using existing form data image URL:", formData.image_url);
-          finalFormData.image_url = formData.image_url;
-        } else {
-          console.log("No valid image URL found, setting to null");
-          finalFormData.image_url = null;
-        }
+      // If we're keeping the same or no image, verify it's valid
+      if (shouldClearImageUrl(finalFormData.image_url)) {
+        console.log("No valid image URL found, setting to null");
+        finalFormData.image_url = null;
       }
       
       // Process hashtags
@@ -171,6 +167,12 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         clearFormData();
         sessionStorage.removeItem('blogImageUrl');
         sessionStorage.removeItem('blogImageIsFile');
+        
+        // Show success message when saving
+        toast({
+          title: id ? "تم تحديث المنشور بنجاح" : "تم إضافة المنشور بنجاح",
+          description: "سيتم تحديث قائمة المنشورات تلقائياً",
+        });
       }
     } catch (error) {
       console.error("Error in blog submission:", error);

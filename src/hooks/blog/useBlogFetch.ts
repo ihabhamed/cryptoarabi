@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from '@/types/supabase';
 import { toast } from "@/lib/utils/toast-utils";
-import { cleanImageUrl } from './utils/blogImageUtils';
+import { cleanImageUrl, shouldClearImageUrl } from './utils/blogImageUtils';
 
 /**
  * Hook to fetch blog post data by ID
@@ -32,11 +32,10 @@ export function useBlogFetch() {
       if (data) {
         // Process the image URL to ensure it's valid
         let processedImageUrl = data.image_url;
-        if (processedImageUrl && 
-            processedImageUrl !== 'null' && 
-            processedImageUrl !== 'undefined' && 
-            processedImageUrl.trim() !== '') {
-          // Remove any query parameters to prevent caching issues
+        
+        // Check if the image_url is valid (not null, not 'null' string, etc.)
+        if (!shouldClearImageUrl(processedImageUrl)) {
+          // Clean valid URL (remove query parameters)
           processedImageUrl = cleanImageUrl(processedImageUrl);
           console.log(`Processed image URL: ${processedImageUrl}`);
         } else {

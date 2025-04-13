@@ -72,3 +72,21 @@ export const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, E
   console.error(`Image loading error for post "${postTitle || 'unknown'}": ${target.src}`);
   target.src = getFallbackImageUrl();
 };
+
+/**
+ * Ensures a string is not a "null" string
+ */
+export const ensureNotNullString = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  if (value === 'null' || value === 'undefined' || value.trim() === '') return null;
+  return value;
+};
+
+/**
+ * Determines if image URL needs to be cleared (is an invalid format)
+ */
+export const shouldClearImageUrl = (url: string | null | undefined): boolean => {
+  if (!url) return true;
+  if (url === 'null' || url === 'undefined' || url.trim() === '') return true;
+  return false;
+};

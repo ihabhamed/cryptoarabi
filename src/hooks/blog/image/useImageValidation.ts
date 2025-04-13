@@ -51,8 +51,18 @@ export function useImageValidation() {
     }
   };
 
+  // Check if a value is an empty or invalid URL string
+  const isEmptyOrInvalidUrlString = (url: string | null | undefined): boolean => {
+    return !url || 
+           url === 'null' || 
+           url === 'undefined' || 
+           url.trim() === '' || 
+           url.toLowerCase() === 'null';
+  };
+
   return {
     validateImageUrl,
-    isValidUrl
+    isValidUrl,
+    isEmptyOrInvalidUrlString
   };
 }

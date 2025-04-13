@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from '@/types/supabase';
-import { cleanImageUrl } from '@/hooks/blog/utils/blogImageUtils';
+import { cleanImageUrl, shouldClearImageUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 /**
  * Processes a blog post to ensure all fields are properly typed and handled
@@ -11,7 +11,7 @@ const processBlogPost = (post: any): BlogPost => {
   // Process image URL to ensure it's in the correct format
   let processedImageUrl = null;
   
-  if (post.image_url && post.image_url !== 'null' && post.image_url !== 'undefined' && post.image_url.trim() !== '') {
+  if (!shouldClearImageUrl(post.image_url)) {
     processedImageUrl = cleanImageUrl(post.image_url);
     console.log(`[useBlogPosts] Processing post: ${post.id}, Image URL: "${post.image_url}" -> "${processedImageUrl}"`);
   } else {
@@ -104,13 +104,8 @@ export function useRelatedBlogPosts(currentPostId: string | undefined, hashtags:
       
       if (error) throw error;
       
-      // Ensure we have all required fields for the BlogPost type
-      const posts = data?.map(post => ({
-        ...post,
-        meta_title: post.meta_title || null,
-        meta_description: post.meta_description || null,
-        hashtags: post.hashtags || null
-      })) || [];
+      // Process posts to ensure consistent data format
+      const posts = data?.map(processBlogPost) || [];
       
       return posts;
     },
