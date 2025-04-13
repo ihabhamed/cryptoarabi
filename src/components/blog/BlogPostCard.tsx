@@ -15,13 +15,23 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     ? post.hashtags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3) 
     : [];
 
+  // Ensure we have a valid image URL
+  const imageUrl = post.image_url && post.image_url !== 'null' && post.image_url.trim() !== '' 
+    ? post.image_url 
+    : 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+
   return (
     <div className="bg-crypto-darkGray/50 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:border-crypto-orange/30 h-full flex flex-col">
       <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48">
         <img 
-          src={post.image_url || 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80'} 
+          src={imageUrl} 
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null; // Prevent infinite loop
+            target.src = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+          }}
         />
       </Link>
       

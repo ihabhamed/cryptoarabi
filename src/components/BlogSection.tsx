@@ -12,6 +12,13 @@ const BlogSection = () => {
   // Show only 3 latest blog posts for homepage
   const latestPosts = blogPosts.slice(0, 3);
 
+  // Function to get a valid image URL with fallback
+  const getValidImageUrl = (post: BlogPost) => {
+    return post.image_url && post.image_url !== 'null' && post.image_url.trim() !== '' 
+      ? post.image_url 
+      : "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+  };
+
   if (isLoading) {
     return (
       <section id="blog" className="section-padding bg-crypto-darkGray relative">
@@ -91,9 +98,14 @@ const BlogSection = () => {
               <article key={post.id} className="crypto-card hover:translate-y-[-8px]">
                 <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
                   <img 
-                    src={post.image_url || "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"} 
+                    src={getValidImageUrl(post)} 
                     alt={post.title} 
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null; // Prevent infinite loop
+                      target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+                    }}
                   />
                   <div className="absolute top-3 right-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
                     {post.category || "عام"}

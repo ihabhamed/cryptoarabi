@@ -40,7 +40,7 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       let finalFormData: Partial<BlogPost> = { ...formData };
       
       // CRITICAL: Always ensure we have a valid slug before saving
-      if (!finalFormData.slug || finalFormData.slug.trim() === '') {
+      if (!finalFormData.slug || finalFormData.slug === 'null' || finalFormData.slug.trim() === '') {
         // Generate a timestamp-based slug for uniqueness
         const timestamp = new Date().getTime().toString().slice(-6);
         
@@ -95,10 +95,14 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
           const imageUrl = await uploadBlogImage();
           
           if (imageUrl) {
+            console.log("Successfully uploaded image, setting image_url to:", imageUrl);
             finalFormData = { 
               ...finalFormData, 
               image_url: imageUrl 
             };
+            
+            // Update the form data with the new image URL
+            setFormData(prev => ({ ...prev, image_url: imageUrl }));
           } else {
             toast({
               variant: "destructive",

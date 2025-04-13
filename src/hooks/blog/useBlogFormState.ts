@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BlogPost } from '@/types/supabase';
 import { saveFormData, getFormData, clearFormData } from '@/lib/utils/formStorage';
 
@@ -11,6 +11,7 @@ interface UseBlogFormStateProps {
 export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}) {
   const isEditMode = !!id;
   const storageKey = isEditMode && id ? `blogFormData_${id}` : 'blogFormData_new';
+  const scrollPositionRef = useRef<number>(0);
   
   const [formData, setFormData] = useState<Partial<BlogPost>>({
     title: '',
@@ -28,6 +29,51 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Save scroll position when component loses focus
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      scrollPositionRef.current = window.scrollY;
+    };
+
+    // Save scroll position when window loses focus
+    window.addEventListener('blur', saveScrollPosition);
+
+    // Save scroll position when switching tabs
+    document.addEventListener('visibilitychange', saveScrollPosition);
+
+    return () => {
+      window.removeEventListener('blur', saveScrollPosition);
+      document.removeEventListener('visibilitychange', saveScrollPosition);
+    };
+  }, []);
+
+  // Restore scroll position when component regains focus
+  useEffect(() => {
+    const restoreScrollPosition = () => {
+      // Only restore if we have a saved position
+      if (scrollPositionRef.current > 0) {
+        setTimeout(() => {
+          window.scrollTo(0, scrollPositionRef.current);
+        }, 100);
+      }
+    };
+
+    // Restore scroll position when window regains focus
+    window.addEventListener('focus', restoreScrollPosition);
+
+    // Restore scroll position when switching back to tab
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        restoreScrollPosition();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', restoreScrollPosition);
+      document.removeEventListener('visibilitychange', restoreScrollPosition);
+    };
+  }, []);
 
   // Load data from localStorage or initial data
   useEffect(() => {
@@ -143,6 +189,7 @@ export function useBlogFormState({ id, initialData }: UseBlogFormStateProps = {}
     isEditMode,
     handleChange,
     generateSlug,
-    clearFormData: clearFormDataState
+    clearFormData: clearFormDataState,
+    scrollPositionRef
   };
 }

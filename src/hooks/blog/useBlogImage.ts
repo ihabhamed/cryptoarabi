@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from "@/lib/utils/toast-utils";
 import { uploadImage } from '@/lib/utils/imageUpload';
 
@@ -56,6 +56,15 @@ export function useBlogImage() {
       setPreviewUrl(url);
     }
   };
+
+  // Clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl && !previewUrl.startsWith('http')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return {
     uploadingImage,

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/utils/toast-utils";
@@ -22,6 +23,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   imageUrl,
   isUploading
 }) => {
+  // Set image URL from input if no file is selected but URL is provided
+  useEffect(() => {
+    if (imageUrl && !previewUrl) {
+      // Only set preview URL if it's a valid image URL and not already set
+      if (imageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
+        onImageUrlChange(imageUrl);
+      }
+    }
+  }, [imageUrl, previewUrl, onImageUrlChange]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -41,6 +51,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     
     // Clear the input value so the same file can be selected again if needed
     e.target.value = '';
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    onImageUrlChange(url);
+    
+    // If URL is cleared, remove the image
+    if (!url.trim()) {
+      onRemoveImage();
+    }
   };
 
   return (
@@ -92,7 +112,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           <Input
             name="image_url"
             value={imageUrl}
-            onChange={(e) => onImageUrlChange(e.target.value)}
+            onChange={handleUrlChange}
             placeholder="أدخل رابط صورة المنشور"
             className="bg-crypto-darkBlue/50 border-white/20 text-white"
             disabled={isUploading}
