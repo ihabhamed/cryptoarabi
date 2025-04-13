@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -8,12 +7,19 @@ import { BlogPost } from '@/types/supabase';
 
 const BlogSection = () => {
   const { data: blogPosts = [], isLoading, error } = useBlogPosts();
+  // Track image loading errors for each post
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   
   // Show only 3 latest blog posts for homepage
   const latestPosts = blogPosts.slice(0, 3);
 
   // Improved function to get a valid image URL with proper fallback
   const getValidImageUrl = (post: BlogPost) => {
+    // If this specific image has already errored, use fallback immediately
+    if (imageErrors[post.id]) {
+      return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+    }
+    
     // Check if image_url exists and is not null, 'null' string, or empty
     if (post.image_url && 
         post.image_url !== 'null' && 
@@ -26,6 +32,15 @@ const BlogSection = () => {
     // Return fallback image if no valid image exists
     console.log(`Using fallback image for post: ${post.title}`);
     return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+  };
+
+  // Handle image loading errors
+  const handleImageError = (postId: string) => {
+    console.error(`Image loading error for post ID: ${postId}`);
+    setImageErrors(prev => ({
+      ...prev,
+      [postId]: true
+    }));
   };
 
   if (isLoading) {
@@ -111,7 +126,7 @@ const BlogSection = () => {
                     alt={post.title} 
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
-                      console.error(`Image load error for: ${post.image_url}`);
+                      handleImageError(post.id);
                       const target = e.target as HTMLImageElement;
                       target.onerror = null; // Prevent infinite loop
                       target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";

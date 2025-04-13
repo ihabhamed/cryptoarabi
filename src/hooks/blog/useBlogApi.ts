@@ -98,6 +98,21 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         
         console.log("Generated slug for post:", blogData.slug);
       }
+
+      // Debug image URL before saving
+      console.log(`Image URL before saving: ${blogData.image_url}`);
+      
+      // If image_url is explicitly set to an empty string, null, undefined, or "null"/"undefined" strings, 
+      // make sure we set it to null in the database
+      if (!blogData.image_url || 
+          blogData.image_url === 'null' || 
+          blogData.image_url === 'undefined' || 
+          blogData.image_url.trim() === '') {
+        console.log("Setting image_url to null before saving");
+        blogData.image_url = null;
+      } else {
+        console.log(`Saving valid image URL: ${blogData.image_url}`);
+      }
       
       // Create a clean data object with only the fields that exist in the database
       const cleanData = {
@@ -107,7 +122,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         author: blogData.author || null,
         category: blogData.category || null,
         slug: blogData.slug, // Now guaranteed to have a value
-        image_url: blogData.image_url || null,
+        image_url: blogData.image_url, // Now properly handled for null cases
         publish_date: blogData.publish_date || new Date().toISOString(),
         meta_title: blogData.meta_title || null,
         meta_description: blogData.meta_description || null,

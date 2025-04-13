@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/utils/toast-utils";
@@ -23,23 +23,32 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   imageUrl,
   isUploading
 }) => {
+  const [internalImageUrl, setInternalImageUrl] = useState(imageUrl);
+
+  // Update internal state when external imageUrl changes
+  useEffect(() => {
+    setInternalImageUrl(imageUrl);
+  }, [imageUrl]);
+
   // Set image URL from input if no file is selected but URL is provided
   useEffect(() => {
-    if (imageUrl && !previewUrl) {
+    if (internalImageUrl && !previewUrl) {
+      console.log(`Setting image URL from input: ${internalImageUrl}`);
       // Only set preview URL if it's a valid image URL and not already set
-      if (imageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
-        onImageUrlChange(imageUrl);
+      if (internalImageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
+        onImageUrlChange(internalImageUrl);
       }
     }
-  }, [imageUrl, previewUrl, onImageUrlChange]);
+  }, [internalImageUrl, previewUrl, onImageUrlChange]);
   
   // When tab visibility changes, ensure the image is still displayed
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && imageUrl && !previewUrl) {
+      if (!document.hidden && internalImageUrl && !previewUrl) {
+        console.log('Tab visible again, checking image URL');
         // Re-apply the image URL when tab becomes visible again
-        if (imageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
-          onImageUrlChange(imageUrl);
+        if (internalImageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
+          onImageUrlChange(internalImageUrl);
         }
       }
     };
@@ -49,7 +58,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [imageUrl, previewUrl, onImageUrlChange]);
+  }, [internalImageUrl, previewUrl, onImageUrlChange]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,6 +74,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
     
+    console.log(`File selected: ${file.name}`);
     onImageChange(file);
     
     // Clear the input value so the same file can be selected again if needed
@@ -73,11 +83,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
+    setInternalImageUrl(url);
     onImageUrlChange(url);
     
     // If URL is cleared, remove the image
     if (!url.trim()) {
       onRemoveImage();
+      console.log('Image URL cleared');
+    } else {
+      console.log(`Image URL changed to: ${url}`);
     }
     
     // Store in localStorage to persist across tab changes
@@ -136,7 +150,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           <span className="text-white text-sm">أو</span>
           <Input
             name="image_url"
-            value={imageUrl}
+            value={internalImageUrl}
             onChange={handleUrlChange}
             placeholder="أدخل رابط صورة المنشور"
             className="bg-crypto-darkBlue/50 border-white/20 text-white"

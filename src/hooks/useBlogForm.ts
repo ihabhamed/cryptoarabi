@@ -49,6 +49,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
         const blogData = await fetchBlogPost();
         
         if (blogData) {
+          console.log("Loaded blog data for editing:", blogData);
           setFormData(blogData);
           
           // Set image preview if image_url exists and is valid
@@ -69,6 +70,19 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     
     loadBlogPost();
   }, [id, isEditMode]);
+
+  // Add a useEffect to specifically update image URL when form data changes
+  useEffect(() => {
+    if (formData.image_url && !previewUrl) {
+      // Only if image URL is valid and preview is not set yet
+      if (formData.image_url !== 'null' && 
+          formData.image_url !== 'undefined' && 
+          formData.image_url.trim() !== '') {
+        console.log(`Setting image preview from form data: ${formData.image_url}`);
+        setInitialImagePreview(formData.image_url);
+      }
+    }
+  }, [formData.image_url, previewUrl]);
 
   // Add a new useEffect to log any image URL changes
   useEffect(() => {

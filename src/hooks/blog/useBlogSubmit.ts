@@ -92,6 +92,7 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       // Upload image if selected
       if (selectedImage) {
         try {
+          console.log("Uploading selected image...");
           const imageUrl = await uploadBlogImage();
           
           if (imageUrl) {
@@ -122,6 +123,12 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
           setIsSaving(false);
           return;
         }
+      } else if (formData.image_url) {
+        // If we have an image URL but no selected image, ensure it's properly set
+        console.log("Using existing image URL:", formData.image_url);
+        finalFormData.image_url = formData.image_url;
+      } else {
+        console.log("No image selected or URL provided");
       }
       
       // Process hashtags - ensure it's a properly formatted string

@@ -18,9 +18,12 @@ export function useBlogImage() {
     if (imageUrl) {
       sessionStorage.setItem('blogImageUrl', imageUrl);
       sessionStorage.setItem('blogImageIsFile', isFile ? 'true' : 'false');
+      // Log the image URL being saved to sessionStorage
+      console.log(`Persisting image to sessionStorage: ${imageUrl}`);
     } else {
       sessionStorage.removeItem('blogImageUrl');
       sessionStorage.removeItem('blogImageIsFile');
+      console.log('Clearing image from sessionStorage');
     }
   };
 
@@ -32,6 +35,7 @@ export function useBlogImage() {
     // Create a preview URL
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    console.log(`New image selected, preview URL: ${objectUrl}`);
     
     // Persist in session storage
     persistImageData(objectUrl, true);
@@ -43,6 +47,7 @@ export function useBlogImage() {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(null);
+    console.log('Image removed from preview');
     
     // Remove from session storage
     persistImageData(null);
@@ -53,6 +58,7 @@ export function useBlogImage() {
     
     try {
       setUploadingImage(true);
+      console.log(`Uploading image: ${selectedImage.name}`);
       const imageUrl = await uploadImage(selectedImage, 'blog');
       
       if (!imageUrl) {
@@ -63,6 +69,8 @@ export function useBlogImage() {
         });
         return null;
       }
+      
+      console.log(`Image uploaded successfully: ${imageUrl}`);
       
       // Persist the permanent URL
       persistImageData(imageUrl);
@@ -78,6 +86,7 @@ export function useBlogImage() {
 
   const setInitialImagePreview = (url: string | null) => {
     if (url) {
+      console.log(`Setting initial image preview: ${url}`);
       setPreviewUrl(url);
       
       // Persist in session storage
@@ -93,6 +102,7 @@ export function useBlogImage() {
         const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
         
         if (savedImageUrl && !previewUrl) {
+          console.log(`Restoring image from sessionStorage: ${savedImageUrl}`);
           // If it's a file URL (object URL), we can't restore the actual file,
           // but we can show the image and mark it for upload later
           if (isFile) {

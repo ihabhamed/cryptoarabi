@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -11,10 +10,25 @@ import { BlogPostTags } from '@/components/blog/BlogPostTags';
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPost(slug);
+  // Track image loading errors
+  const [imageError, setImageError] = useState(false);
+
+  // Log post data to help debug image issues
+  useEffect(() => {
+    if (post) {
+      console.log(`Blog post loaded: ${post.title}`);
+      console.log(`Image URL from database: ${post.image_url}`);
+    }
+  }, [post]);
 
   // Function to get a valid image URL
   const getValidImageUrl = () => {
     if (!post) return null;
+    
+    // If image has already errored, use fallback immediately
+    if (imageError) {
+      return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
+    }
     
     // Check if image_url exists and is not null, 'null' string, or empty
     if (post.image_url && 
@@ -112,6 +126,7 @@ const BlogPost = () => {
               className="w-full h-auto object-cover"
               onError={(e) => {
                 console.error(`Image load error for: ${post.image_url}`);
+                setImageError(true);
                 const target = e.target as HTMLImageElement;
                 target.onerror = null; // Prevent infinite loop
                 target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
