@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -6,6 +5,12 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+// Re-export the interfaces from their respective files
+export { Airdrop, NewAirdrop } from './airdrop';
+export { BlogPost } from './blog';
+export { Service } from './service';
+export { SiteSettings } from './site-settings';
 
 export interface Database {
   public: {
@@ -120,7 +125,7 @@ export interface Database {
           show_testimonials_section?: boolean
           theme_primary_color?: string | null
           theme_secondary_color?: string | null
-          updated_at?: string
+          updated_at: string
         }
         Relationships: []
       }
@@ -149,65 +154,3 @@ export type Views<
   Public extends boolean = false
 > = Public extends true ? Database["public"]["Views"]
   : Database["public"]["Views"];
-
-// MAPPINGS
-export interface BlogPost {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string | null;
-  slug: string | null;
-  content: string | null;
-  excerpt: string | null;
-  author: string | null;
-  category: string | null;
-  image_url: string | null;
-  meta_title: string | null;
-  meta_description: string | null;
-  hashtags: string | null;
-  publish_date: string | null;
-}
-
-// Update SiteSettings to include blog visibility settings
-export interface SiteSettings {
-  id: string;
-  site_name: string;
-  site_description: string | null;
-  logo_url: string | null;
-  show_about_section: boolean;
-  show_testimonials_section: boolean;
-  show_blog_section: boolean; // Field for blog visibility
-  footer_about_text: string | null;
-  footer_links_title: string | null;
-  copyright_text: string | null;
-  hero_video_url: string | null;
-  hero_headline: string | null;
-  hero_description: string | null;
-  hero_cta_text: string | null;
-  theme_primary_color: string | null;
-  theme_secondary_color: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type Airdrop = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  description: string | null;
-  status: string;
-  twitter_link: string | null;
-  youtube_link: string | null;
-  claim_url: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  publish_date: string;
-  image_url: string | null; // Keeping this in the type for backward compatibility
-  meta_title: string | null;
-  meta_description: string | null;
-  hashtags: string | null;
-  steps: string | null; // Added steps field
-};
-
-export type NewAirdrop = Omit<Airdrop, 'id' | 'created_at' | 'updated_at'>;

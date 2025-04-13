@@ -1,5 +1,5 @@
 
-import { NewAirdrop } from '@/types/supabase';
+import { NewAirdrop } from '@/types/airdrop';
 
 /**
  * Formats airdrop data from API response for form display

@@ -1,5 +1,5 @@
 
-import { NewAirdrop } from '@/types/supabase';
+import { NewAirdrop } from '@/types/airdrop';
 
 type FormSetter = React.Dispatch<React.SetStateAction<NewAirdrop & { 
   meta_title?: string; 
