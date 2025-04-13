@@ -48,10 +48,13 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
   const saveTimeoutRef = useRef<number | null>(null);
   // Track if we've initialized the form
   const hasInitializedRef = useRef(false);
+  // DEBUG flag
+  const DEBUG = true;
 
   // Update the ref whenever formData changes
   useEffect(() => {
     formDataRef.current = formData;
+    if (DEBUG) console.log('Form data updated:', formData);
   }, [formData]);
 
   // Load data from localStorage or initial data
@@ -61,7 +64,9 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     
     const storageKey = getStorageKey("airdrop", isEditMode, id);
     
-    if (initialData) {
+    if (initialData && Object.keys(initialData).length > 0) {
+      if (DEBUG) console.log('Loading from initialData:', initialData);
+      
       // Set initial data
       setFormData({
         ...initialData,
@@ -71,14 +76,13 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         steps: initialData.steps || '',
       });
       
-      // Save to localStorage with unique key only if it's not already there
-      const existingData = getFormData(storageKey);
-      if (!existingData) {
-        saveFormData(storageKey, { ...initialData, id });
-        lastSavedDataRef.current = JSON.stringify({ ...initialData, id });
-      }
-    } else if (!isEditMode) {
-      // For new entry, check localStorage
+      // Save to localStorage with unique key
+      saveFormData(storageKey, { ...initialData, id });
+      lastSavedDataRef.current = JSON.stringify({ ...initialData, id });
+      
+      if (DEBUG) console.log('Saved initial data to localStorage:', storageKey);
+    } else {
+      // For new entry or edit mode without initialData, check localStorage
       const savedData = getFormData<NewAirdrop & { 
         id?: string; 
         meta_title?: string; 
@@ -88,6 +92,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
       }>(storageKey);
       
       if (savedData) {
+        if (DEBUG) console.log('Loading from localStorage:', savedData);
+        
         const loadedData = {
           title: savedData.title || '',
           description: savedData.description || '',
@@ -107,6 +113,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         
         setFormData(loadedData);
         lastSavedDataRef.current = JSON.stringify({ ...loadedData, id });
+      } else if (DEBUG) {
+        console.log('No data found in localStorage for key:', storageKey);
       }
     }
     
@@ -120,25 +128,24 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     }
     
     const save = () => {
-      // Only save if there's actual data
-      if (formDataRef.current.title) {
-        const storageKey = getStorageKey("airdrop", isEditMode, id);
-        const dataToSave = { ...formDataRef.current, id };
-        const serializedData = JSON.stringify(dataToSave);
-        
-        // Skip if nothing has changed
-        if (serializedData === lastSavedDataRef.current) {
-          return;
-        }
-        
-        saveFormData(storageKey, dataToSave);
-        lastSavedDataRef.current = serializedData;
-        console.log('Saved form data to localStorage', storageKey);
+      const dataToSave = { ...formDataRef.current, id };
+      const serializedData = JSON.stringify(dataToSave);
+      
+      // Skip if nothing has changed
+      if (serializedData === lastSavedDataRef.current) {
+        if (DEBUG) console.log('No changes to save');
+        return;
       }
+      
+      const storageKey = getStorageKey("airdrop", isEditMode, id);
+      saveFormData(storageKey, dataToSave);
+      lastSavedDataRef.current = serializedData;
+      
+      if (DEBUG) console.log('Saved form data to localStorage:', storageKey, dataToSave);
     };
     
     // Set a timeout to save after a delay
-    saveTimeoutRef.current = window.setTimeout(save, 1000);
+    saveTimeoutRef.current = window.setTimeout(save, 300);
   }, [id, isEditMode]);
   
   // Wrap setFormData to also trigger a save
@@ -148,15 +155,24 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     hashtags?: string;
     steps?: string;
   }>) => {
-    setFormData(data);
+    setFormData(prev => {
+      // Handle functional updates
+      const newData = typeof data === 'function' ? data(prev) : data;
+      
+      if (DEBUG) console.log('Setting form data:', newData);
+      
+      // Return the new state
+      return newData;
+    });
+    
     // Schedule a save after the state has been updated
-    setTimeout(debouncedSave, 0);
+    setTimeout(debouncedSave, 10);
   }, [debouncedSave]);
   
-  // Save form data to localStorage whenever it changes, but debounce it
+  // Save form data to localStorage whenever it changes
   useEffect(() => {
-    // Only save if there's actual data and we've initialized
-    if (formData.title && hasInitializedRef.current) {
+    // Only save if we've initialized
+    if (hasInitializedRef.current) {
       debouncedSave();
     }
     
@@ -164,13 +180,21 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     return () => {
       if (saveTimeoutRef.current !== null) {
         clearTimeout(saveTimeoutRef.current);
+        
+        // Force a final save on unmount
+        const storageKey = getStorageKey("airdrop", isEditMode, id);
+        saveFormData(storageKey, { ...formDataRef.current, id });
+        
+        if (DEBUG) console.log('Final save on unmount:', storageKey);
       }
     };
-  }, [debouncedSave, formData]);
+  }, [debouncedSave, formData, id, isEditMode]);
 
   const clearAirdropFormData = useCallback(() => {
     const storageKey = getStorageKey("airdrop", isEditMode, id);
     clearFormData(storageKey);
+    
+    if (DEBUG) console.log('Cleared form data:', storageKey);
   }, [isEditMode, id]);
 
   return {

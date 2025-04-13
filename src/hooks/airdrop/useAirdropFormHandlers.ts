@@ -16,14 +16,10 @@ export function useAirdropFormHandlers(setFormData: FormSetter) {
   // Handle text input changes
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    console.log(`Input changed: ${name} = ${value}`);
     
     // Use functional update to avoid race conditions
     setFormData(prevData => {
-      // Only update if the value has actually changed
-      if (prevData[name as keyof typeof prevData] === value) {
-        return prevData;
-      }
-      
       // Create a completely new object to ensure React detects the change
       return { 
         ...prevData, 
@@ -34,13 +30,10 @@ export function useAirdropFormHandlers(setFormData: FormSetter) {
   
   // Handle select changes
   const handleSelectChange = useCallback((name: string, value: string) => {
+    console.log(`Select changed: ${name} = ${value}`);
+    
     // Use functional update to avoid race conditions
     setFormData(prevData => {
-      // Only update if the value has actually changed
-      if (prevData[name as keyof typeof prevData] === value) {
-        return prevData;
-      }
-      
       // Create a completely new object to ensure React detects the change
       return { 
         ...prevData, 

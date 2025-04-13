@@ -19,6 +19,8 @@ export function useAirdropHashtags(
   
   // Initialize hashtags from formData only once or when hashtags string changes
   useEffect(() => {
+    console.log('Hashtags from formData:', formData.hashtags);
+    
     if (!formData.hashtags) {
       setHashtags([]);
       setIsInitialized(true);
@@ -31,6 +33,7 @@ export function useAirdropHashtags(
         .map(tag => tag.trim())
         .filter(Boolean);
         
+      console.log('Parsed hashtags:', tagArray);
       setHashtags(tagArray);
       setIsInitialized(true);
     }
@@ -68,6 +71,7 @@ export function useAirdropHashtags(
       }
     } as React.ChangeEvent<HTMLInputElement>;
     
+    console.log('Updating parent hashtags:', newHashtags.join(' '));
     handleChange(event);
   }, [handleChange]);
   
@@ -86,6 +90,7 @@ export function useAirdropHashtags(
     }
     
     const updatedHashtags = [...hashtags, newTag];
+    console.log('Adding hashtag:', newTag, 'New list:', updatedHashtags);
     setHashtags(updatedHashtags);
     updateParentFormData(updatedHashtags);
     
@@ -99,6 +104,8 @@ export function useAirdropHashtags(
     
     // Create a new array without the removed tag
     const updatedHashtags = hashtags.filter(tag => tag !== tagToRemove);
+    
+    console.log('Removing hashtag:', tagToRemove, 'New list:', updatedHashtags);
     
     // Update state first
     setHashtags(updatedHashtags);
