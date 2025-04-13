@@ -16,9 +16,21 @@ interface UseAirdropFormProps {
 
 export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   const isEditMode = !!id;
-  const { data: existingAirdrop, isLoading } = useAirdrop(id);
+  const { data: existingAirdrop, isLoading, error: fetchError } = useAirdrop(id);
   const { linkCopied, copyAirdropLink: baseCopyAirdropLink } = useAirdropLink();
   const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // If there's an error fetching airdrop data, show a toast
+  useEffect(() => {
+    if (fetchError) {
+      console.error("Error fetching airdrop data:", fetchError);
+      toast({
+        title: "خطأ في التحميل",
+        description: "حدث خطأ أثناء تحميل بيانات الإيردروب. يرجى المحاولة مرة أخرى.",
+        variant: "destructive"
+      });
+    }
+  }, [fetchError]);
   
   // Refresh form when a custom event is dispatched
   useEffect(() => {
@@ -36,10 +48,19 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   
   // Create a wrapper function that passes the ID to copyAirdropLink
   const copyAirdropLink = () => {
-    if (id) {
-      baseCopyAirdropLink(id);
-    } else {
-      baseCopyAirdropLink();
+    try {
+      if (id) {
+        baseCopyAirdropLink(id);
+      } else {
+        baseCopyAirdropLink();
+      }
+    } catch (error) {
+      console.error("Error copying link:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء نسخ الرابط",
+        variant: "destructive"
+      });
     }
   };
 
@@ -60,7 +81,8 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   } = useAirdropStorage({
     id,
     isEditMode,
-    initialData: formattedAirdropData
+    initialData: formattedAirdropData,
+    forceUpdate // Pass the forceUpdate value to trigger re-renders
   });
 
   // Use the form handlers hook
@@ -101,8 +123,9 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     submitForm(e, formData);
   };
 
-  // Force re-render when tab becomes active
+  // Force re-render when tab becomes active or forceUpdate changes
   useEffect(() => {
+    console.log("Force update triggered:", forceUpdate);
     // This empty dependency array with forceUpdate will make sure 
     // the component re-evaluates its state when forceUpdate changes
   }, [forceUpdate]);

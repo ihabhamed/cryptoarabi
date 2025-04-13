@@ -16,17 +16,23 @@ const WindowFocusHandler = () => {
     const handleFocus = () => {
       console.log('Window focused - data should be loaded from localStorage if available');
       
-      // Only refetch if we're on the site settings page
-      if (location.pathname.includes('/admin/site-settings')) {
-        console.log('Refetching site settings on focus');
-        refetch();
-      }
-      
-      // Force rerender of the form data for airdrop edit pages
-      if (location.pathname.includes('/admin/airdrops/edit')) {
-        console.log('Triggering airdrop form data reload on focus');
-        // Force a rerender by dispatching a custom event
-        window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+      try {
+        // Only refetch if we're on the site settings page
+        if (location.pathname.includes('/admin/site-settings')) {
+          console.log('Refetching site settings on focus');
+          refetch().catch(err => {
+            console.error('Error refetching site settings:', err);
+          });
+        }
+        
+        // Force rerender of the form data for airdrop edit pages
+        if (location.pathname.includes('/admin/airdrops/edit')) {
+          console.log('Triggering airdrop form data reload on focus');
+          // Force a rerender by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+        }
+      } catch (error) {
+        console.error('Error in focus handler:', error);
       }
     };
     
@@ -35,17 +41,23 @@ const WindowFocusHandler = () => {
       if (document.visibilityState === 'visible') {
         console.log('Tab became visible again');
         
-        // Only refetch if we're on the site settings page
-        if (location.pathname.includes('/admin/site-settings')) {
-          console.log('Refetching site settings on visibility change');
-          refetch();
-        }
-        
-        // Force rerender of the form data for airdrop edit pages
-        if (location.pathname.includes('/admin/airdrops/edit')) {
-          console.log('Triggering airdrop form data reload on visibility change');
-          // Force a rerender by dispatching a custom event
-          window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+        try {
+          // Only refetch if we're on the site settings page
+          if (location.pathname.includes('/admin/site-settings')) {
+            console.log('Refetching site settings on visibility change');
+            refetch().catch(err => {
+              console.error('Error refetching site settings:', err);
+            });
+          }
+          
+          // Force rerender of the form data for airdrop edit pages
+          if (location.pathname.includes('/admin/airdrops/edit')) {
+            console.log('Triggering airdrop form data reload on visibility change');
+            // Force a rerender by dispatching a custom event
+            window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+          }
+        } catch (error) {
+          console.error('Error in visibility change handler:', error);
         }
       }
     };
