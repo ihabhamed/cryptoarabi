@@ -14,11 +14,18 @@ type FormSetter = React.Dispatch<React.SetStateAction<NewAirdrop & {
 export function useAirdropFormHandlers(setFormData: FormSetter) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Use functional update to avoid race conditions
+    setFormData(prevData => {
+      // Prevent losing other state values by creating a new object with all previous data
+      return { ...prevData, [name]: value };
+    });
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Use functional update to avoid race conditions
+    setFormData(prevData => {
+      return { ...prevData, [name]: value };
+    });
   };
 
   return {

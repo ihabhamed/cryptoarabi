@@ -3,10 +3,10 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { NewAirdrop } from '@/types/supabase';
+import { NewAirdrop } from '@/types/airdrop';
 
 interface BasicInfoSectionProps {
-  formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string };
+  formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string; steps?: string };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
 }

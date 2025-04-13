@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { NewAirdrop } from '@/types/supabase';
+import { NewAirdrop } from '@/types/airdrop';
 import { saveFormData, getFormData, getStorageKey, clearFormData } from '@/lib/utils/formStorage';
 
 interface UseAirdropStorageProps {
@@ -87,12 +87,16 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     }
   }, [initialData, id, isEditMode]);
   
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage whenever it changes, but debounce it to prevent conflicts
   useEffect(() => {
-    // Only save if there's actual data
+    // Only save if there's actual data and a small delay to prevent rapid overwrites
     if (formData.title) {
       const storageKey = getStorageKey("airdrop", isEditMode, id);
-      saveFormData(storageKey, { ...formData, id });
+      const timeoutId = setTimeout(() => {
+        saveFormData(storageKey, { ...formData, id });
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [formData, id, isEditMode]);
 
