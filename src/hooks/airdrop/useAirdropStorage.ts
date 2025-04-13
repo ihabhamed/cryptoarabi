@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { NewAirdrop } from '@/types/airdrop';
 import { saveFormData, getFormData, getStorageKey, clearFormData } from '@/lib/utils/formStorage';
@@ -13,12 +12,13 @@ interface UseAirdropStorageProps {
     hashtags?: string;
     steps?: string;
   };
+  forceUpdate?: number; // Add the forceUpdate property
 }
 
 /**
  * Hook for managing airdrop form data persistence in localStorage
  */
-export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropStorageProps) {
+export function useAirdropStorage({ id, isEditMode, initialData, forceUpdate = 0 }: UseAirdropStorageProps) {
   const [formData, setFormData] = useState<NewAirdrop & { 
     meta_title?: string; 
     meta_description?: string; 
@@ -137,6 +137,47 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     
     hasInitializedRef.current = true;
   }, [initialData, id, isEditMode]);
+  
+  // Add effect to respond to forceUpdate changes
+  useEffect(() => {
+    if (forceUpdate > 0 && hasInitializedRef.current) {
+      if (DEBUG) console.log('Force update triggered in storage hook:', forceUpdate);
+      
+      // Re-fetch data from localStorage
+      const storageKey = getStorageKey("airdrop", isEditMode, id);
+      const savedData = getFormData<NewAirdrop & { 
+        id?: string; 
+        meta_title?: string; 
+        meta_description?: string;
+        hashtags?: string;
+        steps?: string;
+      }>(storageKey);
+      
+      if (savedData) {
+        if (DEBUG) console.log('Reloading data from localStorage due to force update:', savedData);
+        
+        const loadedData = {
+          title: savedData.title || '',
+          description: savedData.description || '',
+          status: savedData.status || 'upcoming',
+          twitter_link: savedData.twitter_link || '',
+          youtube_link: savedData.youtube_link || '',
+          claim_url: savedData.claim_url || '',
+          start_date: savedData.start_date || '',
+          end_date: savedData.end_date || '',
+          image_url: savedData.image_url || '',
+          publish_date: savedData.publish_date || new Date().toISOString(),
+          meta_title: savedData.meta_title || '',
+          meta_description: savedData.meta_description || '',
+          hashtags: savedData.hashtags || '',
+          steps: savedData.steps || '',
+        };
+        
+        setFormData(loadedData);
+        lastSavedDataRef.current = JSON.stringify({ ...loadedData, id });
+      }
+    }
+  }, [forceUpdate, id, isEditMode]);
   
   // Create a debounced save function
   const debouncedSave = useCallback(() => {

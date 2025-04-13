@@ -82,7 +82,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     id,
     isEditMode,
     initialData: formattedAirdropData,
-    forceUpdate // Pass the forceUpdate value to trigger re-renders
+    forceUpdate // Now this is correctly typed
   });
 
   // Use the form handlers hook
@@ -123,7 +123,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     submitForm(e, formData);
   };
 
-  // Force re-render when tab becomes active or forceUpdate changes
+  // Log when forceUpdate changes
   useEffect(() => {
     console.log("Force update triggered:", forceUpdate);
     // This empty dependency array with forceUpdate will make sure 
