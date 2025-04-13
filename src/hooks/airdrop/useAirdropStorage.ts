@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { NewAirdrop } from '@/types/airdrop';
 import { saveFormData, getFormData, getStorageKey, clearFormData } from '@/lib/utils/formStorage';
 
