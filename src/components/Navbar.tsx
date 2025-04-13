@@ -23,8 +23,12 @@ const Navbar = () => {
   }
 
   const siteName = siteSettings?.site_name || 'كريبتوعرب';
-  // Check if blog section should be shown
-  const showBlogSection = siteSettings?.show_blog_section !== false; // Default to true if undefined
+  
+  // Default to showing the blog section if the setting doesn't exist
+  // This ensures backward compatibility until the database is updated
+  const showBlogSection = 'show_blog_section' in (siteSettings || {}) 
+    ? siteSettings?.show_blog_section !== false 
+    : true;
 
   return (
     <nav className="fixed w-full z-50 bg-crypto-darkBlue/80 backdrop-blur-md border-b border-white/10">

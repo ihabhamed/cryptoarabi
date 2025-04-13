@@ -43,6 +43,9 @@ const HomeTab = () => {
     </div>;
   }
 
+  // Check if blog section toggle is supported
+  const isBlogSectionToggleSupported = 'show_blog_section' in (settings || {});
+
   return (
     <div className="space-y-6">
       <div>
@@ -72,17 +75,31 @@ const HomeTab = () => {
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="blog-section" className="text-white">قسم "المدونة"</Label>
-              <p className="text-sm text-gray-400">إظهار أو إخفاء قسم "المدونة" في الصفحة الرئيسية والقائمة</p>
+          {isBlogSectionToggleSupported ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="blog-section" className="text-white">قسم "المدونة"</Label>
+                <p className="text-sm text-gray-400">إظهار أو إخفاء قسم "المدونة" في الصفحة الرئيسية والقائمة</p>
+              </div>
+              <Switch 
+                id="blog-section" 
+                checked={settings?.show_blog_section ?? true}
+                onCheckedChange={(checked) => handleToggleSection('show_blog_section', checked)}
+              />
             </div>
-            <Switch 
-              id="blog-section" 
-              checked={settings?.show_blog_section ?? true}
-              onCheckedChange={(checked) => handleToggleSection('show_blog_section', checked)}
-            />
-          </div>
+          ) : (
+            <div className="flex items-center justify-between bg-yellow-900/20 p-3 rounded-md">
+              <div>
+                <Label htmlFor="blog-section" className="text-white">قسم "المدونة"</Label>
+                <p className="text-sm text-yellow-400">يجب تحديث قاعدة البيانات لدعم هذه الميزة. اتصل بمسؤول النظام.</p>
+              </div>
+              <Switch 
+                id="blog-section" 
+                checked={true}
+                disabled={true}
+              />
+            </div>
+          )}
         </div>
       </div>
       
