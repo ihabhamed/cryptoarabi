@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,17 @@ const AdminAirdropForm = () => {
     onSuccess: () => navigate('/admin')
   });
   
+  // Force data reload when component mounts to ensure data is displayed immediately
+  useEffect(() => {
+    if (id) {
+      console.log('AdminAirdropForm component mounted with ID:', id);
+      // Trigger a refresh event after a short delay to ensure data visibility
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+      }, 200);
+    }
+  }, [id]);
+  
   // Cancel button handler
   const handleCancel = () => {
     const storageKey = isEditMode && id ? `airdropFormData_${id}` : 'airdropFormData_new';
@@ -44,6 +55,9 @@ const AdminAirdropForm = () => {
       </div>
     );
   }
+  
+  // Render a feedback message if formData is empty in edit mode
+  const isEmptyForm = isEditMode && (!formData.title || formData.title === '');
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-crypto-darkBlue to-crypto-darkGray p-4">
@@ -65,6 +79,12 @@ const AdminAirdropForm = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
+            {isEmptyForm && isEditMode && (
+              <div className="mb-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-md text-white">
+                <p>جاري تحميل البيانات... إذا لم تظهر البيانات، يرجى تحديث الصفحة.</p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <AirdropFormFields 
                 formData={formData}

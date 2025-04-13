@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { NewAirdrop } from '@/types/airdrop';
 import { saveFormData, getFormData, getStorageKey, clearFormData } from '@/lib/utils/formStorage';
@@ -13,12 +14,13 @@ interface UseAirdropStorageProps {
     steps?: string;
   };
   forceUpdate?: number; // Add the forceUpdate property
+  dataReady?: boolean; // Add flag to indicate when API data is ready
 }
 
 /**
  * Hook for managing airdrop form data persistence in localStorage
  */
-export function useAirdropStorage({ id, isEditMode, initialData, forceUpdate = 0 }: UseAirdropStorageProps) {
+export function useAirdropStorage({ id, isEditMode, initialData, forceUpdate = 0, dataReady = false }: UseAirdropStorageProps) {
   const [formData, setFormData] = useState<NewAirdrop & { 
     meta_title?: string; 
     meta_description?: string; 
@@ -58,14 +60,16 @@ export function useAirdropStorage({ id, isEditMode, initialData, forceUpdate = 0
     if (DEBUG) console.log('Form data updated:', formData);
   }, [formData]);
 
-  // Load data from localStorage or initial data
+  // Load data from localStorage or initial data when API data is ready
   useEffect(() => {
-    // Skip if we've already initialized
-    if (hasInitializedRef.current) return;
+    // Skip if we've already initialized or (in edit mode) if data isn't ready yet
+    if (hasInitializedRef.current || (isEditMode && !dataReady && !initialData)) {
+      return;
+    }
     
     const storageKey = getStorageKey("airdrop", isEditMode, id);
     
-    if (DEBUG) console.log('Initial load with key:', storageKey, 'isEditMode:', isEditMode, 'id:', id);
+    if (DEBUG) console.log('Initial load with key:', storageKey, 'isEditMode:', isEditMode, 'id:', id, 'dataReady:', dataReady);
     
     if (initialData && Object.keys(initialData).length > 0) {
       if (DEBUG) console.log('Loading from initialData:', initialData);
@@ -90,6 +94,8 @@ export function useAirdropStorage({ id, isEditMode, initialData, forceUpdate = 0
         title: "تم تحميل البيانات",
         description: "تم تحميل بيانات الإيردروب بنجاح",
       });
+      
+      hasInitializedRef.current = true;
     } else {
       // For new entry or edit mode without initialData, check localStorage
       const savedData = getFormData<NewAirdrop & { 
@@ -130,13 +136,31 @@ export function useAirdropStorage({ id, isEditMode, initialData, forceUpdate = 0
             description: "تم استعادة بيانات الإيردروب من الجلسة السابقة",
           });
         }
+        
+        hasInitializedRef.current = true;
       } else if (DEBUG) {
         console.log('No data found in localStorage for key:', storageKey);
       }
     }
-    
-    hasInitializedRef.current = true;
-  }, [initialData, id, isEditMode]);
+  }, [initialData, id, isEditMode, dataReady]);
+  
+  // Effect specifically for handling changes in dataReady state
+  useEffect(() => {
+    if (dataReady && isEditMode && initialData && Object.keys(initialData).length > 0) {
+      if (DEBUG) console.log('Data ready flag changed to true, setting data from API:', initialData);
+      
+      // Set data from API
+      setFormData({
+        ...initialData,
+        meta_title: initialData.meta_title || initialData.title || '',
+        meta_description: initialData.meta_description || initialData.description || '',
+        hashtags: initialData.hashtags || '',
+        steps: initialData.steps || '',
+      });
+      
+      hasInitializedRef.current = true;
+    }
+  }, [dataReady, initialData, isEditMode]);
   
   // Add effect to respond to forceUpdate changes
   useEffect(() => {

@@ -19,6 +19,7 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   const { data: existingAirdrop, isLoading, error: fetchError } = useAirdrop(id);
   const { linkCopied, copyAirdropLink: baseCopyAirdropLink } = useAirdropLink();
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [dataInitialized, setDataInitialized] = useState(false);
   
   // If there's an error fetching airdrop data, show a toast
   useEffect(() => {
@@ -45,6 +46,14 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
       window.removeEventListener('airdrop-form-refresh', handleFormRefresh);
     };
   }, []);
+
+  // Track when data has been successfully loaded from API
+  useEffect(() => {
+    if (existingAirdrop && !dataInitialized) {
+      console.log('Airdrop data loaded from API, triggering initialization');
+      setDataInitialized(true);
+    }
+  }, [existingAirdrop, dataInitialized]);
   
   // Create a wrapper function that passes the ID to copyAirdropLink
   const copyAirdropLink = () => {
@@ -70,6 +79,8 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   useEffect(() => {
     if (formattedAirdropData && Object.keys(formattedAirdropData).length > 0) {
       console.log('Received formatted airdrop data:', formattedAirdropData);
+      // Force a refresh when data is loaded from API
+      setForceUpdate(prev => prev + 1);
     }
   }, [formattedAirdropData]);
   
@@ -82,7 +93,8 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     id,
     isEditMode,
     initialData: formattedAirdropData,
-    forceUpdate // Now this is correctly typed
+    forceUpdate, // Now this is correctly typed
+    dataReady: dataInitialized
   });
 
   // Use the form handlers hook

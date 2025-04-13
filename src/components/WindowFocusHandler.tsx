@@ -53,14 +53,26 @@ const WindowFocusHandler = () => {
           // Force rerender of the form data for airdrop edit pages
           if (location.pathname.includes('/admin/airdrops/edit')) {
             console.log('Triggering airdrop form data reload on visibility change');
-            // Force a rerender by dispatching a custom event
-            window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+            // Force a rerender by dispatching a custom event with higher priority
+            window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
+              detail: { priority: 'high' } 
+            }));
           }
         } catch (error) {
           console.error('Error in visibility change handler:', error);
         }
       }
     };
+    
+    // Initial data load for airdrop edit pages - trigger a refresh when component mounts
+    if (location.pathname.includes('/admin/airdrops/edit')) {
+      console.log('WindowFocusHandler mounted on airdrop edit page - triggering initial refresh');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
+          detail: { priority: 'high', initial: true } 
+        }));
+      }, 100);
+    }
     
     // Add event listeners
     window.addEventListener('focus', handleFocus);
