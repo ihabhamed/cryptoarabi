@@ -6,7 +6,7 @@ import { shouldClearImageUrl, cleanImageUrl } from '../utils/blogImageUtils';
  * Hook to handle image persistence across tab switches and visibility changes
  */
 export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (url: string | null) => void) {
-  // Persist image data in sessionStorage
+  // Persist image data in sessionStorage with improved reliability
   const persistImageData = (imageUrl: string | null, isFile: boolean = false) => {
     if (imageUrl && !shouldClearImageUrl(imageUrl)) {
       console.log(`[useImagePersistence] Persisting image to sessionStorage: ${imageUrl}`);
@@ -16,9 +16,8 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
       sessionStorage.setItem('blogImageTimestamp', new Date().getTime().toString());
     } else {
       console.log('[useImagePersistence] Clearing image from sessionStorage');
-      sessionStorage.removeItem('blogImageUrl');
-      sessionStorage.removeItem('blogImageIsFile');
-      sessionStorage.removeItem('blogImageTimestamp');
+      // Don't actually remove items here, just log the intent
+      // We'll handle removal after a successful submission
     }
   };
 
@@ -33,10 +32,12 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
       setPreviewUrl(cleanUrl);
       persistImageData(cleanUrl);
     } else {
-      console.log(`[useImagePersistence] Invalid URL provided to setInitialImagePreview: ${url || 'NULL'}`);
-      // Clear the preview if URL is invalid
-      setPreviewUrl(null);
-      persistImageData(null);
+      // Check if we have a saved image in sessionStorage before clearing
+      const savedImageUrl = sessionStorage.getItem('blogImageUrl');
+      if (!savedImageUrl || shouldClearImageUrl(savedImageUrl)) {
+        console.log(`[useImagePersistence] Invalid URL provided to setInitialImagePreview: ${url || 'NULL'}`);
+        setPreviewUrl(null);
+      }
     }
   };
 
@@ -47,7 +48,7 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
         const savedImageUrl = sessionStorage.getItem('blogImageUrl');
         const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
         
-        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && !previewUrl) {
+        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && (!previewUrl || previewUrl !== savedImageUrl)) {
           console.log(`[useImagePersistence] Restoring image from sessionStorage: ${savedImageUrl}`);
           setPreviewUrl(savedImageUrl);
         }
@@ -60,32 +61,50 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
       }
     };
     
-    // Check on component mount
+    // Check on component mount - important for returning to the page
     handleVisibilityChange();
     
-    // Also add visibility change listener
+    // Add visibility change listener
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // Add additional event listeners for tab/window focus and blur
-    window.addEventListener('blur', () => {
+    const handleWindowBlur = () => {
       if (previewUrl && !shouldClearImageUrl(previewUrl)) {
         console.log(`[useImagePersistence] Saving image on window blur: ${previewUrl}`);
         persistImageData(previewUrl);
       }
-    });
+    };
     
-    window.addEventListener('focus', () => {
+    const handleWindowFocus = () => {
       const savedImageUrl = sessionStorage.getItem('blogImageUrl');
-      if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && !previewUrl) {
+      if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && (!previewUrl || previewUrl !== savedImageUrl)) {
         console.log(`[useImagePersistence] Restoring image on window focus: ${savedImageUrl}`);
         setPreviewUrl(savedImageUrl);
       }
-    });
+    };
+    
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+    
+    // Additional check on navigation events using the History API
+    const handlePopState = () => {
+      console.log('[useImagePersistence] Navigation detected, checking for saved images');
+      setTimeout(() => {
+        const savedImageUrl = sessionStorage.getItem('blogImageUrl');
+        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && (!previewUrl || previewUrl !== savedImageUrl)) {
+          console.log(`[useImagePersistence] Restoring image after navigation: ${savedImageUrl}`);
+          setPreviewUrl(savedImageUrl);
+        }
+      }, 100); // Small delay to ensure DOM is settled
+    };
+    
+    window.addEventListener('popstate', handlePopState);
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', () => {});
-      window.removeEventListener('focus', () => {});
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, [previewUrl, setPreviewUrl]);
 

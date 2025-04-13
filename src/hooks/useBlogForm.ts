@@ -1,10 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { useBlogFormState } from './blog/useBlogFormState';
 import { useBlogImage } from './blog/useBlogImage';
 import { useBlogApi } from './blog/useBlogApi';
 import { useBlogSubmit } from './blog/useBlogSubmit';
 import { toast } from "@/lib/utils/toast-utils";
+import { recoverImageFromStorage } from './blog/utils/blogImageUtils';
 
 interface UseBlogFormProps {
   id?: string;
@@ -82,15 +82,30 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
               validateImageUrl(blogData.image_url).then(isValid => {
                 if (!isValid) {
                   console.log(`[useBlogForm] WARNING: Image URL validation failed for: ${blogData.image_url}`);
-                  toast({
-                    variant: "warning",
-                    title: "تحذير",
-                    description: "تعذر تحميل صورة المنشور. يمكنك اختيار صورة أخرى.",
-                  });
+                  // Try to recover from session storage
+                  const recoveredUrl = recoverImageFromStorage();
+                  if (recoveredUrl) {
+                    console.log(`[useBlogForm] Falling back to recovered URL: ${recoveredUrl}`);
+                    setInitialImagePreview(recoveredUrl);
+                  } else {
+                    toast({
+                      variant: "warning",
+                      title: "تحذير",
+                      description: "تعذر تحميل صورة المنشور. يمكنك اختيار صورة أخرى.",
+                    });
+                  }
                 }
               });
             } else {
               console.log(`[useBlogForm] No valid image URL found in blogData: ${blogData.image_url || 'NULL'}`);
+              // Try to recover from session storage
+              const recoveredUrl = recoverImageFromStorage();
+              if (recoveredUrl) {
+                console.log(`[useBlogForm] Using recovered image URL: ${recoveredUrl}`);
+                setInitialImagePreview(recoveredUrl);
+                // Update form data to match
+                setFormData(prev => ({ ...prev, image_url: recoveredUrl }));
+              }
             }
             
             setFormLoaded(true);
@@ -127,6 +142,14 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
       } else if (!isEditMode) {
         // New post mode, no data to load
         setFormLoaded(true);
+        
+        // Check for any previously stored image
+        const recoveredUrl = recoverImageFromStorage();
+        if (recoveredUrl) {
+          console.log(`[useBlogForm] Recovered image URL for new post: ${recoveredUrl}`);
+          setInitialImagePreview(recoveredUrl);
+          setFormData(prev => ({ ...prev, image_url: recoveredUrl }));
+        }
       }
     };
     
@@ -137,7 +160,39 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
   useEffect(() => {
     console.log(`[useBlogForm] Current form.image_url: "${formData.image_url || 'NULL'}"`);
     console.log(`[useBlogForm] Current previewUrl: "${previewUrl || 'NULL'}"`);
-  }, [formData.image_url, previewUrl]);
+    
+    // Ensure image consistency - if formData.image_url changes but previewUrl doesn't match
+    if (formData.image_url && formData.image_url !== previewUrl && isValidUrl(formData.image_url)) {
+      console.log(`[useBlogForm] Syncing previewUrl with formData.image_url`);
+      setInitialImagePreview(formData.image_url);
+    }
+  }, [formData.image_url, previewUrl, setInitialImagePreview, isValidUrl]);
+
+  // Additional check when route changes to ensure image persistence
+  useEffect(() => {
+    const handleRouteChange = () => {
+      console.log('[useBlogForm] Route change detected, ensuring image data is preserved');
+      // Save form state
+      saveFormState();
+      
+      // If we have an image URL, make sure it's stored
+      if (formData.image_url && isValidUrl(formData.image_url)) {
+        console.log(`[useBlogForm] Saving image on navigation: ${formData.image_url}`);
+        sessionStorage.setItem('blogImageUrl', formData.image_url);
+        sessionStorage.setItem('blogImageIsFile', 'false');
+      } else if (previewUrl) {
+        console.log(`[useBlogForm] Saving preview on navigation: ${previewUrl}`);
+        sessionStorage.setItem('blogImageUrl', previewUrl);
+        sessionStorage.setItem('blogImageIsFile', 'false');
+      }
+    };
+    
+    window.addEventListener('popstate', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, [formData.image_url, previewUrl, isValidUrl, saveFormState]);
 
   // Save form state when tab visibility changes
   useEffect(() => {
@@ -145,6 +200,16 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
       if (document.hidden) {
         // Save form state when tab is hidden
         saveFormState();
+      } else {
+        // On becoming visible, check if image needs to be recovered
+        if (!previewUrl && !formData.image_url) {
+          const recoveredUrl = recoverImageFromStorage();
+          if (recoveredUrl) {
+            console.log(`[useBlogForm] Recovered image on visibility change: ${recoveredUrl}`);
+            setInitialImagePreview(recoveredUrl);
+            setFormData(prev => ({ ...prev, image_url: recoveredUrl }));
+          }
+        }
       }
     };
     
@@ -153,18 +218,16 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [saveFormState]);
+  }, [saveFormState, previewUrl, formData.image_url, setInitialImagePreview, setFormData]);
 
-  // Clear blogImageUrl from sessionStorage when component unmounts
+  // Only clear blogImageUrl from sessionStorage when component unmounts if it's not an edit mode
+  // or after submission, not during normal navigation
   useEffect(() => {
     return () => {
-      if (!isEditMode) {
-        console.log('[useBlogForm] Cleaning up image data from sessionStorage on unmount');
-        sessionStorage.removeItem('blogImageUrl');
-        sessionStorage.removeItem('blogImageIsFile');
-      }
+      // Don't clear session storage here - we want to keep the image data
+      console.log('[useBlogForm] Component unmounting, keeping image data in sessionStorage for persistence');
     };
-  }, [isEditMode]);
+  }, []);
 
   return {
     formData,

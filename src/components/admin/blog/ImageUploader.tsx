@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { toast } from "@/lib/utils/toast-utils";
-import { isValidImageUrl } from '@/hooks/blog/utils/blogImageUtils';
+import { isValidImageUrl, recoverImageFromStorage } from '@/hooks/blog/utils/blogImageUtils';
 import ImagePreview from './components/ImagePreview';
 import ImageUploadInput from './components/ImageUploadInput';
 import ImageUrlInput from './components/ImageUrlInput';
@@ -28,21 +28,53 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     console.log(`[ImageUploader] imageUrl prop: "${imageUrl || 'NULL'}", previewUrl: "${previewUrl || 'NULL'}"`);
   }, [imageUrl, previewUrl]);
   
+  // When component mounts, try to recover image from storage if needed
+  useEffect(() => {
+    if (!previewUrl && !imageUrl) {
+      const recoveredUrl = recoverImageFromStorage();
+      if (recoveredUrl) {
+        console.log(`[ImageUploader] Recovered image URL on mount: ${recoveredUrl}`);
+        onImageUrlChange(recoveredUrl);
+      }
+    }
+  }, []);
+  
   // When tab visibility changes, ensure the image is still displayed
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && imageUrl && !previewUrl) {
-        console.log('[ImageUploader] Tab visible again, checking image URL');
-        if (isValidImageUrl(imageUrl)) {
-          onImageUrlChange(imageUrl);
+      if (!document.hidden) {
+        console.log('[ImageUploader] Tab visible again, checking images');
+        
+        // First check if we have a valid previewUrl
+        if (!previewUrl) {
+          // Check if imageUrl is valid
+          if (imageUrl && isValidImageUrl(imageUrl)) {
+            console.log(`[ImageUploader] Using valid imageUrl: ${imageUrl}`);
+            onImageUrlChange(imageUrl);
+          } else {
+            // Try to recover from sessionStorage as last resort
+            const recoveredUrl = recoverImageFromStorage();
+            if (recoveredUrl) {
+              console.log(`[ImageUploader] Recovered image from storage: ${recoveredUrl}`);
+              onImageUrlChange(recoveredUrl);
+            }
+          }
         }
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
+    // Also handle navigation events
+    const handleRouteChange = () => {
+      setTimeout(handleVisibilityChange, 100);
+    };
+    
+    window.addEventListener('popstate', handleRouteChange);
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('popstate', handleRouteChange);
     };
   }, [imageUrl, previewUrl, onImageUrlChange]);
 
@@ -60,6 +92,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         title: "جاري إعادة تحميل الصورة",
         description: "يرجى الانتظار قليلاً...",
       });
+    } else {
+      // Try to recover from session storage
+      const recoveredUrl = recoverImageFromStorage();
+      if (recoveredUrl) {
+        console.log(`[ImageUploader] Recovered image on retry: ${recoveredUrl}`);
+        onImageUrlChange(recoveredUrl);
+      }
     }
   };
 

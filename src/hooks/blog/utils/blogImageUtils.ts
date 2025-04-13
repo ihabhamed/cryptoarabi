@@ -119,8 +119,22 @@ export const normalizeImageUrl = (url: string | null): string | null => {
  */
 export const recoverImageFromStorage = (): string | null => {
   const savedImageUrl = sessionStorage.getItem('blogImageUrl');
+  const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
+  
   if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
     console.log(`Recovered image URL from session storage: ${savedImageUrl}`);
+    
+    // Make sure it's a valid URL if it's not a file
+    if (!isFile) {
+      try {
+        new URL(savedImageUrl);
+        return savedImageUrl;
+      } catch (e) {
+        console.error('Recovered URL is not valid:', savedImageUrl);
+        return null;
+      }
+    }
+    
     return savedImageUrl;
   }
   return null;
