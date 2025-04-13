@@ -13,6 +13,7 @@ interface UseBlogFormProps {
 
 export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
   const [formLoaded, setFormLoaded] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   
   const {
     formData,
@@ -50,19 +51,19 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
 
   // Validate image URLs for debugging
   useEffect(() => {
-    if (isEditMode && id) {
+    if (isEditMode && id && loadAttempts === 0) {
       // Run a direct inspection of image URLs in the database
       inspectImageUrls();
     }
-  }, [isEditMode, id, inspectImageUrls]);
+  }, [isEditMode, id, inspectImageUrls, loadAttempts]);
 
   // Load blog post data if in edit mode
   useEffect(() => {
     const loadBlogPost = async () => {
-      if (isEditMode && id) {
+      if (isEditMode && id && !formLoaded && loadAttempts < 3) {
         try {
           setIsLoading(true);
-          console.log(`[useBlogForm] Loading blog post for editing with ID: ${id}`);
+          console.log(`[useBlogForm] Loading blog post for editing with ID: ${id} (attempt ${loadAttempts + 1})`);
           
           const blogData = await fetchBlogPost(id);
           
@@ -95,30 +96,42 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
             setFormLoaded(true);
           } else {
             console.error(`[useBlogForm] Failed to load blog post with ID: ${id}`);
-            toast({
-              variant: "destructive",
-              title: "خطأ في التحميل",
-              description: "تعذر تحميل بيانات المنشور. يرجى المحاولة مرة أخرى.",
-            });
+            
+            // Only show toast after multiple attempts to reduce UI noise during initial loads
+            if (loadAttempts >= 2) {
+              toast({
+                variant: "destructive",
+                title: "خطأ في التحميل",
+                description: "تعذر تحميل بيانات المنشور. يرجى المحاولة مرة أخرى.",
+              });
+            }
+            
+            setLoadAttempts(prev => prev + 1);
           }
         } catch (error) {
           console.error('[useBlogForm] Error loading blog post:', error);
-          toast({
-            variant: "destructive",
-            title: "خطأ في التحميل",
-            description: "حدث خطأ أثناء تحميل بيانات المنشور.",
-          });
+          
+          // Only show toast after multiple attempts
+          if (loadAttempts >= 2) {
+            toast({
+              variant: "destructive",
+              title: "خطأ في التحميل",
+              description: "حدث خطأ أثناء تحميل بيانات المنشور.",
+            });
+          }
+          
+          setLoadAttempts(prev => prev + 1);
         } finally {
           setIsLoading(false);
         }
-      } else {
+      } else if (!isEditMode) {
         // New post mode, no data to load
         setFormLoaded(true);
       }
     };
     
     loadBlogPost();
-  }, [id, isEditMode, fetchBlogPost, setFormData, setInitialImagePreview, validateImageUrl, setIsLoading, isValidUrl]);
+  }, [id, isEditMode, fetchBlogPost, setFormData, setInitialImagePreview, validateImageUrl, setIsLoading, isValidUrl, formLoaded, loadAttempts]);
 
   // Debug image URL state when form data changes
   useEffect(() => {

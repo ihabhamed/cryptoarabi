@@ -32,10 +32,16 @@ export function useBlogFetch() {
       if (data) {
         // Process the image URL to ensure it's valid
         let processedImageUrl = data.image_url;
-        if (processedImageUrl) {
+        if (processedImageUrl && 
+            processedImageUrl !== 'null' && 
+            processedImageUrl !== 'undefined' && 
+            processedImageUrl.trim() !== '') {
           // Remove any query parameters to prevent caching issues
           processedImageUrl = cleanImageUrl(processedImageUrl);
           console.log(`Processed image URL: ${processedImageUrl}`);
+        } else {
+          processedImageUrl = null;
+          console.log('Image URL is null or invalid, setting to null');
         }
         
         return {
@@ -46,7 +52,7 @@ export function useBlogFetch() {
           author: data.author || '',
           category: data.category || '',
           slug: data.slug || '',
-          image_url: processedImageUrl || '',
+          image_url: processedImageUrl,
           publish_date: data.publish_date || new Date().toISOString(),
           meta_title: data.meta_title || '',
           meta_description: data.meta_description || '',

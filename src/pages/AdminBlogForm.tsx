@@ -8,6 +8,7 @@ import BlogFormFields from '@/components/admin/blog/BlogFormFields';
 import ImageUploader from '@/components/admin/blog/ImageUploader';
 import { useBlogForm } from '@/hooks/useBlogForm';
 import { toast } from "@/lib/utils/toast-utils";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const AdminBlogForm = () => {
   const { id } = useParams();
@@ -28,7 +29,7 @@ const AdminBlogForm = () => {
     handleSubmit
   } = useBlogForm({
     id,
-    onSuccess: () => navigate('/admin')
+    onSuccess: () => navigate('/admin/blog')
   });
   
   // Check if form has been loaded after a timeout
@@ -52,11 +53,21 @@ const AdminBlogForm = () => {
     };
   }, [isEditMode, formLoaded, isLoading]);
   
+  // Redirect to the correct admin blog page
+  useEffect(() => {
+    if (location.pathname.includes('/blog/edit/') && location.pathname.includes('/admin/')) {
+      const correctPath = location.pathname.replace('/admin/blog/edit/', '/admin/blog/edit/');
+      if (location.pathname !== correctPath) {
+        navigate(correctPath);
+      }
+    }
+  }, [navigate]);
+  
   // Cancel button handler
   const handleCancel = () => {
     const storageKey = isEditMode && id ? `blogFormData_${id}` : 'blogFormData_new';
     localStorage.removeItem(storageKey);
-    navigate('/admin');
+    navigate('/admin/blog');
   };
   
   if (isLoading && isEditMode) {
@@ -79,7 +90,7 @@ const AdminBlogForm = () => {
             <Button 
               variant="outline" 
               className="border-white/20 text-white hover:bg-white/10"
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/admin/blog')}
             >
               العودة للقائمة
             </Button>
@@ -104,7 +115,7 @@ const AdminBlogForm = () => {
               <Button 
                 variant="ghost" 
                 className="text-white hover:text-crypto-orange"
-                onClick={() => navigate('/admin')}
+                onClick={() => navigate('/admin/blog')}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 العودة
@@ -115,6 +126,15 @@ const AdminBlogForm = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
+            {isEditMode && formData.id && (
+              <Alert variant="warning" className="mb-6">
+                <AlertTitle>معلومات هامة</AlertTitle>
+                <AlertDescription>
+                  إذا كنت تواجه مشاكل في رؤية صور المنشور، فقد تحتاج إلى رفع صورة جديدة.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <BlogFormFields 
                 formData={formData}

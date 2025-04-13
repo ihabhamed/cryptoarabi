@@ -24,7 +24,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   imageUrl,
   isUploading
 }) => {
-  const [internalImageUrl, setInternalImageUrl] = useState(imageUrl);
+  const [internalImageUrl, setInternalImageUrl] = useState('');
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -39,7 +39,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   // Update internal state when external imageUrl changes
   useEffect(() => {
     console.log(`[ImageUploader] External imageUrl changed to: "${imageUrl || 'NULL'}"`);
-    setInternalImageUrl(imageUrl);
+    // Only update if the imageUrl is not null/undefined/empty
+    if (imageUrl && imageUrl !== 'null' && imageUrl !== 'undefined' && imageUrl.trim() !== '') {
+      setInternalImageUrl(imageUrl);
+    } else {
+      setInternalImageUrl('');
+    }
   }, [imageUrl]);
 
   // Set image URL from input if no file is selected but URL is provided

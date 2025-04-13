@@ -5,7 +5,7 @@
 export function useImageValidation() {
   // Test for direct validating if the image can be loaded
   const validateImageUrl = async (url: string): Promise<boolean> => {
-    if (!url || url === 'null' || url === 'undefined' || url.trim() === '') {
+    if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
       console.log('[useImageValidation] validateImageUrl: URL is invalid or empty');
       return false;
     }
@@ -38,8 +38,8 @@ export function useImageValidation() {
   };
 
   // Check if a URL is properly formatted
-  const isValidUrl = (url: string): boolean => {
-    if (!url || url === 'null' || url === 'undefined' || url.trim() === '') {
+  const isValidUrl = (url: string | null | undefined): boolean => {
+    if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
       return false;
     }
     

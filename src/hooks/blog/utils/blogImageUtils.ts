@@ -7,7 +7,7 @@
  * Validates if an image URL is properly formatted and not null/undefined/empty
  */
 export const isValidImageUrl = (url: string | null | undefined): boolean => {
-  if (!url || url === 'null' || url === 'undefined' || url.trim() === '') {
+  if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
     return false;
   }
   
