@@ -11,10 +11,10 @@ export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPo
   console.log(`[createCleanBlogData] Processing image URL: "${blogData.image_url || 'NULL'}" -> "${imageUrl || 'NULL'}"`);
 
   // Generate defaults for required fields
-  return {
+  const result: Partial<BlogPost> = {
     // Ensure required fields for database schema are included
     title: blogData.title || '',
-    content: blogData.content || '',  // Provide a default empty string to ensure content is always present
+    content: blogData.content || ' ',  // Always ensure content has at least a space to meet DB requirements
     excerpt: blogData.excerpt || null,
     author: blogData.author || null,
     category: blogData.category || null,
@@ -25,6 +25,8 @@ export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPo
     meta_description: blogData.meta_description || null,
     hashtags: blogData.hashtags || null
   };
+
+  return result;
 };
 
 /**

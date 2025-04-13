@@ -101,23 +101,30 @@ export function useBlogSave() {
         });
       } else {
         // For insertion, content is required by the database schema
-        if (!cleanData.content && blogData.content) {
-          cleanData.content = blogData.content;
+        if (!cleanData.content) {
+          if (blogData.content) {
+            cleanData.content = blogData.content;
+          } else {
+            cleanData.content = ' '; // Add a fallback default value
+          }
         }
         
         // Ensure content is not an empty string
-        if (cleanData.content && cleanData.content.trim() === '') {
+        if (cleanData.content.trim() === '') {
           cleanData.content = ' '; // Add a space to prevent empty string issues
         }
         
         // Ensure required fields are present for insertion
-        if (!cleanData.content || !cleanData.title) {
-          console.error("Missing required fields for blog insertion:", cleanData);
-          throw new Error("المحتوى والعنوان مطلوبان لإنشاء منشور جديد");
+        if (!cleanData.title) {
+          console.error("Missing required field 'title' for blog insertion");
+          throw new Error("العنوان مطلوب لإنشاء منشور جديد");
         }
         
+        // Create properly typed insert data object with explicitly typed content field
         const insertData = {
           ...cleanData,
+          content: cleanData.content, // Explicitly include content to satisfy TypeScript
+          title: cleanData.title, // Explicitly include title to satisfy TypeScript
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
