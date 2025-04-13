@@ -1,13 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, X } from "lucide-react";
 import { 
   getFallbackImageUrl,
-  normalizeImageUrl,
-  addTimestampToUrl 
+  addTimestampToUrl as addTimestampToFallbackUrl,
 } from '@/hooks/blog/utils/image/imageFallback';
-import { normalizeImageUrl as normalizeUrl } from '@/hooks/blog/utils/image/imageProcessing';
+import { normalizeImageUrl } from '@/hooks/blog/utils/image/imageProcessing';
 
 interface ImagePreviewProps {
   previewUrl: string | null;
@@ -26,10 +24,10 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
   const [showingFallback, setShowingFallback] = useState(false);
   
   // Try to normalize the preview URL if it exists
-  const normalizedPreviewUrl = previewUrl ? normalizeUrl(previewUrl) : null;
+  const normalizedPreviewUrl = previewUrl ? normalizeImageUrl(previewUrl) : null;
   // Add a timestamp if we've retried loading
   const displayUrl = retryCount > 0 && normalizedPreviewUrl ? 
-    addTimestampToUrl(normalizedPreviewUrl) : 
+    addTimestampToFallbackUrl(normalizedPreviewUrl) : 
     normalizedPreviewUrl || getFallbackImageUrl();
   
   // Reset error state when previewUrl changes

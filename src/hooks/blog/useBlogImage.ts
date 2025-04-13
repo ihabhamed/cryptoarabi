@@ -1,4 +1,3 @@
-
 import { useImageSelection } from './image/useImageSelection';
 import { useImageUpload } from './image/useImageUpload';
 import { useImagePersistence } from './image/useImagePersistence';
@@ -6,12 +5,10 @@ import { useImageValidation } from './image/useImageValidation';
 import { 
   cleanImageUrl, 
   shouldClearImageUrl, 
-  recoverImageFromStorage,
-  isBlobUrlValid,
-  addTimestampToUrl
+  recoverImageFromStorage
 } from './utils/image/imageValidation';
 import { 
-  addTimestampToUrl as addTimestamp 
+  addTimestampToUrl 
 } from './utils/image/imageProcessing';
 import { 
   recoverImageFromStorage as recoverImage 

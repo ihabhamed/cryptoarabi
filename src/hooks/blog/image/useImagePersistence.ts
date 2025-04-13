@@ -1,6 +1,5 @@
-
 import { useEffect } from 'react';
-import { shouldClearImageUrl, cleanImageUrl } from '../utils/blogImageUtils';
+import { shouldClearImageUrl, cleanImageUrl } from '../utils/image/imageValidation';
 
 /**
  * Hook to handle image persistence across tab switches and visibility changes
