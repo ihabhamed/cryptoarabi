@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NewAirdrop } from '@/types/airdrop';
 import { saveFormData, getFormData, getStorageKey, clearFormData } from '@/lib/utils/formStorage';
 
@@ -39,6 +39,11 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     hashtags: '',
     steps: '',
   });
+  
+  // Use a ref to track the last saved data to avoid unnecessary re-renders
+  const lastSavedDataRef = useRef<string>('');
+  // Use a ref to track the save timeout
+  const saveTimeoutRef = useRef<number | null>(null);
 
   // Load data from localStorage or initial data
   useEffect(() => {
@@ -56,6 +61,7 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
       
       // Save to localStorage with unique key
       saveFormData(storageKey, { ...initialData, id });
+      lastSavedDataRef.current = JSON.stringify({ ...initialData, id });
     } else if (!isEditMode) {
       // For new entry, check localStorage
       const savedData = getFormData<NewAirdrop & { 
@@ -67,7 +73,7 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
       }>(storageKey);
       
       if (savedData) {
-        setFormData({
+        const loadedData = {
           title: savedData.title || '',
           description: savedData.description || '',
           status: savedData.status || 'upcoming',
@@ -82,21 +88,47 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
           meta_description: savedData.meta_description || '',
           hashtags: savedData.hashtags || '',
           steps: savedData.steps || '',
-        });
+        };
+        
+        setFormData(loadedData);
+        lastSavedDataRef.current = JSON.stringify({ ...loadedData, id });
       }
     }
   }, [initialData, id, isEditMode]);
   
-  // Save form data to localStorage whenever it changes, but debounce it to prevent conflicts
+  // Save form data to localStorage whenever it changes, but debounce it
   useEffect(() => {
-    // Only save if there's actual data and a small delay to prevent rapid overwrites
+    // Only save if there's actual data
     if (formData.title) {
       const storageKey = getStorageKey("airdrop", isEditMode, id);
-      const timeoutId = setTimeout(() => {
-        saveFormData(storageKey, { ...formData, id });
-      }, 500);
+      const dataToSave = { ...formData, id };
+      const serializedData = JSON.stringify(dataToSave);
       
-      return () => clearTimeout(timeoutId);
+      // Skip if nothing has changed
+      if (serializedData === lastSavedDataRef.current) {
+        return;
+      }
+      
+      // Clear any existing timeout
+      if (saveTimeoutRef.current !== null) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      // Set a new timeout to save the data after a delay
+      const timeoutId = window.setTimeout(() => {
+        saveFormData(storageKey, dataToSave);
+        lastSavedDataRef.current = serializedData;
+        saveTimeoutRef.current = null;
+      }, 1000);
+      
+      saveTimeoutRef.current = timeoutId;
+      
+      // Cleanup on unmount
+      return () => {
+        if (saveTimeoutRef.current !== null) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+      };
     }
   }, [formData, id, isEditMode]);
 

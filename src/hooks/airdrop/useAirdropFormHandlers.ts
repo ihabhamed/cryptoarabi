@@ -1,4 +1,5 @@
 
+import { useCallback } from 'react';
 import { NewAirdrop } from '@/types/airdrop';
 
 type FormSetter = React.Dispatch<React.SetStateAction<NewAirdrop & { 
@@ -12,21 +13,29 @@ type FormSetter = React.Dispatch<React.SetStateAction<NewAirdrop & {
  * Hook for managing airdrop form input handlers
  */
 export function useAirdropFormHandlers(setFormData: FormSetter) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
     // Use functional update to avoid race conditions
     setFormData(prevData => {
-      // Prevent losing other state values by creating a new object with all previous data
-      return { ...prevData, [name]: value };
+      // Create a completely new object to ensure React detects the change
+      return { 
+        ...prevData, 
+        [name]: value 
+      };
     });
-  };
+  }, [setFormData]);
   
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = useCallback((name: string, value: string) => {
     // Use functional update to avoid race conditions
     setFormData(prevData => {
-      return { ...prevData, [name]: value };
+      // Create a completely new object to ensure React detects the change
+      return { 
+        ...prevData, 
+        [name]: value 
+      };
     });
-  };
+  }, [setFormData]);
 
   return {
     handleChange,

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { NewAirdrop } from '@/types/supabase';
+import { NewAirdrop } from '@/types/airdrop';
 import { toast } from "@/lib/utils/toast-utils";
 
 interface UseAirdropHashtagsProps {
@@ -15,22 +15,24 @@ export function useAirdropHashtags(
 ) {
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [suggestedHashtags, setSuggestedHashtags] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   
-  // Initialize hashtags from formData
+  // Initialize hashtags from formData only once or when hashtags string changes
   useEffect(() => {
-    if (formData.hashtags) {
+    if (formData.hashtags && (!isInitialized || formData.hashtags !== hashtags.join(' '))) {
       const tagArray = formData.hashtags
         .split(/[\s,]+/) // Split by spaces or commas
         .map(tag => tag.trim())
         .filter(Boolean);
         
       setHashtags(tagArray);
-    } else {
+      setIsInitialized(true);
+    } else if (!formData.hashtags && hashtags.length > 0) {
       setHashtags([]);
     }
-  }, [formData.hashtags]);
+  }, [formData.hashtags, isInitialized, hashtags]);
   
-  // Generate base suggestions
+  // Generate base suggestions only once or when title changes
   useEffect(() => {
     // Only run if we have title and no suggestions yet
     if (formData.title && !suggestedHashtags.length) {
@@ -87,9 +89,15 @@ export function useAirdropHashtags(
   
   // Remove a hashtag
   const removeHashtag = useCallback((tagToRemove: string) => {
+    if (!tagToRemove) return;
+    
     const updatedHashtags = hashtags.filter(tag => tag !== tagToRemove);
     setHashtags(updatedHashtags);
-    updateParentFormData(updatedHashtags);
+    
+    // Add a small delay to ensure state is stable before updating parent
+    setTimeout(() => {
+      updateParentFormData(updatedHashtags);
+    }, 50);
   }, [hashtags, updateParentFormData]);
   
   // Add a suggested hashtag

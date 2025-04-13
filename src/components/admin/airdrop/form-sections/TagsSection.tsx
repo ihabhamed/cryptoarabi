@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { NewAirdrop } from '@/types/supabase';
+import { NewAirdrop } from '@/types/airdrop';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ const TagsSection: React.FC<TagsSectionProps> = ({
   generateHashtagsContent
 }) => {
   const [hashtag, setHashtag] = useState('');
+  const [renderKey, setRenderKey] = useState(0); // Force re-render when needed
+  
   const { 
     hashtags, 
     suggestedHashtags, 
@@ -44,6 +46,18 @@ const TagsSection: React.FC<TagsSectionProps> = ({
       e.preventDefault();
       handleAddHashtag();
     }
+  };
+
+  // Force re-render when hashtags change
+  useEffect(() => {
+    setRenderKey(prev => prev + 1);
+  }, [formData.hashtags]);
+
+  // Handle removal of a hashtag with proper event prevention
+  const handleRemoveHashtag = (e: React.MouseEvent, tag: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeHashtag(tag);
   };
 
   return (
@@ -87,11 +101,11 @@ const TagsSection: React.FC<TagsSectionProps> = ({
       </div>
       
       {/* Current Hashtags */}
-      <div className="flex flex-wrap gap-2 mt-2">
+      <div className="flex flex-wrap gap-2 mt-2" key={renderKey}>
         {hashtags.length > 0 ? (
           hashtags.map((tag, index) => (
             <Badge 
-              key={index} 
+              key={`${tag}-${index}`}
               className="bg-crypto-darkBlue hover:bg-crypto-darkBlue/80 text-white flex items-center gap-1"
             >
               {tag}
@@ -100,7 +114,7 @@ const TagsSection: React.FC<TagsSectionProps> = ({
                 variant="ghost"
                 size="sm"
                 className="h-4 w-4 p-0 text-white hover:text-white hover:bg-transparent"
-                onClick={() => removeHashtag(tag)}
+                onClick={(e) => handleRemoveHashtag(e, tag)}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -118,7 +132,7 @@ const TagsSection: React.FC<TagsSectionProps> = ({
           <div className="flex flex-wrap gap-2">
             {suggestedHashtags.map((tag, index) => (
               <Badge 
-                key={index} 
+                key={`suggestion-${tag}-${index}`}
                 className="bg-crypto-darkGray hover:bg-crypto-darkGray/80 text-gray-300 flex items-center gap-1 cursor-pointer"
                 onClick={() => addSuggestedHashtag(tag)}
               >
