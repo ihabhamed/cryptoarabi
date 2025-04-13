@@ -12,10 +12,13 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
       console.log(`[useImagePersistence] Persisting image to sessionStorage: ${imageUrl}`);
       sessionStorage.setItem('blogImageUrl', imageUrl);
       sessionStorage.setItem('blogImageIsFile', isFile ? 'true' : 'false');
+      // Also store timestamp to track when the image was saved
+      sessionStorage.setItem('blogImageTimestamp', new Date().getTime().toString());
     } else {
       console.log('[useImagePersistence] Clearing image from sessionStorage');
       sessionStorage.removeItem('blogImageUrl');
       sessionStorage.removeItem('blogImageIsFile');
+      sessionStorage.removeItem('blogImageTimestamp');
     }
   };
 
@@ -48,6 +51,12 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
           console.log(`[useImagePersistence] Restoring image from sessionStorage: ${savedImageUrl}`);
           setPreviewUrl(savedImageUrl);
         }
+      } else {
+        // When tab is hidden, make sure to save current image
+        if (previewUrl && !shouldClearImageUrl(previewUrl)) {
+          console.log(`[useImagePersistence] Saving image before tab hidden: ${previewUrl}`);
+          persistImageData(previewUrl);
+        }
       }
     };
     
@@ -57,8 +66,26 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
     // Also add visibility change listener
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
+    // Add additional event listeners for tab/window focus and blur
+    window.addEventListener('blur', () => {
+      if (previewUrl && !shouldClearImageUrl(previewUrl)) {
+        console.log(`[useImagePersistence] Saving image on window blur: ${previewUrl}`);
+        persistImageData(previewUrl);
+      }
+    });
+    
+    window.addEventListener('focus', () => {
+      const savedImageUrl = sessionStorage.getItem('blogImageUrl');
+      if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && !previewUrl) {
+        console.log(`[useImagePersistence] Restoring image on window focus: ${savedImageUrl}`);
+        setPreviewUrl(savedImageUrl);
+      }
+    });
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', () => {});
+      window.removeEventListener('focus', () => {});
     };
   }, [previewUrl, setPreviewUrl]);
 

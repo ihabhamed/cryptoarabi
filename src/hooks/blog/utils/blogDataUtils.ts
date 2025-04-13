@@ -13,7 +13,7 @@ export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPo
   // Generate defaults for required fields
   const result: Partial<BlogPost> = {
     // Ensure required fields for database schema are included
-    title: blogData.title || '',
+    title: blogData.title ? blogData.title.trim() : '',  // Trim the title to handle whitespace-only titles
     content: blogData.content || ' ',  // Always ensure content has at least a space to meet DB requirements
     excerpt: blogData.excerpt || null,
     author: blogData.author || null,

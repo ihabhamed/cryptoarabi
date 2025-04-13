@@ -112,3 +112,16 @@ export const normalizeImageUrl = (url: string | null): string | null => {
   
   return url;
 };
+
+/**
+ * Attempt to recover image data from session storage
+ * Returns the image URL if found, null otherwise
+ */
+export const recoverImageFromStorage = (): string | null => {
+  const savedImageUrl = sessionStorage.getItem('blogImageUrl');
+  if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
+    console.log(`Recovered image URL from session storage: ${savedImageUrl}`);
+    return savedImageUrl;
+  }
+  return null;
+};

@@ -30,8 +30,9 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         contentLength: formData.content?.length 
       });
       
-      // Check for empty or whitespace-only strings
-      if (!formData.title || formData.title.trim() === '') {
+      // First validate title - special focus since this is causing issues
+      if (!formData.title) {
+        console.error("[useBlogSubmit] Title is null or undefined");
         toast({
           variant: "destructive",
           title: "بيانات غير مكتملة",
@@ -41,6 +42,19 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         return;
       }
       
+      // Then check if title is just whitespace
+      if (formData.title.trim() === '') {
+        console.error("[useBlogSubmit] Title contains only whitespace");
+        toast({
+          variant: "destructive",
+          title: "بيانات غير مكتملة",
+          description: "العنوان مطلوب"
+        });
+        setIsSaving(false);
+        return;
+      }
+      
+      // Now check content
       if (!formData.content || formData.content.trim() === '') {
         toast({
           variant: "destructive",
@@ -108,6 +122,10 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
             console.log("Successfully uploaded image, setting image_url to:", imageUrl);
             finalFormData.image_url = imageUrl;
             setFormData(prev => ({ ...prev, image_url: imageUrl }));
+            
+            // Also save to sessionStorage for persistence
+            sessionStorage.setItem('blogImageUrl', imageUrl);
+            sessionStorage.setItem('blogImageIsFile', 'false');
           } else {
             toast({
               variant: "destructive",
@@ -138,6 +156,10 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
             previewUrl.trim() !== '') {
           finalFormData.image_url = previewUrl;
           console.log("Setting final image_url from previewUrl:", previewUrl);
+          
+          // Also save to sessionStorage for persistence
+          sessionStorage.setItem('blogImageUrl', previewUrl);
+          sessionStorage.setItem('blogImageIsFile', 'false');
         }
       }
       
@@ -177,13 +199,28 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
         console.log("Final fallback slug generated:", finalFormData.slug);
       }
       
+      // Explicitly ensure title and content are present
+      if (!finalFormData.title || finalFormData.title.trim() === '') {
+        console.error("Title is still missing at save time, setting a placeholder");
+        finalFormData.title = `Post ${new Date().toISOString()}`;
+      }
+      
+      if (!finalFormData.content || finalFormData.content.trim() === '') {
+        console.error("Content is still missing at save time, setting a placeholder");
+        finalFormData.content = ' '; // Minimal content
+      }
+      
       const success = await saveBlogPost(finalFormData);
       
       if (success) {
         // Clear form data and session storage after successful submission
         clearFormData();
-        sessionStorage.removeItem('blogImageUrl');
-        sessionStorage.removeItem('blogImageIsFile');
+        
+        // Keep image URL in session storage a little longer to avoid disappearance issues
+        setTimeout(() => {
+          sessionStorage.removeItem('blogImageUrl');
+          sessionStorage.removeItem('blogImageIsFile');
+        }, 2000);
         
         // Show success message when saving
         toast({
