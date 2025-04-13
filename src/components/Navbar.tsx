@@ -23,6 +23,8 @@ const Navbar = () => {
   }
 
   const siteName = siteSettings?.site_name || 'كريبتوعرب';
+  // Check if blog section should be shown
+  const showBlogSection = siteSettings?.show_blog_section !== false; // Default to true if undefined
 
   return (
     <nav className="fixed w-full z-50 bg-crypto-darkBlue/80 backdrop-blur-md border-b border-white/10">
@@ -42,7 +44,9 @@ const Navbar = () => {
           <Link to="/" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">الرئيسية</Link>
           <Link to="/services" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">الخدمات</Link>
           <Link to="/airdrop" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">إيردروب</Link>
-          <Link to="/blog" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">المدونة</Link>
+          {showBlogSection && (
+            <Link to="/blog" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">المدونة</Link>
+          )}
           <Link to="/contact" className="px-3 py-2 text-white hover:text-crypto-orange transition-colors">تواصل معنا</Link>
           {isAdmin && (
             <Link to="/admin" className="px-3 py-2 flex items-center gap-1 text-crypto-orange hover:text-crypto-orange/80 transition-colors">
@@ -89,7 +93,9 @@ const Navbar = () => {
                     <Link to="/" className="block px-2 py-3 text-white hover:text-crypto-orange transition-colors">الرئيسية</Link>
                     <Link to="/services" className="block px-2 py-3 text-white hover:text-crypto-orange transition-colors">الخدمات</Link>
                     <Link to="/airdrop" className="block px-2 py-3 text-white hover:text-crypto-orange transition-colors">إيردروب</Link>
-                    <Link to="/blog" className="block px-2 py-3 text-white hover:text-crypto-orange transition-colors">المدونة</Link>
+                    {showBlogSection && (
+                      <Link to="/blog" className="block px-2 py-3 text-white hover:text-crypto-orange transition-colors">المدونة</Link>
+                    )}
                     <Link to="/contact" className="block px-2 py-3 text-white hover:text-crypto-orange transition-colors">تواصل معنا</Link>
                     {isAdmin && (
                       <Link to="/admin" className="flex items-center gap-2 px-2 py-3 text-crypto-orange hover:text-crypto-orange/80 transition-colors">

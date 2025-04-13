@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, X } from "lucide-react";
 import { 
   getFallbackImageUrl
 } from '@/hooks/blog/utils/blogImageUtils';
-import { normalizeImageUrl, addTimestampToUrl } from '@/hooks/blog/utils/image/imageProcessing';
+import { normalizeImageUrl, addTimestampToUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 interface ImagePreviewProps {
   previewUrl: string | null;

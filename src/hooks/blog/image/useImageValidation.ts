@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { isValidImageUrl as validateUrl } from '../utils/blogImageUtils';
+import { isValidImageUrl } from '../utils/blogImageUtils';
 
 /**
  * Hook to validate image URLs
@@ -10,7 +10,7 @@ export function useImageValidation() {
   
   // Validate an image URL by attempting to load it
   const validateImageUrl = async (url: string): Promise<boolean> => {
-    if (!validateUrl(url)) {
+    if (!isValidImageUrl(url)) {
       console.log(`[useImageValidation] URL is not valid format: ${url}`);
       setIsValidUrl(false);
       return false;

@@ -16,6 +16,7 @@ const Index = () => {
   // Get section visibility settings with defaults in case settings are still loading
   const showAboutSection = settings?.show_about_section !== false; // Default to true if undefined
   const showTestimonialsSection = settings?.show_testimonials_section !== false; // Default to true if undefined
+  const showBlogSection = settings?.show_blog_section !== false; // Default to true if undefined
 
   return (
     <div className="min-h-screen bg-crypto-darkBlue">
@@ -25,7 +26,7 @@ const Index = () => {
       <AirdropSection />
       {showAboutSection && <AboutSection />}
       {showTestimonialsSection && <TestimonialsSection />}
-      <BlogSection />
+      {showBlogSection && <BlogSection />}
       <Footer />
     </div>
   );

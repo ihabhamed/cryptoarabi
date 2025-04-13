@@ -11,14 +11,12 @@ export {
   ensureNotNullString,
   isBlobUrlValid,
   cleanImageUrl,
-  recoverImageFromStorage,
-  addTimestampToUrl as addTimestampToImageUrl
+  recoverImageFromStorage
 } from './image/imageValidation';
 
 export {
   processImageUrlForStorage,
-  normalizeImageUrl,
-  addTimestampToUrl
+  normalizeImageUrl
 } from './image/imageProcessing';
 
 export {
@@ -29,3 +27,6 @@ export {
 export {
   createMockBlobUrl
 } from './image/imageStorage';
+
+// Export addTimestampToUrl from imageProcessing to prevent ambiguity
+export { addTimestampToUrl } from './image/imageProcessing';

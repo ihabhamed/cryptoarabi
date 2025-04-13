@@ -7,10 +7,8 @@ import {
   cleanImageUrl, 
   shouldClearImageUrl, 
   isBlobUrlValid,
-  recoverImageFromStorage
-} from './utils/blogImageUtils';
-import { 
-  addTimestampToUrl 
+  recoverImageFromStorage,
+  addTimestampToUrl
 } from './utils/blogImageUtils';
 
 /**
