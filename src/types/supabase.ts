@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -7,10 +8,10 @@ export type Json =
   | Json[]
 
 // Re-export the interfaces from their respective files
-export { Airdrop, NewAirdrop } from './airdrop';
-export { BlogPost } from './blog';
-export { Service } from './service';
-export { SiteSettings } from './site-settings';
+export type { Airdrop, NewAirdrop } from './airdrop';
+export type { BlogPost } from './blog';
+export type { Service } from './service';
+export type { SiteSettings } from './site-settings';
 
 export type Database = {
   public: {
