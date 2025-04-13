@@ -4,6 +4,28 @@
  */
 
 /**
+ * Validates if an image URL is properly formatted and not null/undefined/empty
+ */
+export const isValidImageUrl = (url: string | null | undefined): boolean => {
+  if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
+    return false;
+  }
+  
+  // Object URLs are always considered valid since they can't be checked the same way
+  if (url.startsWith('blob:') || url.startsWith('data:')) {
+    return true;
+  }
+  
+  // Check if it's a properly formatted URL
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
  * Cleans image URL by removing query parameters
  */
 export const cleanImageUrl = (url: string): string => {
@@ -33,26 +55,6 @@ export const processImageUrlForStorage = (url: string | null | undefined): strin
   // Additional logging to track the image URL being processed
   console.log(`Processing image URL for storage: "${url || 'NULL'}"`);
   
-  // Import from imageValidation
-  const isValidImageUrl = (url: string | null | undefined): boolean => {
-    if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
-      return false;
-    }
-    
-    // Object URLs are always considered valid since they can't be checked the same way
-    if (url.startsWith('blob:') || url.startsWith('data:')) {
-      return true;
-    }
-    
-    // Check if it's a properly formatted URL
-    try {
-      new URL(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  };
-  
   // Blob URLs should not be stored in the database as they're temporary
   if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
     console.log("Blog URL detected, not storing in database");
@@ -79,7 +81,7 @@ export const processImageUrlForStorage = (url: string | null | undefined): strin
  * This ensures consistent URL handling when coming from file upload vs direct URL input
  */
 export const normalizeImageUrl = (url: string | null): string | null => {
-  // Import from imageValidation
+  // Import shouldClearImageUrl inline to avoid circular dependencies
   const shouldClearImageUrl = (url: string | null | undefined): boolean => {
     if (!url) return true;
     if (url === 'null' || url === 'undefined' || url.trim() === '') return true;

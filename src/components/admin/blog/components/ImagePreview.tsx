@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, X } from "lucide-react";
 import { 
-  getFallbackImageUrl, 
-  normalizeImageUrl, 
+  getFallbackImageUrl,
+  normalizeImageUrl,
   addTimestampToUrl 
 } from '@/hooks/blog/utils/image/imageFallback';
 import { normalizeImageUrl as normalizeUrl } from '@/hooks/blog/utils/image/imageProcessing';

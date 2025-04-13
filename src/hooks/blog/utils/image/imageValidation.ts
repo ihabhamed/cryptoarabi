@@ -61,3 +61,59 @@ export const isBlobUrlValid = async (url: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Cleans image URL by removing query parameters
+ */
+export const cleanImageUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // Don't modify blob URLs or data URLs
+  if (url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+  
+  try {
+    // Remove query parameters
+    if (url.includes('?')) {
+      return url.split('?')[0];
+    }
+    return url;
+  } catch (e) {
+    console.error('Error cleaning image URL:', e);
+    return url;
+  }
+};
+
+/**
+ * Adds a timestamp to a URL to force a refresh
+ * Useful for forcing image reload after cache issues
+ */
+export const addTimestampToUrl = (url: string): string => {
+  if (!url) return url;
+  
+  // Don't modify blob URLs
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url;
+  
+  const timestamp = new Date().getTime();
+  return url.includes('?') 
+    ? `${url}&t=${timestamp}` 
+    : `${url}?t=${timestamp}`;
+};
+
+/**
+ * Attempt to recover image data from session storage
+ * Returns the image URL if found, null otherwise
+ */
+export const recoverImageFromStorage = (): string | null => {
+  const savedImageUrl = sessionStorage.getItem('blogImageUrl');
+  const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
+  const isBlob = sessionStorage.getItem('blogImageIsBlob') === 'true';
+  
+  if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
+    console.log(`Recovered image URL from session storage: ${savedImageUrl}`);
+    
+    return savedImageUrl;
+  }
+  return null;
+};
