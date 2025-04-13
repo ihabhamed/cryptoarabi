@@ -42,8 +42,11 @@ export const cleanImageUrl = (url: string): string => {
  * Processes image URL for storage (handles null, undefined, empty strings)
  */
 export const processImageUrlForStorage = (url: string | null | undefined): string | null => {
+  // Additional logging to track the image URL being processed
+  console.log(`Processing image URL for storage: "${url || 'NULL'}"`);
+  
   if (!isValidImageUrl(url)) {
-    console.log("Setting image_url to null before saving");
+    console.log("Setting image_url to null before saving - invalid URL");
     return null;
   }
   
@@ -89,4 +92,23 @@ export const shouldClearImageUrl = (url: string | null | undefined): boolean => 
   if (!url) return true;
   if (url === 'null' || url === 'undefined' || url.trim() === '') return true;
   return false;
+};
+
+/**
+ * Properly normalizes image URL from various sources
+ * This ensures consistent URL handling when coming from file upload vs direct URL input
+ */
+export const normalizeImageUrl = (url: string | null): string | null => {
+  if (shouldClearImageUrl(url)) return null;
+  
+  // If URL contains storage path but needs adjustment
+  if (url && url.includes('images/')) {
+    // Make sure the URL is properly formatted
+    if (!url.startsWith('http')) {
+      // Assuming Supabase storage URL pattern
+      return `https://tlpiqkbiwcdyzpqqzsbg.supabase.co/storage/v1/object/public/${url}`;
+    }
+  }
+  
+  return url;
 };

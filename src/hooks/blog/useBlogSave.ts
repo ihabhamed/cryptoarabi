@@ -20,7 +20,8 @@ export function useBlogSave() {
       console.log("Validating blog data with:", { 
         title: blogData.title, 
         titleLength: blogData.title?.length, 
-        contentLength: blogData.content?.length 
+        contentLength: blogData.content?.length,
+        imageUrl: blogData.image_url || 'NULL'
       });
       
       // Validate that required fields are present and not empty strings
@@ -48,8 +49,7 @@ export function useBlogSave() {
       let result;
       
       if (isEditMode && id) {
-        // TypeScript requires content to be present, so we need to ensure it's there
-        // If content exists in the original data, it will be present in cleanData
+        // Make sure content is not empty (required by DB schema)
         if (!cleanData.content && blogData.content) {
           cleanData.content = blogData.content;
         }
@@ -59,9 +59,22 @@ export function useBlogSave() {
           cleanData.content = ' '; // Add a space to prevent empty string issues
         }
         
+        // Make a full explicit type for the update
+        const updateData: Record<string, any> = {
+          ...cleanData,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Ensure image_url is explicitly set (even if null)
+        if (!('image_url' in updateData)) {
+          updateData.image_url = null;
+        }
+        
+        console.log("Updating blog post with data:", updateData);
+        
         result = await supabase
           .from('blog_posts')
-          .update(cleanData as { content: string, title: string, [key: string]: any })
+          .update(updateData)
           .eq('id', id);
         
         if (result.error) {
@@ -72,12 +85,14 @@ export function useBlogSave() {
         // Verify the image URL was saved correctly
         const { data: verifyData, error: verifyError } = await supabase
           .from('blog_posts')
-          .select('image_url')
+          .select('image_url, title')
           .eq('id', id)
           .single();
           
         if (!verifyError && verifyData) {
-          console.log(`Verified saved image URL in database: '${verifyData.image_url}'`);
+          console.log(`Verified saved image URL in database for "${verifyData.title}": '${verifyData.image_url || 'NULL'}'`);
+        } else {
+          console.error("Failed to verify saved data:", verifyError);
         }
         
         toast({
@@ -101,9 +116,17 @@ export function useBlogSave() {
           throw new Error("المحتوى والعنوان مطلوبان لإنشاء منشور جديد");
         }
         
+        const insertData = {
+          ...cleanData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        console.log("Inserting new blog post with data:", insertData);
+        
         result = await supabase
           .from('blog_posts')
-          .insert(cleanData as { content: string, title: string, [key: string]: any });
+          .insert(insertData);
         
         if (result.error) {
           console.error("Supabase insert error:", result.error);

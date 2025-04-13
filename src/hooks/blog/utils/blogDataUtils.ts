@@ -6,8 +6,9 @@ import { processImageUrlForStorage } from './blogImageUtils';
  * Creates a clean blog data object with proper defaults for database operations
  */
 export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPost> => {
-  // Process image URL
+  // Process image URL - this ensures null values are handled correctly
   const imageUrl = processImageUrlForStorage(blogData.image_url);
+  console.log(`[createCleanBlogData] Processing image URL: "${blogData.image_url || 'NULL'}" -> "${imageUrl || 'NULL'}"`);
 
   // Generate defaults for required fields
   return {
@@ -30,12 +31,13 @@ export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPo
  * Validates required blog data fields
  */
 export const validateBlogData = (blogData: Partial<BlogPost>): boolean => {
-  // Improved validation to properly check for empty strings too
+  // Check for title - ensure it's not empty or just whitespace
   if (!blogData.title || blogData.title.trim() === '') {
     console.error("Missing required field: Title is empty or undefined");
     return false;
   }
   
+  // Check for content - ensure it's not empty or just whitespace
   if (!blogData.content || blogData.content.trim() === '') {
     console.error("Missing required field: Content is empty or undefined");
     return false;

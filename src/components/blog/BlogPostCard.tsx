@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { BlogPost } from '@/types/supabase';
 import { Badge } from "@/components/ui/badge";
-import { isValidImageUrl, getFallbackImageUrl, handleImageError } from '@/hooks/blog/utils/blogImageUtils';
+import { isValidImageUrl, getFallbackImageUrl, handleImageError, normalizeImageUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -13,6 +13,7 @@ interface BlogPostCardProps {
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   // State to track image loading errors
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   
   // Extract hashtags if present
   const hashtags = post.hashtags 
@@ -26,29 +27,38 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     
     // Check if image_url exists and is valid
     if (isValidImageUrl(post.image_url)) {
-      console.log(`[BlogPostCard] Using post image: ${post.image_url} for post: ${post.title}`);
-      setImageUrl(post.image_url);
+      // Try to normalize the URL if needed
+      const normalizedUrl = normalizeImageUrl(post.image_url);
+      console.log(`[BlogPostCard] Using normalized post image: ${normalizedUrl} for post: ${post.title}`);
+      setImageUrl(normalizedUrl);
     } else {
       // Use fallback image if no valid image exists
       console.log(`[BlogPostCard] No valid image found for post: ${post.title}, using fallback`);
       setImageUrl(getFallbackImageUrl());
+      setImageError(true);
     }
   }, [post.id, post.title, post.image_url]);
 
   const handleImageLoadError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    handleImageError(e, post.title);
+    console.error(`[BlogPostCard] Image load error for post: ${post.title}, URL: ${imageUrl}`);
+    setImageError(true);
     setImageUrl(getFallbackImageUrl());
   };
 
   return (
     <div className="bg-crypto-darkGray/50 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:border-crypto-orange/30 h-full flex flex-col">
-      <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48">
+      <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48 relative">
         <img 
           src={imageUrl || getFallbackImageUrl()} 
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           onError={handleImageLoadError}
         />
+        {imageError && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end justify-center pb-3">
+            <span className="text-xs text-gray-300 px-2 py-1 bg-black/50 rounded-full">الصورة غير متاحة</span>
+          </div>
+        )}
       </Link>
       
       <div className="p-5 flex flex-col flex-grow">

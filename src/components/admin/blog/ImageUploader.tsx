@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/utils/toast-utils";
-import { X, Upload, AlertTriangle } from "lucide-react";
+import { X, Upload, AlertTriangle, RefreshCw } from "lucide-react";
 import { validateImageFile } from '@/lib/utils/imageUpload';
-import { isValidImageUrl, getFallbackImageUrl, shouldClearImageUrl } from '@/hooks/blog/utils/blogImageUtils';
+import { isValidImageUrl, getFallbackImageUrl, shouldClearImageUrl, normalizeImageUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 interface ImageUploaderProps {
   previewUrl: string | null;
@@ -27,6 +27,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [internalImageUrl, setInternalImageUrl] = useState('');
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Debug when imageUrl or previewUrl changes
   useEffect(() => {
@@ -97,7 +98,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
     
-    console.log(`[ImageUploader] File selected: ${file.name}`);
+    console.log(`[ImageUploader] File selected: ${file.name}, size: ${(file.size / 1024).toFixed(2)}KB`);
     onImageChange(file);
     
     // Clear errors when new file is selected
@@ -136,6 +137,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     console.log('[ImageUploader] Image loaded successfully');
     setImageLoaded(true);
     setImageError(false);
+    setRetryCount(0);
   };
 
   const handleImageError = () => {
@@ -144,12 +146,31 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setImageLoaded(false);
     
     // Only show toast for errors after initial load attempt
-    if (imageLoaded) {
+    if (retryCount > 0) {
       toast({
         variant: "destructive",
         title: "خطأ في تحميل الصورة",
-        description: "تعذر تحميل الصورة. يرجى التحقق من صحة الرابط.",
+        description: "تعذر تحميل الصورة. يرجى التحقق من صحة الرابط أو تحميل صورة جديدة.",
       });
+    }
+    
+    setRetryCount(prev => prev + 1);
+  };
+  
+  // Try to normalize the preview URL if it exists
+  const normalizedPreviewUrl = previewUrl ? normalizeImageUrl(previewUrl) : null;
+  const displayUrl = normalizedPreviewUrl || getFallbackImageUrl();
+  
+  const handleRetryLoad = () => {
+    setImageError(false);
+    setImageLoaded(false);
+    // Force a reload by adding a timestamp parameter
+    const timestamp = new Date().getTime();
+    if (previewUrl) {
+      const urlWithTimestamp = previewUrl.includes('?') 
+        ? `${previewUrl}&t=${timestamp}` 
+        : `${previewUrl}?t=${timestamp}`;
+      onImageUrlChange(urlWithTimestamp);
     }
   };
 
@@ -161,7 +182,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       {previewUrl && (
         <div className="relative mt-2 mb-4 w-full max-w-xs mx-auto">
           <img 
-            src={previewUrl} 
+            src={displayUrl} 
             alt="معاينة الصورة" 
             className={`w-full h-auto rounded-md border ${imageError ? 'border-red-500' : 'border-white/20'} object-cover aspect-video`}
             onError={handleImageError}
@@ -171,7 +192,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           {imageError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md">
               <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
-              <p className="text-white text-sm text-center px-4">تعذر تحميل الصورة</p>
+              <p className="text-white text-sm text-center px-4 mb-2">تعذر تحميل الصورة</p>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-2"
+                onClick={handleRetryLoad}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                إعادة المحاولة
+              </Button>
             </div>
           )}
           
