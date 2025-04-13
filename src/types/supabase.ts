@@ -454,6 +454,7 @@ export interface Airdrop {
   meta_title?: string | null;
   meta_description?: string | null;
   hashtags?: string | null;
+  steps?: string | null; // Add steps field to Airdrop interface
 }
 
 // Define a type specifically for inserting new airdrops
@@ -471,6 +472,7 @@ export interface NewAirdrop {
   meta_title?: string | null;
   meta_description?: string | null;
   hashtags?: string | null;
+  steps?: string | null; // Add steps field to NewAirdrop interface
 }
 
 export interface BlogPost {
