@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { BlogPost } from '@/types/supabase';
 import { Badge } from "@/components/ui/badge";
-import { isValidImageUrl, getFallbackImageUrl, handleImageError, normalizeImageUrl } from '@/hooks/blog/utils/blogImageUtils';
+import { isValidImageUrl } from '@/hooks/blog/utils/image/imageValidation';
+import { getFallbackImageUrl, handleImageError } from '@/hooks/blog/utils/image/imageFallback';
+import { normalizeImageUrl } from '@/hooks/blog/utils/image/imageProcessing';
 
 interface BlogPostCardProps {
   post: BlogPost;

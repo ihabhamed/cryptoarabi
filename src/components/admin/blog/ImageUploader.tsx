@@ -1,7 +1,9 @@
 
 import React, { useEffect, useRef } from 'react';
 import { toast } from "@/lib/utils/toast-utils";
-import { isValidImageUrl, recoverImageFromStorage, isBlobUrlValid } from '@/hooks/blog/utils/blogImageUtils';
+import { isValidImageUrl } from '@/hooks/blog/utils/image/imageValidation';
+import { isBlobUrlValid } from '@/hooks/blog/utils/image/imageValidation';
+import { recoverImageFromStorage } from '@/hooks/blog/utils/image/imageStorage';
 import ImagePreview from './components/ImagePreview';
 import ImageUploadInput from './components/ImageUploadInput';
 import ImageUrlInput from './components/ImageUrlInput';

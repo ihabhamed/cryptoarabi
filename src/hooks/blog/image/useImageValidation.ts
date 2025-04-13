@@ -1,11 +1,13 @@
 
+import { addTimestampToUrl, isValidImageUrl } from '../utils/image/imageProcessing';
+
 /**
  * Hook for validating image URLs and checking if they can be loaded
  */
 export function useImageValidation() {
   // Test for direct validating if the image can be loaded
   const validateImageUrl = async (url: string): Promise<boolean> => {
-    if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
+    if (!isValidImageUrl(url)) {
       console.log('[useImageValidation] validateImageUrl: URL is invalid or empty');
       return false;
     }
@@ -60,28 +62,14 @@ export function useImageValidation() {
       img.crossOrigin = 'anonymous';
       
       // Bypass cache by adding a timestamp for better testing
-      const cacheBuster = `${cleanUrl}${cleanUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+      const cacheBuster = addTimestampToUrl(cleanUrl);
       img.src = cacheBuster;
     });
   };
 
   // Check if a URL is properly formatted
   const isValidUrl = (url: string | null | undefined): boolean => {
-    if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
-      return false;
-    }
-
-    // Object URLs are always considered valid
-    if (url.startsWith('blob:') || url.startsWith('data:')) {
-      return true;
-    }
-    
-    try {
-      new URL(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return isValidImageUrl(url);
   };
 
   // Check if a value is an empty or invalid URL string
