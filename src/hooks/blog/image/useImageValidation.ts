@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { isValidImageUrl as validateUrl } from '../utils/image/imageValidation';
+import { isValidImageUrl as validateUrl } from '../utils/blogImageUtils';
 
 /**
  * Hook to validate image URLs

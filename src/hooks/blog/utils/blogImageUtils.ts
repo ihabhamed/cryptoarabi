@@ -11,20 +11,19 @@ export {
   ensureNotNullString,
   isBlobUrlValid,
   cleanImageUrl,
-  recoverImageFromStorage
+  recoverImageFromStorage,
+  addTimestampToUrl as addTimestampToImageUrl
 } from './image/imageValidation';
 
 export {
   processImageUrlForStorage,
   normalizeImageUrl,
-  addTimestampToUrl as addTimestampToProcessedUrl
+  addTimestampToUrl
 } from './image/imageProcessing';
 
 export {
   getFallbackImageUrl,
-  handleImageError,
-  addTimestampToUrl as addTimestampToFallbackUrl,
-  normalizeImageUrl as normalizeFallbackImageUrl
+  handleImageError
 } from './image/imageFallback';
 
 export {

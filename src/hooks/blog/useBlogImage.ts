@@ -1,3 +1,4 @@
+
 import { useImageSelection } from './image/useImageSelection';
 import { useImageUpload } from './image/useImageUpload';
 import { useImagePersistence } from './image/useImagePersistence';
@@ -5,14 +6,12 @@ import { useImageValidation } from './image/useImageValidation';
 import { 
   cleanImageUrl, 
   shouldClearImageUrl, 
+  isBlobUrlValid,
   recoverImageFromStorage
-} from './utils/image/imageValidation';
+} from './utils/blogImageUtils';
 import { 
   addTimestampToUrl 
-} from './utils/image/imageProcessing';
-import { 
-  recoverImageFromStorage as recoverImage 
-} from './utils/image/imageStorage';
+} from './utils/blogImageUtils';
 
 /**
  * Main hook that combines all image-related functionality for blog posts
@@ -71,7 +70,7 @@ export function useBlogImage() {
         } else {
           console.warn(`[useBlogImage] Blob URL is no longer valid: ${cleanedUrl}`);
           // Try to recover from session storage
-          const recoveredUrl = recoverImage();
+          const recoveredUrl = recoverImageFromStorage();
           if (recoveredUrl && recoveredUrl !== cleanedUrl) {
             console.log(`[useBlogImage] Falling back to recovered URL: ${recoveredUrl}`);
             setInitialImagePreview(recoveredUrl);
@@ -91,7 +90,7 @@ export function useBlogImage() {
           console.warn(`[useBlogImage] Warning: Image URL validation failed for: ${cleanedUrl}`);
           
           // Try adding a timestamp to force a reload
-          const timestampedUrl = addTimestamp(cleanedUrl);
+          const timestampedUrl = addTimestampToUrl(cleanedUrl);
           console.log(`[useBlogImage] Trying with timestamp: ${timestampedUrl}`);
           
           validateImageUrl(timestampedUrl).then(isValidWithTimestamp => {
@@ -100,7 +99,7 @@ export function useBlogImage() {
               setInitialImagePreview(timestampedUrl);
             } else {
               // Try to recover from session storage as fallback
-              const recoveredUrl = recoverImage();
+              const recoveredUrl = recoverImageFromStorage();
               if (recoveredUrl && recoveredUrl !== cleanedUrl) {
                 console.log(`[useBlogImage] Falling back to recovered URL: ${recoveredUrl}`);
                 setInitialImagePreview(recoveredUrl);
@@ -111,7 +110,7 @@ export function useBlogImage() {
       });
     } else if (!previewUrl) {
       // Try to recover from session storage if no URL provided
-      const recoveredUrl = recoverImage();
+      const recoveredUrl = recoverImageFromStorage();
       if (recoveredUrl) {
         console.log(`[useBlogImage] Recovered image from storage: ${recoveredUrl}`);
         

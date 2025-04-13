@@ -74,28 +74,26 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
             setFormData(blogData);
             
             // Set image preview if image_url exists and is valid
-            if (blogData.image_url && isValidUrl(blogData.image_url)) {
-              console.log(`[useBlogForm] Setting initial image preview from blogData: ${blogData.image_url}`);
-              setInitialImagePreview(blogData.image_url);
-              
-              // Validate if the image URL is actually loadable
-              validateImageUrl(blogData.image_url).then(isValid => {
-                if (!isValid) {
-                  console.log(`[useBlogForm] WARNING: Image URL validation failed for: ${blogData.image_url}`);
-                  // Try to recover from session storage
-                  const recoveredUrl = recoverImageFromStorage();
-                  if (recoveredUrl) {
-                    console.log(`[useBlogForm] Falling back to recovered URL: ${recoveredUrl}`);
-                    setInitialImagePreview(recoveredUrl);
-                  } else {
-                    toast({
-                      variant: "warning",
-                      title: "تحذير",
-                      description: "تعذر تحميل صورة المنشور. يمكنك اختيار صورة أخرى.",
-                    });
-                  }
+            if (blogData.image_url) {
+              const urlValid = await validateImageUrl(blogData.image_url);
+              if (urlValid) {
+                console.log(`[useBlogForm] Setting initial image preview from blogData: ${blogData.image_url}`);
+                setInitialImagePreview(blogData.image_url);
+              } else {
+                console.log(`[useBlogForm] WARNING: Image URL validation failed for: ${blogData.image_url}`);
+                // Try to recover from session storage
+                const recoveredUrl = recoverImageFromStorage();
+                if (recoveredUrl) {
+                  console.log(`[useBlogForm] Falling back to recovered URL: ${recoveredUrl}`);
+                  setInitialImagePreview(recoveredUrl);
+                } else {
+                  toast({
+                    variant: "warning",
+                    title: "تحذير",
+                    description: "تعذر تحميل صورة المنشور. يمكنك اختيار صورة أخرى.",
+                  });
                 }
-              });
+              }
             } else {
               console.log(`[useBlogForm] No valid image URL found in blogData: ${blogData.image_url || 'NULL'}`);
               // Try to recover from session storage
@@ -162,11 +160,17 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     console.log(`[useBlogForm] Current previewUrl: "${previewUrl || 'NULL'}"`);
     
     // Ensure image consistency - if formData.image_url changes but previewUrl doesn't match
-    if (formData.image_url && formData.image_url !== previewUrl && isValidUrl(formData.image_url)) {
-      console.log(`[useBlogForm] Syncing previewUrl with formData.image_url`);
-      setInitialImagePreview(formData.image_url);
+    if (formData.image_url && formData.image_url !== previewUrl) {
+      const checkUrlValid = async () => {
+        const urlValid = await validateImageUrl(formData.image_url!);
+        if (urlValid) {
+          console.log(`[useBlogForm] Syncing previewUrl with formData.image_url`);
+          setInitialImagePreview(formData.image_url);
+        }
+      };
+      checkUrlValid();
     }
-  }, [formData.image_url, previewUrl, setInitialImagePreview, isValidUrl]);
+  }, [formData.image_url, previewUrl, setInitialImagePreview, validateImageUrl]);
 
   // Additional check when route changes to ensure image persistence
   useEffect(() => {
@@ -176,14 +180,20 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
       saveFormState();
       
       // If we have an image URL, make sure it's stored
-      if (formData.image_url && isValidUrl(formData.image_url)) {
-        console.log(`[useBlogForm] Saving image on navigation: ${formData.image_url}`);
-        sessionStorage.setItem('blogImageUrl', formData.image_url);
-        sessionStorage.setItem('blogImageIsFile', 'false');
-      } else if (previewUrl) {
-        console.log(`[useBlogForm] Saving preview on navigation: ${previewUrl}`);
-        sessionStorage.setItem('blogImageUrl', previewUrl);
-        sessionStorage.setItem('blogImageIsFile', 'false');
+      if (formData.image_url) {
+        const checkUrlValid = async () => {
+          const urlValid = await validateImageUrl(formData.image_url!);
+          if (urlValid) {
+            console.log(`[useBlogForm] Saving image on navigation: ${formData.image_url}`);
+            sessionStorage.setItem('blogImageUrl', formData.image_url);
+            sessionStorage.setItem('blogImageIsFile', 'false');
+          } else if (previewUrl) {
+            console.log(`[useBlogForm] Saving preview on navigation: ${previewUrl}`);
+            sessionStorage.setItem('blogImageUrl', previewUrl);
+            sessionStorage.setItem('blogImageIsFile', 'false');
+          }
+        };
+        checkUrlValid();
       }
     };
     
@@ -192,7 +202,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     return () => {
       window.removeEventListener('popstate', handleRouteChange);
     };
-  }, [formData.image_url, previewUrl, isValidUrl, saveFormState]);
+  }, [formData.image_url, previewUrl, validateImageUrl, saveFormState]);
 
   // Save form state when tab visibility changes
   useEffect(() => {
