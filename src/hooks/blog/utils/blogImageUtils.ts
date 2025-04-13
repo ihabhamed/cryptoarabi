@@ -146,33 +146,6 @@ export const recoverImageFromStorage = (): string | null => {
   if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
     console.log(`Recovered image URL from session storage: ${savedImageUrl}`);
     
-    // If it's a blob URL, make sure it's still valid
-    if (isBlob && savedImageUrl.startsWith('blob:')) {
-      try {
-        // Try fetching the blob URL to see if it's still valid
-        // This is non-blocking and just for logging
-        fetch(savedImageUrl, { method: 'HEAD' })
-          .then(() => console.log(`Blob URL is still valid: ${savedImageUrl}`))
-          .catch(() => console.warn(`Blob URL is no longer valid: ${savedImageUrl}`));
-        
-        return savedImageUrl;
-      } catch (e) {
-        console.error('Error checking blob URL:', e);
-        return null;
-      }
-    }
-    
-    // Make sure it's a valid URL if it's not a file or blob
-    if (!isFile && !isBlob) {
-      try {
-        new URL(savedImageUrl);
-        return savedImageUrl;
-      } catch (e) {
-        console.error('Recovered URL is not valid:', savedImageUrl);
-        return null;
-      }
-    }
-    
     return savedImageUrl;
   }
   return null;
@@ -202,7 +175,10 @@ export const isBlobUrlValid = async (url: string): Promise<boolean> => {
   if (!url.startsWith('blob:')) return false;
   
   try {
-    const response = await fetch(url, { method: 'HEAD' });
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      cache: 'no-store' // Important to avoid cached results
+    });
     return response.ok;
   } catch (e) {
     console.error('Error checking blob URL validity:', e);
@@ -210,3 +186,21 @@ export const isBlobUrlValid = async (url: string): Promise<boolean> => {
   }
 };
 
+/**
+ * Create a mock blob URL for testing if needed
+ * This is useful for development and debugging
+ */
+export const createMockBlobUrl = (): string => {
+  // Create a small transparent pixel as a blob
+  const base64Data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  const byteString = atob(base64Data);
+  const arrayBuffer = new ArrayBuffer(byteString.length);
+  const intArray = new Uint8Array(arrayBuffer);
+  
+  for (let i = 0; i < byteString.length; i++) {
+    intArray[i] = byteString.charCodeAt(i);
+  }
+  
+  const blob = new Blob([arrayBuffer], { type: 'image/png' });
+  return URL.createObjectURL(blob);
+};

@@ -14,6 +14,21 @@ export function useImageValidation() {
     // but can't be validated with a network request in the background
     if (url.startsWith('blob:') || url.startsWith('data:')) {
       console.log(`[useImageValidation] validateImageUrl: Using object URL, assuming valid: ${url.substring(0, 50)}...`);
+      
+      // Special check for blob URLs to verify they're still valid
+      if (url.startsWith('blob:')) {
+        try {
+          const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+          if (!response.ok) {
+            console.log(`[useImageValidation] validateImageUrl: Blob URL is no longer valid: ${url.substring(0, 50)}...`);
+            return false;
+          }
+        } catch (e) {
+          console.log(`[useImageValidation] validateImageUrl: Error checking blob URL: ${url.substring(0, 50)}...`);
+          return false;
+        }
+      }
+      
       return true;
     }
 
@@ -25,6 +40,7 @@ export function useImageValidation() {
       const img = new Image();
       const timeoutId = setTimeout(() => {
         console.log(`[useImageValidation] validateImageUrl: Image load timed out: ${cleanUrl}`);
+        img.src = ''; // Cancel the image request
         resolve(false);
       }, 10000); // 10 second timeout for slow connections
       
@@ -40,7 +56,12 @@ export function useImageValidation() {
         resolve(false);
       };
       
-      img.src = cleanUrl;
+      // Set crossOrigin attribute for CORS issues with certain domains
+      img.crossOrigin = 'anonymous';
+      
+      // Bypass cache by adding a timestamp for better testing
+      const cacheBuster = `${cleanUrl}${cleanUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+      img.src = cacheBuster;
     });
   };
 

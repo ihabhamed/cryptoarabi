@@ -18,6 +18,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [showingFallback, setShowingFallback] = useState(false);
   
   // Try to normalize the preview URL if it exists
   const normalizedPreviewUrl = previewUrl ? normalizeImageUrl(previewUrl) : null;
@@ -31,27 +32,50 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     setImageError(false);
     setImageLoaded(false);
     setRetryCount(0);
+    setShowingFallback(false);
   }, [previewUrl]);
   
+  // Auto retry loading once if the image errors on first attempt
+  useEffect(() => {
+    if (imageError && retryCount === 0) {
+      console.log('[ImagePreview] Auto-retrying image load after initial error');
+      handleRetry();
+    }
+  }, [imageError]);
+  
   const handleImageLoad = () => {
-    console.log('[ImagePreview] Image loaded successfully');
+    console.log('[ImagePreview] Image loaded successfully:', displayUrl);
     setImageLoaded(true);
     setImageError(false);
+    setShowingFallback(false);
   };
 
   const handleImageError = () => {
-    console.error(`[ImagePreview] Error loading preview image: ${previewUrl}`);
-    setImageError(true);
-    setImageLoaded(false);
+    console.error(`[ImagePreview] Error loading preview image: ${displayUrl}`);
+    
+    // If this is a blob URL that failed, it's likely invalid now
+    if (displayUrl && displayUrl.startsWith('blob:') && !showingFallback) {
+      console.log('[ImagePreview] Blob URL failed to load, trying fallback');
+      setShowingFallback(true);
+      // Force render with fallback
+      setTimeout(() => {
+        setImageError(true);
+      }, 50);
+    } else {
+      setImageError(true);
+      setImageLoaded(false);
+    }
   };
 
   // Handle retry internally first before calling parent retry
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
     setImageError(false);
+    setShowingFallback(false);
     
-    // If we've already tried a few times, call the parent's retry handler
+    // If we've already tried a few times internally, call the parent's retry handler
     if (retryCount >= 2) {
+      console.log('[ImagePreview] Multiple retries failed, calling parent retry handler');
       onRetryLoad();
     }
   };
@@ -59,11 +83,12 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
   return (
     <div className="relative mt-2 mb-4 w-full max-w-xs mx-auto">
       <img 
-        src={displayUrl} 
+        src={showingFallback ? getFallbackImageUrl() : displayUrl} 
         alt="معاينة الصورة" 
         className={`w-full h-auto rounded-md border ${imageError ? 'border-red-500' : 'border-white/20'} object-cover aspect-video`}
         onError={handleImageError}
         onLoad={handleImageLoad}
+        key={`img-${retryCount}-${showingFallback ? 'fallback' : 'normal'}`} // Key helps force re-render on retry
       />
       
       {imageError && (
