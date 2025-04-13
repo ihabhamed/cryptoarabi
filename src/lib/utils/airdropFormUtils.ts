@@ -15,7 +15,11 @@ export function formatAirdropData(existingAirdrop: any): NewAirdrop {
     start_date: existingAirdrop.start_date || '',
     end_date: existingAirdrop.end_date || '',
     image_url: existingAirdrop.image_url || '',
-    publish_date: existingAirdrop.publish_date
+    publish_date: existingAirdrop.publish_date,
+    meta_title: existingAirdrop.meta_title || '',
+    meta_description: existingAirdrop.meta_description || '',
+    hashtags: existingAirdrop.hashtags || '',
+    steps: existingAirdrop.steps || ''
   };
 }
 

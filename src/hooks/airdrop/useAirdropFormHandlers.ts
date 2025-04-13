@@ -4,7 +4,8 @@ import { NewAirdrop } from '@/types/supabase';
 type FormSetter = React.Dispatch<React.SetStateAction<NewAirdrop & { 
   meta_title?: string; 
   meta_description?: string; 
-  hashtags?: string 
+  hashtags?: string;
+  steps?: string;
 }>>;
 
 /**

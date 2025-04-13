@@ -4,9 +4,10 @@ import { NewAirdrop } from '@/types/supabase';
 import BasicInfoSection from './form-sections/BasicInfoSection';
 import SeoSection from './form-sections/SeoSection';
 import TagsSection from './form-sections/TagsSection';
+import StepsSection from './form-sections/StepsSection';
 
 interface AirdropFormFieldsProps {
-  formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string };
+  formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string; steps?: string };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   isGeneratingMeta?: boolean;
@@ -31,6 +32,12 @@ const AirdropFormFields: React.FC<AirdropFormFieldsProps> = ({
         formData={formData}
         handleChange={handleChange}
         handleSelectChange={handleSelectChange}
+      />
+      
+      {/* Steps Section */}
+      <StepsSection
+        formData={formData}
+        handleChange={handleChange}
       />
       
       {/* SEO Section */}

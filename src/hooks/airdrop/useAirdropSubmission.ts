@@ -24,8 +24,7 @@ export function useAirdropSubmission({
   
   const handleSubmit = async (
     e: React.FormEvent, 
-    formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string },
-    uploadSelectedImage: () => Promise<string | null>
+    formData: NewAirdrop & { meta_title?: string; meta_description?: string; hashtags?: string; steps?: string }
   ) => {
     e.preventDefault();
     
@@ -36,13 +35,7 @@ export function useAirdropSubmission({
         throw new Error(validationError);
       }
       
-      let finalFormData = { ...formData };
-      
-      // Upload image if selected
-      const imageUrl = await uploadSelectedImage();
-      if (imageUrl) {
-        finalFormData = { ...finalFormData, image_url: imageUrl };
-      }
+      const finalFormData = { ...formData };
       
       if (id) {
         await updateAirdrop.mutateAsync({

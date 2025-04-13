@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -189,3 +188,25 @@ export interface SiteSettings {
   created_at: string;
   updated_at: string;
 }
+
+export type Airdrop = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  description: string | null;
+  status: string;
+  twitter_link: string | null;
+  youtube_link: string | null;
+  claim_url: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  publish_date: string;
+  image_url: string | null; // Keeping this in the type for backward compatibility
+  meta_title: string | null;
+  meta_description: string | null;
+  hashtags: string | null;
+  steps: string | null; // Added this for storing steps as JSON string
+};
+
+export type NewAirdrop = Omit<Airdrop, 'id' | 'created_at' | 'updated_at'>;

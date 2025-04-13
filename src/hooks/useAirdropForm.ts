@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useAirdrop } from "@/lib/hooks";
 import { formatAirdropData } from '@/lib/utils/airdropFormUtils';
-import { useAirdropImage } from '@/hooks/useAirdropImage';
 import { useAirdropLink } from '@/hooks/useAirdropLink';
 import { useAirdropMetaGeneration } from '@/hooks/useAirdropMetaGeneration';
 import { useAirdropStorage } from '@/hooks/airdrop/useAirdropStorage';
@@ -45,22 +44,6 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
   // Use the form handlers hook
   const { handleChange, handleSelectChange } = useAirdropFormHandlers(setFormData);
   
-  // Use the image management hook
-  const {
-    uploadingImage,
-    previewUrl,
-    handleImageChange,
-    handleImageUrlChange: handleImageUrlChangeBase,
-    handleRemoveImage: handleRemoveImageBase,
-    uploadSelectedImage
-  } = useAirdropImage({ 
-    initialImageUrl: isEditMode && existingAirdrop?.image_url ? existingAirdrop.image_url : null 
-  });
-
-  // Custom handlers that pass the state setter
-  const handleImageUrlChange = (url: string) => handleImageUrlChangeBase(url, setFormData);
-  const handleRemoveImage = () => handleRemoveImageBase(setFormData);
-  
   // Use the meta generation hook
   const {
     isGeneratingMeta,
@@ -79,25 +62,20 @@ export function useAirdropForm({ id, onSuccess }: UseAirdropFormProps) {
     clearAirdropFormData
   });
 
-  // Create the main handleSubmit function that combines the pieces
+  // Create the main handleSubmit function
   const handleSubmit = (e: React.FormEvent) => {
-    submitForm(e, formData, uploadSelectedImage);
+    submitForm(e, formData);
   };
 
   return {
     formData,
     isLoading,
     isEditMode,
-    uploadingImage,
-    previewUrl,
     linkCopied,
     isGeneratingMeta,
     isGeneratingHashtags,
     handleChange,
     handleSelectChange,
-    handleImageChange,
-    handleImageUrlChange,
-    handleRemoveImage,
     handleSubmit,
     copyAirdropLink,
     generateMetaContent,

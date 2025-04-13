@@ -10,6 +10,7 @@ interface UseAirdropStorageProps {
     meta_title?: string; 
     meta_description?: string;
     hashtags?: string;
+    steps?: string;
   };
 }
 
@@ -20,7 +21,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
   const [formData, setFormData] = useState<NewAirdrop & { 
     meta_title?: string; 
     meta_description?: string; 
-    hashtags?: string 
+    hashtags?: string;
+    steps?: string;
   }>({
     title: '',
     description: '',
@@ -34,7 +36,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     publish_date: new Date().toISOString(),
     meta_title: '',
     meta_description: '',
-    hashtags: ''
+    hashtags: '',
+    steps: '',
   });
 
   // Load data from localStorage or initial data
@@ -47,7 +50,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         ...initialData,
         meta_title: initialData.meta_title || initialData.title || '',
         meta_description: initialData.meta_description || initialData.description || '',
-        hashtags: initialData.hashtags || ''
+        hashtags: initialData.hashtags || '',
+        steps: initialData.steps || '',
       });
       
       // Save to localStorage with unique key
@@ -59,6 +63,7 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         meta_title?: string; 
         meta_description?: string;
         hashtags?: string;
+        steps?: string;
       }>(storageKey);
       
       if (savedData) {
@@ -75,7 +80,8 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
           publish_date: savedData.publish_date || new Date().toISOString(),
           meta_title: savedData.meta_title || '',
           meta_description: savedData.meta_description || '',
-          hashtags: savedData.hashtags || ''
+          hashtags: savedData.hashtags || '',
+          steps: savedData.steps || '',
         });
       }
     }

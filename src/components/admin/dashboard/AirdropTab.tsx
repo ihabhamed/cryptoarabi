@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
   Edit,
   Trash2,
   Plus,
-  Calendar
+  List as ListIcon
 } from "lucide-react";
 
 const AirdropTab = () => {
@@ -49,6 +50,22 @@ const AirdropTab = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ar-SA');
+  };
+
+  const hasSteps = (airdrop: any) => {
+    try {
+      return airdrop.steps && JSON.parse(airdrop.steps).length > 0;
+    } catch {
+      return false;
+    }
+  };
+
+  const getStepsCount = (airdrop: any) => {
+    try {
+      return airdrop.steps ? JSON.parse(airdrop.steps).length : 0;
+    } catch {
+      return 0;
+    }
   };
 
   return (
@@ -97,6 +114,13 @@ const AirdropTab = () => {
                         {airdrop.status === 'active' ? 'نشط' : 
                          airdrop.status === 'upcoming' ? 'قادم' : 'منتهي'}
                       </span>
+                      
+                      {hasSteps(airdrop) && (
+                        <span className="inline-block mr-2 px-2 py-0.5 rounded-full bg-purple-900/60 text-purple-300 text-xs">
+                          <ListIcon className="h-3 w-3 inline-block mr-1" />
+                          {getStepsCount(airdrop)} خطوات
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -118,6 +142,9 @@ const AirdropTab = () => {
                           <p><strong>تاريخ البداية:</strong> {airdrop.start_date ? formatDate(airdrop.start_date) : 'غير محدد'}</p>
                           <p><strong>تاريخ النهاية:</strong> {airdrop.end_date ? formatDate(airdrop.end_date) : 'غير محدد'}</p>
                           <p><strong>الحالة:</strong> {airdrop.status}</p>
+                          {hasSteps(airdrop) && (
+                            <p><strong>الخطوات:</strong> {getStepsCount(airdrop)} خطوة</p>
+                          )}
                         </div>
                       </HoverCardContent>
                     </HoverCard>

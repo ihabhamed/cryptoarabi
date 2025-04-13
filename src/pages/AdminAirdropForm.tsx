@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Copy, Link as LinkIcon } from "lucide-react";
 import AirdropFormFields from '@/components/admin/airdrop/AirdropFormFields';
-import ImageUploader from '@/components/admin/blog/ImageUploader';
 import { useAirdropForm } from '@/hooks/useAirdropForm';
 
 const AdminAirdropForm = () => {
@@ -16,16 +15,11 @@ const AdminAirdropForm = () => {
     formData,
     isLoading,
     isEditMode,
-    uploadingImage,
-    previewUrl,
     linkCopied,
     isGeneratingMeta,
     isGeneratingHashtags,
     handleChange,
     handleSelectChange,
-    handleImageChange,
-    handleImageUrlChange,
-    handleRemoveImage,
     handleSubmit,
     copyAirdropLink,
     generateMetaContent,
@@ -81,18 +75,6 @@ const AdminAirdropForm = () => {
                 generateMetaContent={generateMetaContent}
                 generateHashtagsContent={generateHashtagsContent}
               />
-              
-              <div className="mt-6 border-t border-white/10 pt-6">
-                <h3 className="text-lg font-medium text-white mb-4">صورة الإيردروب</h3>
-                <ImageUploader 
-                  previewUrl={previewUrl}
-                  onImageChange={handleImageChange}
-                  onImageUrlChange={handleImageUrlChange}
-                  onRemoveImage={handleRemoveImage}
-                  imageUrl={formData.image_url || ''}
-                  isUploading={uploadingImage}
-                />
-              </div>
 
               {isEditMode && id && (
                 <div className="mt-4 p-4 bg-crypto-darkBlue/30 rounded-md">
@@ -131,11 +113,11 @@ const AdminAirdropForm = () => {
               type="submit"
               className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
               onClick={handleSubmit}
-              disabled={isSaving || uploadingImage}
+              disabled={isSaving}
             >
               <Save className="mr-2 h-4 w-4" />
               {isEditMode ? 'حفظ التغييرات' : 'إضافة الإيردروب'}
-              {(isSaving || uploadingImage) && <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>}
+              {isSaving && <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>}
             </Button>
           </CardFooter>
         </Card>
