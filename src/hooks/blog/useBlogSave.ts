@@ -16,7 +16,14 @@ export function useBlogSave() {
       console.log("Saving blog post, original data:", blogData);
       const isEditMode = !!id;
       
-      // Validate that required fields are present
+      // Enhanced validation with more detailed logging
+      console.log("Validating blog data with:", { 
+        title: blogData.title, 
+        titleLength: blogData.title?.length, 
+        contentLength: blogData.content?.length 
+      });
+      
+      // Validate that required fields are present and not empty strings
       if (!validateBlogData(blogData)) {
         toast({
           variant: "destructive",
@@ -45,6 +52,11 @@ export function useBlogSave() {
         // If content exists in the original data, it will be present in cleanData
         if (!cleanData.content && blogData.content) {
           cleanData.content = blogData.content;
+        }
+        
+        // Ensure content is not an empty string
+        if (cleanData.content && cleanData.content.trim() === '') {
+          cleanData.content = ' '; // Add a space to prevent empty string issues
         }
         
         result = await supabase
@@ -76,6 +88,11 @@ export function useBlogSave() {
         // For insertion, content is required by the database schema
         if (!cleanData.content && blogData.content) {
           cleanData.content = blogData.content;
+        }
+        
+        // Ensure content is not an empty string
+        if (cleanData.content && cleanData.content.trim() === '') {
+          cleanData.content = ' '; // Add a space to prevent empty string issues
         }
         
         // Ensure required fields are present for insertion

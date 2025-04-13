@@ -30,10 +30,18 @@ export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPo
  * Validates required blog data fields
  */
 export const validateBlogData = (blogData: Partial<BlogPost>): boolean => {
-  if (!blogData.title || !blogData.content) {
-    console.error("Missing required fields. Title:", blogData.title, "Content length:", blogData.content?.length);
+  // Improved validation to properly check for empty strings too
+  if (!blogData.title || blogData.title.trim() === '') {
+    console.error("Missing required field: Title is empty or undefined");
     return false;
   }
+  
+  if (!blogData.content || blogData.content.trim() === '') {
+    console.error("Missing required field: Content is empty or undefined");
+    return false;
+  }
+  
+  console.log("Blog validation passed. Title length:", blogData.title?.length, "Content length:", blogData.content?.length);
   return true;
 };
 

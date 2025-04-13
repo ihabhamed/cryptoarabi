@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,7 +76,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-white mb-2">العنوان</label>
+        <label className="block text-white mb-2">العنوان <span className="text-red-500">*</span></label>
         <Input
           name="title"
           value={formData.title || ''}
@@ -98,7 +99,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
       </div>
       
       <div>
-        <label className="block text-white mb-2">المحتوى</label>
+        <label className="block text-white mb-2">المحتوى <span className="text-red-500">*</span></label>
         <Textarea
           name="content"
           value={formData.content || ''}
@@ -107,6 +108,9 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
           className="bg-crypto-darkBlue/50 border-white/20 text-white min-h-[200px]"
           required
         />
+        {!formData.content && (
+          <p className="text-red-500 text-sm mt-1">المحتوى مطلوب</p>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

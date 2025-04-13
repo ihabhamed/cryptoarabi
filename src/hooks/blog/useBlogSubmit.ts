@@ -23,12 +23,29 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
     setIsSaving(true);
     
     try {
-      // Validate required fields before proceeding
-      if (!formData.title || !formData.content) {
+      // Enhanced validation logic to check for empty strings more accurately
+      console.log("Validating blog data:", { 
+        title: formData.title, 
+        titleLength: formData.title?.length, 
+        contentLength: formData.content?.length 
+      });
+      
+      // Check for empty or whitespace-only strings
+      if (!formData.title || formData.title.trim() === '') {
         toast({
           variant: "destructive",
           title: "بيانات غير مكتملة",
-          description: "العنوان والمحتوى مطلوبان"
+          description: "العنوان مطلوب"
+        });
+        setIsSaving(false);
+        return;
+      }
+      
+      if (!formData.content || formData.content.trim() === '') {
+        toast({
+          variant: "destructive",
+          title: "بيانات غير مكتملة",
+          description: "المحتوى مطلوب"
         });
         setIsSaving(false);
         return;
