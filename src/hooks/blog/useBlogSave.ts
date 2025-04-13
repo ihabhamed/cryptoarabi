@@ -41,9 +41,15 @@ export function useBlogSave() {
       let result;
       
       if (isEditMode && id) {
+        // TypeScript requires content to be present, so we need to ensure it's there
+        // If content exists in the original data, it will be present in cleanData
+        if (!cleanData.content && blogData.content) {
+          cleanData.content = blogData.content;
+        }
+        
         result = await supabase
           .from('blog_posts')
-          .update(cleanData)
+          .update(cleanData as { content: string, title: string, [key: string]: any })
           .eq('id', id);
         
         if (result.error) {
@@ -67,9 +73,20 @@ export function useBlogSave() {
           description: "تم تحديث المنشور بنجاح",
         });
       } else {
+        // For insertion, content is required by the database schema
+        if (!cleanData.content && blogData.content) {
+          cleanData.content = blogData.content;
+        }
+        
+        // Ensure required fields are present for insertion
+        if (!cleanData.content || !cleanData.title) {
+          console.error("Missing required fields for blog insertion:", cleanData);
+          throw new Error("المحتوى والعنوان مطلوبان لإنشاء منشور جديد");
+        }
+        
         result = await supabase
           .from('blog_posts')
-          .insert(cleanData);
+          .insert(cleanData as { content: string, title: string, [key: string]: any });
         
         if (result.error) {
           console.error("Supabase insert error:", result.error);

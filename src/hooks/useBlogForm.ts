@@ -56,7 +56,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     const loadBlogPost = async () => {
       if (isEditMode && id) {
         setIsLoading(true);
-        const blogData = await fetchBlogPost();
+        const blogData = await fetchBlogPost(id); // Pass id as argument here
         
         if (blogData) {
           console.log("[useBlogForm] Loaded blog data for editing:", blogData);

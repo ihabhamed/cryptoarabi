@@ -27,6 +27,7 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
   };
 
   return {
+    // Make sure we're passing the id parameter to fetchBlogPost
     fetchBlogPost,
     saveBlogPost: handleSaveBlogPost,
     inspectImageUrls

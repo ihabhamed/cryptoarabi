@@ -11,8 +11,9 @@ export const createCleanBlogData = (blogData: Partial<BlogPost>): Partial<BlogPo
 
   // Generate defaults for required fields
   return {
-    title: blogData.title,
-    content: blogData.content,
+    // Ensure required fields for database schema are included
+    title: blogData.title || '',
+    content: blogData.content || '',  // Provide a default empty string to ensure content is always present
     excerpt: blogData.excerpt || null,
     author: blogData.author || null,
     category: blogData.category || null,
