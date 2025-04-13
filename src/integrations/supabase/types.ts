@@ -15,7 +15,10 @@ export type Database = {
           created_at: string
           description: string | null
           end_date: string | null
+          hashtags: string | null
           id: string
+          meta_description: string | null
+          meta_title: string | null
           publish_date: string
           start_date: string | null
           status: string
@@ -29,7 +32,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          hashtags?: string | null
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           publish_date?: string
           start_date?: string | null
           status: string
@@ -43,7 +49,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          hashtags?: string | null
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           publish_date?: string
           start_date?: string | null
           status?: string
@@ -186,6 +195,7 @@ export type Database = {
           id: string
           privacy_policy: string | null
           show_about_section: boolean | null
+          show_blog_section: boolean | null
           show_testimonials_section: boolean | null
           site_name: string
           successful_projects_count: string
@@ -210,6 +220,7 @@ export type Database = {
           id?: string
           privacy_policy?: string | null
           show_about_section?: boolean | null
+          show_blog_section?: boolean | null
           show_testimonials_section?: boolean | null
           site_name?: string
           successful_projects_count?: string
@@ -234,6 +245,7 @@ export type Database = {
           id?: string
           privacy_policy?: string | null
           show_about_section?: boolean | null
+          show_blog_section?: boolean | null
           show_testimonials_section?: boolean | null
           site_name?: string
           successful_projects_count?: string
