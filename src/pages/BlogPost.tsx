@@ -11,25 +11,16 @@ import { BlogPostTags } from '@/components/blog/BlogPostTags';
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPost(slug);
-  // Track image loading errors
-  const [imageError, setImageError] = useState(false);
   // State for the determined image URL
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   
-  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
 
-  // Log post data and set the image URL when post data is loaded
+  // Set the image URL when post data is loaded
   useEffect(() => {
     if (post) {
-      console.log(`[BlogPost] Blog post loaded: ${post.title} (ID: ${post.id})`);
-      console.log(`[BlogPost] Image URL from database: "${post.image_url || 'NULL'}"`);
-      
-      if (imageError) {
-        // If we've already had an error, use fallback
-        console.log(`[BlogPost] Using fallback due to previous error`);
-        setImageUrl(FALLBACK_IMAGE);
-        return;
-      }
+      console.log(`[BlogPost] Post loaded: ${post.title} (ID: ${post.id})`);
+      console.log(`[BlogPost] Raw image URL from database: "${post.image_url || 'NULL'}"`);
       
       // Check if image_url exists and is valid
       if (post.image_url && 
@@ -44,20 +35,11 @@ const BlogPost = () => {
         setImageUrl(FALLBACK_IMAGE);
       }
     }
-  }, [post, imageError]);
+  }, [post]);
 
   const handleImageError = () => {
-    console.error(`[BlogPost] Image load error for: ${post?.image_url || 'undefined image URL'}`);
-    setImageError(true);
+    console.error(`[BlogPost] Image load error, using fallback`);
     setImageUrl(FALLBACK_IMAGE);
-  };
-
-  // Force image reload if URL is already the fallback
-  const forceImageReload = (url: string) => {
-    if (url === FALLBACK_IMAGE) {
-      return `${url}?t=${new Date().getTime()}`;
-    }
-    return url;
   };
 
   if (isLoading) {
@@ -139,7 +121,7 @@ const BlogPost = () => {
           <div className="mb-8 rounded-lg overflow-hidden">
             {imageUrl && (
               <img 
-                src={forceImageReload(imageUrl)} 
+                src={imageUrl} 
                 alt={post.title} 
                 className="w-full h-auto object-cover"
                 onError={handleImageError}

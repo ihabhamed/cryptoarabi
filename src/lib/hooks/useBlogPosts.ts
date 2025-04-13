@@ -7,12 +7,23 @@ export function useBlogPosts() {
   return useQuery({
     queryKey: ['blog_posts'],
     queryFn: async (): Promise<BlogPost[]> => {
+      console.log('[useBlogPosts] Fetching all blog posts');
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .order('publish_date', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useBlogPosts] Error fetching blog posts:', error);
+        throw error;
+      }
+      
+      console.log(`[useBlogPosts] Successfully fetched ${data?.length || 0} blog posts`);
+      
+      // Log image URLs for debugging
+      data?.forEach(post => {
+        console.log(`[useBlogPosts] Post: ${post.id}, Image URL: ${post.image_url || 'NULL'}`);
+      });
       
       // Ensure we have all required fields for the BlogPost type
       const posts = data?.map(post => ({
@@ -32,15 +43,24 @@ export function useBlogPost(slug: string | undefined) {
     queryKey: ['blog_posts', slug],
     queryFn: async (): Promise<BlogPost | null> => {
       if (!slug) return null;
+      
+      console.log(`[useBlogPost] Fetching blog post with slug: ${slug}`);
+      
       const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('slug', slug)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error(`[useBlogPost] Error fetching blog post with slug ${slug}:`, error);
+        throw error;
+      }
       
       if (data) {
+        console.log(`[useBlogPost] Successfully fetched blog post: ${data.id}`);
+        console.log(`[useBlogPost] Post image URL: ${data.image_url || 'NULL'}`);
+        
         return {
           ...data,
           meta_title: data.meta_title || null,
@@ -49,6 +69,7 @@ export function useBlogPost(slug: string | undefined) {
         };
       }
       
+      console.log(`[useBlogPost] No blog post found with slug: ${slug}`);
       return null;
     },
     enabled: !!slug,

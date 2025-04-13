@@ -23,15 +23,11 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
 
   // Determine the image URL when the component mounts or when post changes
   useEffect(() => {
-    console.log(`[BlogPostCard] Determining image for post: ${post.title} (ID: ${post.id})`);
-    console.log(`[BlogPostCard] Image URL from DB: "${post.image_url}"`);
+    console.log(`[BlogPostCard] Initializing for post: ${post.title} (ID: ${post.id})`);
+    console.log(`[BlogPostCard] Raw image URL from DB: "${post.image_url}"`);
     
-    if (imageError) {
-      // If we've already had an error, use fallback
-      console.log(`[BlogPostCard] Using fallback due to previous error for post: ${post.id}`);
-      setImageUrl(FALLBACK_IMAGE);
-      return;
-    }
+    // Always reset image error state when post changes to allow new attempt
+    setImageError(false);
     
     // Check if image_url exists and is not null, 'null' string, or empty
     if (post.image_url && 
@@ -45,20 +41,12 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
       console.log(`[BlogPostCard] No valid image found for post: ${post.title}, using fallback`);
       setImageUrl(FALLBACK_IMAGE);
     }
-  }, [post, imageError, post.id, post.title, post.image_url]);
+  }, [post.id, post.title, post.image_url]);
 
   const handleImageError = () => {
-    console.error(`[BlogPostCard] Image load error for post ID ${post.id}, URL: ${post.image_url}`);
+    console.error(`[BlogPostCard] Image load error for post ID ${post.id}, URL: ${imageUrl}`);
     setImageError(true);
-    // This will trigger the useEffect to set the fallback URL
-  };
-
-  // Force image reload if URL is already the fallback
-  const forceImageReload = (url: string) => {
-    if (url === FALLBACK_IMAGE) {
-      return `${url}?t=${new Date().getTime()}`;
-    }
-    return url;
+    setImageUrl(FALLBACK_IMAGE);
   };
 
   return (
@@ -66,7 +54,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
       <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48">
         {imageUrl && (
           <img 
-            src={forceImageReload(imageUrl)} 
+            src={imageUrl} 
             alt={post.title} 
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
             onError={handleImageError}

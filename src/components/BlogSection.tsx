@@ -8,82 +8,18 @@ import { BlogPost } from '@/types/supabase';
 
 const BlogSection = () => {
   const { data: blogPosts = [], isLoading, error } = useBlogPosts();
-  // Track image loading errors for each post by ID
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  // Track image URLs for each post 
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
-  
   // Show only 3 latest blog posts for homepage
   const latestPosts = blogPosts.slice(0, 3);
   
-  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
-
-  // Debug logging of all blog posts at load time
+  // Log data for debugging
   useEffect(() => {
     if (blogPosts.length > 0) {
-      console.log('[BlogSection] All blog posts loaded:');
+      console.log('[BlogSection] All blog posts loaded:', blogPosts.length);
       blogPosts.forEach(post => {
         console.log(`[BlogSection] Post: ${post.title}, ID: ${post.id}, Image URL: "${post.image_url || 'NULL'}"`);
       });
     }
   }, [blogPosts]);
-
-  // Determine image URLs for all posts when they load
-  useEffect(() => {
-    if (latestPosts.length > 0) {
-      console.log(`[BlogSection] Processing ${latestPosts.length} latest posts for display`);
-      const newImageUrls: Record<string, string> = {};
-      
-      latestPosts.forEach(post => {
-        console.log(`[BlogSection] Processing image for post: ${post.title} (ID: ${post.id})`);
-        
-        // If we already know this image errors, use fallback
-        if (imageErrors[post.id]) {
-          console.log(`[BlogSection] Using fallback due to previous error for post: ${post.id}`);
-          newImageUrls[post.id] = FALLBACK_IMAGE;
-          return;
-        }
-        
-        // Check if image_url exists and is valid
-        if (post.image_url && 
-            post.image_url !== 'null' && 
-            post.image_url !== 'undefined' && 
-            post.image_url.trim() !== '') {
-          console.log(`[BlogSection] Using post image: ${post.image_url} for post: ${post.title}`);
-          newImageUrls[post.id] = post.image_url;
-        } else {
-          // Use fallback image if no valid image exists
-          console.log(`[BlogSection] No valid image found for post: ${post.title}, using fallback`);
-          newImageUrls[post.id] = FALLBACK_IMAGE;
-        }
-      });
-      
-      setImageUrls(newImageUrls);
-    }
-  }, [latestPosts, imageErrors]);
-
-  // Handle image loading errors
-  const handleImageError = (postId: string) => {
-    console.error(`[BlogSection] Image loading error for post ID: ${postId}`);
-    setImageErrors(prev => ({
-      ...prev,
-      [postId]: true
-    }));
-    
-    // This will trigger the useEffect to update the image URL to the fallback
-    setImageUrls(prev => ({
-      ...prev,
-      [postId]: FALLBACK_IMAGE
-    }));
-  };
-
-  // Force image reload if URL is already the fallback
-  const forceImageReload = (url: string) => {
-    if (url === FALLBACK_IMAGE) {
-      return `${url}?t=${new Date().getTime()}`;
-    }
-    return url;
-  };
 
   if (isLoading) {
     return (
@@ -163,12 +99,22 @@ const BlogSection = () => {
             latestPosts.map((post: BlogPost) => (
               <article key={post.id} className="crypto-card hover:translate-y-[-8px]">
                 <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
-                  {imageUrls[post.id] && (
+                  {post.image_url && post.image_url !== 'null' && post.image_url !== 'undefined' && post.image_url.trim() !== '' ? (
                     <img 
-                      src={forceImageReload(imageUrls[post.id])} 
+                      src={post.image_url} 
                       alt={post.title} 
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      onError={() => handleImageError(post.id)}
+                      onError={(e) => {
+                        console.error(`[BlogSection] Image error for post ${post.id}`);
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80" 
+                      alt={post.title} 
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
                   )}
                   <div className="absolute top-3 right-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
