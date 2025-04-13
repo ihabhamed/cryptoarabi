@@ -28,8 +28,10 @@ const WindowFocusHandler = () => {
         // Force rerender of the form data for airdrop edit pages
         if (location.pathname.includes('/admin/airdrops/edit')) {
           console.log('Triggering airdrop form data reload on focus');
-          // Force a rerender by dispatching a custom event
-          window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
+          // Force a rerender by dispatching a custom event with high priority
+          window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
+            detail: { priority: 'high', source: 'focus' } 
+          }));
         }
       } catch (error) {
         console.error('Error in focus handler:', error);
@@ -55,7 +57,7 @@ const WindowFocusHandler = () => {
             console.log('Triggering airdrop form data reload on visibility change');
             // Force a rerender by dispatching a custom event with higher priority
             window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
-              detail: { priority: 'high' } 
+              detail: { priority: 'critical', source: 'visibility' } 
             }));
           }
         } catch (error) {
@@ -67,11 +69,12 @@ const WindowFocusHandler = () => {
     // Initial data load for airdrop edit pages - trigger a refresh when component mounts
     if (location.pathname.includes('/admin/airdrops/edit')) {
       console.log('WindowFocusHandler mounted on airdrop edit page - triggering initial refresh');
+      // Use a shorter timeout to ensure data loads faster
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
-          detail: { priority: 'high', initial: true } 
+          detail: { priority: 'critical', initial: true, source: 'mount' } 
         }));
-      }, 100);
+      }, 50);
     }
     
     // Add event listeners

@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Copy, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Save, Copy, Link as LinkIcon, RefreshCw } from "lucide-react";
 import AirdropFormFields from '@/components/admin/airdrop/AirdropFormFields';
 import { useAirdropForm } from '@/hooks/useAirdropForm';
 
@@ -34,12 +34,26 @@ const AdminAirdropForm = () => {
   useEffect(() => {
     if (id) {
       console.log('AdminAirdropForm component mounted with ID:', id);
-      // Trigger a refresh event after a short delay to ensure data visibility
+      // Trigger a refresh event immediately
+      window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
+        detail: { priority: 'critical', initial: true, source: 'AdminAirdropForm' } 
+      }));
+      
+      // Also trigger after a short delay as a backup
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('airdrop-form-refresh'));
-      }, 200);
+        window.dispatchEvent(new CustomEvent('airdrop-form-refresh', {
+          detail: { priority: 'critical', initial: true, source: 'AdminAirdropForm-delayed' }
+        }));
+      }, 100);
     }
   }, [id]);
+  
+  // Force refresh function for manual reload
+  const handleForceRefresh = () => {
+    window.dispatchEvent(new CustomEvent('airdrop-form-refresh', { 
+      detail: { priority: 'critical', source: 'manual-refresh' } 
+    }));
+  };
   
   // Cancel button handler
   const handleCancel = () => {
@@ -76,12 +90,23 @@ const AdminAirdropForm = () => {
               <CardTitle className="text-xl font-bold text-crypto-orange">
                 {isEditMode ? 'تعديل إيردروب' : 'إضافة إيردروب جديد'}
               </CardTitle>
+              {isEditMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-crypto-orange text-crypto-orange hover:bg-crypto-orange/10"
+                  onClick={handleForceRefresh}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  تحديث
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent className="pt-6">
             {isEmptyForm && isEditMode && (
               <div className="mb-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-md text-white">
-                <p>جاري تحميل البيانات... إذا لم تظهر البيانات، يرجى تحديث الصفحة.</p>
+                <p>جاري تحميل البيانات... إذا لم تظهر البيانات، يرجى الضغط على زر "تحديث" أعلاه.</p>
               </div>
             )}
             
