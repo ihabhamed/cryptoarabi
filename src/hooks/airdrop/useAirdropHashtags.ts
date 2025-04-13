@@ -19,7 +19,13 @@ export function useAirdropHashtags(
   
   // Initialize hashtags from formData only once or when hashtags string changes
   useEffect(() => {
-    if (formData.hashtags && (!isInitialized || formData.hashtags !== hashtags.join(' '))) {
+    if (!formData.hashtags) {
+      setHashtags([]);
+      setIsInitialized(true);
+      return;
+    }
+    
+    if (!isInitialized || formData.hashtags !== hashtags.join(' ')) {
       const tagArray = formData.hashtags
         .split(/[\s,]+/) // Split by spaces or commas
         .map(tag => tag.trim())
@@ -27,8 +33,6 @@ export function useAirdropHashtags(
         
       setHashtags(tagArray);
       setIsInitialized(true);
-    } else if (!formData.hashtags && hashtags.length > 0) {
-      setHashtags([]);
     }
   }, [formData.hashtags, isInitialized, hashtags]);
   
@@ -69,6 +73,8 @@ export function useAirdropHashtags(
   
   // Add a hashtag
   const addHashtag = useCallback((newTag: string) => {
+    if (!newTag.trim()) return;
+    
     // Skip if already exists
     if (hashtags.includes(newTag)) {
       toast({
@@ -91,13 +97,14 @@ export function useAirdropHashtags(
   const removeHashtag = useCallback((tagToRemove: string) => {
     if (!tagToRemove) return;
     
+    // Create a new array without the removed tag
     const updatedHashtags = hashtags.filter(tag => tag !== tagToRemove);
+    
+    // Update state first
     setHashtags(updatedHashtags);
     
-    // Add a small delay to ensure state is stable before updating parent
-    setTimeout(() => {
-      updateParentFormData(updatedHashtags);
-    }, 50);
+    // Then update parent form data
+    updateParentFormData(updatedHashtags);
   }, [hashtags, updateParentFormData]);
   
   // Add a suggested hashtag

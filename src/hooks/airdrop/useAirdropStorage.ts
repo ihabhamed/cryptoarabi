@@ -40,13 +40,25 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
     steps: '',
   });
   
-  // Use a ref to track the last saved data to avoid unnecessary re-renders
+  // Use a ref to track the current form data for the debounced save function
+  const formDataRef = useRef(formData);
+  // Use a ref to track the last saved data to avoid unnecessary saves
   const lastSavedDataRef = useRef<string>('');
   // Use a ref to track the save timeout
   const saveTimeoutRef = useRef<number | null>(null);
+  // Track if we've initialized the form
+  const hasInitializedRef = useRef(false);
+
+  // Update the ref whenever formData changes
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   // Load data from localStorage or initial data
   useEffect(() => {
+    // Skip if we've already initialized
+    if (hasInitializedRef.current) return;
+    
     const storageKey = getStorageKey("airdrop", isEditMode, id);
     
     if (initialData) {
@@ -59,9 +71,12 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         steps: initialData.steps || '',
       });
       
-      // Save to localStorage with unique key
-      saveFormData(storageKey, { ...initialData, id });
-      lastSavedDataRef.current = JSON.stringify({ ...initialData, id });
+      // Save to localStorage with unique key only if it's not already there
+      const existingData = getFormData(storageKey);
+      if (!existingData) {
+        saveFormData(storageKey, { ...initialData, id });
+        lastSavedDataRef.current = JSON.stringify({ ...initialData, id });
+      }
     } else if (!isEditMode) {
       // For new entry, check localStorage
       const savedData = getFormData<NewAirdrop & { 
@@ -94,52 +109,73 @@ export function useAirdropStorage({ id, isEditMode, initialData }: UseAirdropSto
         lastSavedDataRef.current = JSON.stringify({ ...loadedData, id });
       }
     }
+    
+    hasInitializedRef.current = true;
   }, [initialData, id, isEditMode]);
+  
+  // Create a debounced save function
+  const debouncedSave = useCallback(() => {
+    if (saveTimeoutRef.current !== null) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    const save = () => {
+      // Only save if there's actual data
+      if (formDataRef.current.title) {
+        const storageKey = getStorageKey("airdrop", isEditMode, id);
+        const dataToSave = { ...formDataRef.current, id };
+        const serializedData = JSON.stringify(dataToSave);
+        
+        // Skip if nothing has changed
+        if (serializedData === lastSavedDataRef.current) {
+          return;
+        }
+        
+        saveFormData(storageKey, dataToSave);
+        lastSavedDataRef.current = serializedData;
+        console.log('Saved form data to localStorage', storageKey);
+      }
+    };
+    
+    // Set a timeout to save after a delay
+    saveTimeoutRef.current = window.setTimeout(save, 1000);
+  }, [id, isEditMode]);
+  
+  // Wrap setFormData to also trigger a save
+  const setFormDataAndSave = useCallback((data: React.SetStateAction<NewAirdrop & { 
+    meta_title?: string; 
+    meta_description?: string; 
+    hashtags?: string;
+    steps?: string;
+  }>) => {
+    setFormData(data);
+    // Schedule a save after the state has been updated
+    setTimeout(debouncedSave, 0);
+  }, [debouncedSave]);
   
   // Save form data to localStorage whenever it changes, but debounce it
   useEffect(() => {
-    // Only save if there's actual data
-    if (formData.title) {
-      const storageKey = getStorageKey("airdrop", isEditMode, id);
-      const dataToSave = { ...formData, id };
-      const serializedData = JSON.stringify(dataToSave);
-      
-      // Skip if nothing has changed
-      if (serializedData === lastSavedDataRef.current) {
-        return;
-      }
-      
-      // Clear any existing timeout
+    // Only save if there's actual data and we've initialized
+    if (formData.title && hasInitializedRef.current) {
+      debouncedSave();
+    }
+    
+    // Cleanup on unmount
+    return () => {
       if (saveTimeoutRef.current !== null) {
         clearTimeout(saveTimeoutRef.current);
       }
-      
-      // Set a new timeout to save the data after a delay
-      const timeoutId = window.setTimeout(() => {
-        saveFormData(storageKey, dataToSave);
-        lastSavedDataRef.current = serializedData;
-        saveTimeoutRef.current = null;
-      }, 1000);
-      
-      saveTimeoutRef.current = timeoutId;
-      
-      // Cleanup on unmount
-      return () => {
-        if (saveTimeoutRef.current !== null) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-      };
-    }
-  }, [formData, id, isEditMode]);
+    };
+  }, [debouncedSave, formData]);
 
-  const clearAirdropFormData = () => {
+  const clearAirdropFormData = useCallback(() => {
     const storageKey = getStorageKey("airdrop", isEditMode, id);
     clearFormData(storageKey);
-  };
+  }, [isEditMode, id]);
 
   return {
     formData,
-    setFormData,
+    setFormData: setFormDataAndSave,
     clearAirdropFormData
   };
 }

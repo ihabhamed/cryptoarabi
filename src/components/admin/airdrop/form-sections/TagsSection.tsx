@@ -55,9 +55,15 @@ const TagsSection: React.FC<TagsSectionProps> = ({
 
   // Handle removal of a hashtag with proper event prevention
   const handleRemoveHashtag = (e: React.MouseEvent, tag: string) => {
-    e.preventDefault();
+    // Stop propagation and prevent default to avoid any side effects
     e.stopPropagation();
+    e.preventDefault();
+    
+    // Remove the hashtag
     removeHashtag(tag);
+    
+    // Force a re-render to update the UI immediately
+    setRenderKey(prev => prev + 1);
   };
 
   return (
@@ -105,7 +111,7 @@ const TagsSection: React.FC<TagsSectionProps> = ({
         {hashtags.length > 0 ? (
           hashtags.map((tag, index) => (
             <Badge 
-              key={`${tag}-${index}`}
+              key={`${tag}-${index}-${renderKey}`}
               className="bg-crypto-darkBlue hover:bg-crypto-darkBlue/80 text-white flex items-center gap-1"
             >
               {tag}
@@ -132,7 +138,7 @@ const TagsSection: React.FC<TagsSectionProps> = ({
           <div className="flex flex-wrap gap-2">
             {suggestedHashtags.map((tag, index) => (
               <Badge 
-                key={`suggestion-${tag}-${index}`}
+                key={`suggestion-${tag}-${index}-${renderKey}`}
                 className="bg-crypto-darkGray hover:bg-crypto-darkGray/80 text-gray-300 flex items-center gap-1 cursor-pointer"
                 onClick={() => addSuggestedHashtag(tag)}
               >
