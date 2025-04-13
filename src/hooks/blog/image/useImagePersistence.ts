@@ -10,8 +10,13 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
   const persistImageData = (imageUrl: string | null, isFile: boolean = false) => {
     if (imageUrl && !shouldClearImageUrl(imageUrl)) {
       console.log(`[useImagePersistence] Persisting image to sessionStorage: ${imageUrl}`);
+      
+      // Store the URL type (blob or regular URL)
+      const isBlob = imageUrl.startsWith('blob:') || imageUrl.startsWith('data:');
+      
       sessionStorage.setItem('blogImageUrl', imageUrl);
       sessionStorage.setItem('blogImageIsFile', isFile ? 'true' : 'false');
+      sessionStorage.setItem('blogImageIsBlob', isBlob ? 'true' : 'false');
       // Also store timestamp to track when the image was saved
       sessionStorage.setItem('blogImageTimestamp', new Date().getTime().toString());
     } else {
@@ -47,10 +52,35 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
       if (!document.hidden) {
         const savedImageUrl = sessionStorage.getItem('blogImageUrl');
         const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
+        const isBlob = sessionStorage.getItem('blogImageIsBlob') === 'true';
         
-        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && (!previewUrl || previewUrl !== savedImageUrl)) {
-          console.log(`[useImagePersistence] Restoring image from sessionStorage: ${savedImageUrl}`);
-          setPreviewUrl(savedImageUrl);
+        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
+          // Check if the URL is a blob URL and if it's still valid
+          if (isBlob && savedImageUrl.startsWith('blob:')) {
+            try {
+              // Simple test to check if blob URL is still valid
+              fetch(savedImageUrl, { method: 'HEAD' })
+                .then(() => {
+                  console.log(`[useImagePersistence] Blob URL is still valid: ${savedImageUrl}`);
+                  if (!previewUrl || previewUrl !== savedImageUrl) {
+                    console.log(`[useImagePersistence] Restoring blob image from sessionStorage: ${savedImageUrl}`);
+                    setPreviewUrl(savedImageUrl);
+                  }
+                })
+                .catch(() => {
+                  console.warn(`[useImagePersistence] Blob URL is no longer valid: ${savedImageUrl}`);
+                  // Clear invalid blob URL from session storage
+                  sessionStorage.removeItem('blogImageUrl');
+                  sessionStorage.removeItem('blogImageIsBlob');
+                  setPreviewUrl(null);
+                });
+            } catch (e) {
+              console.warn(`[useImagePersistence] Error checking blob URL: ${e}`);
+            }
+          } else if (!previewUrl || previewUrl !== savedImageUrl) {
+            console.log(`[useImagePersistence] Restoring image from sessionStorage: ${savedImageUrl}`);
+            setPreviewUrl(savedImageUrl);
+          }
         }
       } else {
         // When tab is hidden, make sure to save current image
@@ -77,9 +107,29 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
     
     const handleWindowFocus = () => {
       const savedImageUrl = sessionStorage.getItem('blogImageUrl');
-      if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && (!previewUrl || previewUrl !== savedImageUrl)) {
-        console.log(`[useImagePersistence] Restoring image on window focus: ${savedImageUrl}`);
-        setPreviewUrl(savedImageUrl);
+      const isBlob = sessionStorage.getItem('blogImageIsBlob') === 'true';
+      
+      if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
+        // For blob URLs, verify they're still valid
+        if (isBlob && savedImageUrl.startsWith('blob:')) {
+          try {
+            fetch(savedImageUrl, { method: 'HEAD' })
+              .then(() => {
+                if (!previewUrl || previewUrl !== savedImageUrl) {
+                  console.log(`[useImagePersistence] Restoring blob image on window focus: ${savedImageUrl}`);
+                  setPreviewUrl(savedImageUrl);
+                }
+              })
+              .catch(() => {
+                console.warn(`[useImagePersistence] Blob URL is no longer valid on focus: ${savedImageUrl}`);
+              });
+          } catch (e) {
+            console.warn(`[useImagePersistence] Error checking blob URL on focus: ${e}`);
+          }
+        } else if (!previewUrl || previewUrl !== savedImageUrl) {
+          console.log(`[useImagePersistence] Restoring image on window focus: ${savedImageUrl}`);
+          setPreviewUrl(savedImageUrl);
+        }
       }
     };
     
@@ -91,9 +141,29 @@ export function useImagePersistence(previewUrl: string | null, setPreviewUrl: (u
       console.log('[useImagePersistence] Navigation detected, checking for saved images');
       setTimeout(() => {
         const savedImageUrl = sessionStorage.getItem('blogImageUrl');
-        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl) && (!previewUrl || previewUrl !== savedImageUrl)) {
-          console.log(`[useImagePersistence] Restoring image after navigation: ${savedImageUrl}`);
-          setPreviewUrl(savedImageUrl);
+        const isBlob = sessionStorage.getItem('blogImageIsBlob') === 'true';
+        
+        if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
+          // For blob URLs, verify they're still valid
+          if (isBlob && savedImageUrl.startsWith('blob:')) {
+            try {
+              fetch(savedImageUrl, { method: 'HEAD' })
+                .then(() => {
+                  if (!previewUrl || previewUrl !== savedImageUrl) {
+                    console.log(`[useImagePersistence] Restoring blob image after navigation: ${savedImageUrl}`);
+                    setPreviewUrl(savedImageUrl);
+                  }
+                })
+                .catch(() => {
+                  console.warn(`[useImagePersistence] Blob URL is no longer valid after navigation: ${savedImageUrl}`);
+                });
+            } catch (e) {
+              console.warn(`[useImagePersistence] Error checking blob URL after navigation: ${e}`);
+            }
+          } else if (!previewUrl || previewUrl !== savedImageUrl) {
+            console.log(`[useImagePersistence] Restoring image after navigation: ${savedImageUrl}`);
+            setPreviewUrl(savedImageUrl);
+          }
         }
       }, 100); // Small delay to ensure DOM is settled
     };

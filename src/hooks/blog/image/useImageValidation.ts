@@ -10,6 +10,13 @@ export function useImageValidation() {
       return false;
     }
 
+    // Handle object URLs (from file inputs) differently - they are always valid
+    // but can't be validated with a network request in the background
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
+      console.log(`[useImageValidation] validateImageUrl: Using object URL, assuming valid: ${url.substring(0, 50)}...`);
+      return true;
+    }
+
     // Clean the URL by removing any query parameters
     const cleanUrl = url.includes('?') ? url.split('?')[0] : url;
     console.log(`[useImageValidation] validateImageUrl: Testing cleaned URL: ${cleanUrl}`);
@@ -41,6 +48,11 @@ export function useImageValidation() {
   const isValidUrl = (url: string | null | undefined): boolean => {
     if (!url || url === 'null' || url === 'undefined' || url.trim() === '' || url.toLowerCase() === 'null') {
       return false;
+    }
+
+    // Object URLs are always considered valid
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
+      return true;
     }
     
     try {

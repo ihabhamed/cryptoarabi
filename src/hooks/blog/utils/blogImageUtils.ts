@@ -11,6 +11,11 @@ export const isValidImageUrl = (url: string | null | undefined): boolean => {
     return false;
   }
   
+  // Object URLs are always considered valid since they can't be checked the same way
+  if (url.startsWith('blob:') || url.startsWith('data:')) {
+    return true;
+  }
+  
   // Check if it's a properly formatted URL
   try {
     new URL(url);
@@ -25,6 +30,11 @@ export const isValidImageUrl = (url: string | null | undefined): boolean => {
  */
 export const cleanImageUrl = (url: string): string => {
   if (!url) return '';
+  
+  // Don't modify blob URLs or data URLs
+  if (url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
   
   try {
     // Remove query parameters
@@ -44,6 +54,12 @@ export const cleanImageUrl = (url: string): string => {
 export const processImageUrlForStorage = (url: string | null | undefined): string | null => {
   // Additional logging to track the image URL being processed
   console.log(`Processing image URL for storage: "${url || 'NULL'}"`);
+  
+  // Blob URLs should not be stored in the database as they're temporary
+  if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+    console.log("Blog URL detected, not storing in database");
+    return null;
+  }
   
   if (!isValidImageUrl(url)) {
     console.log("Setting image_url to null before saving - invalid URL");
@@ -101,6 +117,11 @@ export const shouldClearImageUrl = (url: string | null | undefined): boolean => 
 export const normalizeImageUrl = (url: string | null): string | null => {
   if (shouldClearImageUrl(url)) return null;
   
+  // Don't modify blob URLs
+  if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+    return url;
+  }
+  
   // If URL contains storage path but needs adjustment
   if (url && url.includes('images/')) {
     // Make sure the URL is properly formatted
@@ -120,12 +141,29 @@ export const normalizeImageUrl = (url: string | null): string | null => {
 export const recoverImageFromStorage = (): string | null => {
   const savedImageUrl = sessionStorage.getItem('blogImageUrl');
   const isFile = sessionStorage.getItem('blogImageIsFile') === 'true';
+  const isBlob = sessionStorage.getItem('blogImageIsBlob') === 'true';
   
   if (savedImageUrl && !shouldClearImageUrl(savedImageUrl)) {
     console.log(`Recovered image URL from session storage: ${savedImageUrl}`);
     
-    // Make sure it's a valid URL if it's not a file
-    if (!isFile) {
+    // If it's a blob URL, make sure it's still valid
+    if (isBlob && savedImageUrl.startsWith('blob:')) {
+      try {
+        // Try fetching the blob URL to see if it's still valid
+        // This is non-blocking and just for logging
+        fetch(savedImageUrl, { method: 'HEAD' })
+          .then(() => console.log(`Blob URL is still valid: ${savedImageUrl}`))
+          .catch(() => console.warn(`Blob URL is no longer valid: ${savedImageUrl}`));
+        
+        return savedImageUrl;
+      } catch (e) {
+        console.error('Error checking blob URL:', e);
+        return null;
+      }
+    }
+    
+    // Make sure it's a valid URL if it's not a file or blob
+    if (!isFile && !isBlob) {
       try {
         new URL(savedImageUrl);
         return savedImageUrl;
@@ -139,3 +177,36 @@ export const recoverImageFromStorage = (): string | null => {
   }
   return null;
 };
+
+/**
+ * Adds a timestamp to a URL to force a refresh
+ * Useful for forcing image reload after cache issues
+ */
+export const addTimestampToUrl = (url: string): string => {
+  if (!url) return url;
+  
+  // Don't modify blob URLs
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url;
+  
+  const timestamp = new Date().getTime();
+  return url.includes('?') 
+    ? `${url}&t=${timestamp}` 
+    : `${url}?t=${timestamp}`;
+};
+
+/**
+ * Check if a blob URL is still valid
+ * Returns a promise that resolves to true if valid, false if not
+ */
+export const isBlobUrlValid = async (url: string): Promise<boolean> => {
+  if (!url.startsWith('blob:')) return false;
+  
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch (e) {
+    console.error('Error checking blob URL validity:', e);
+    return false;
+  }
+};
+

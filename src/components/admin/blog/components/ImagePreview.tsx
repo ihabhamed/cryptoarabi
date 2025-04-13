@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, X } from "lucide-react";
-import { getFallbackImageUrl, normalizeImageUrl } from '@/hooks/blog/utils/blogImageUtils';
+import { getFallbackImageUrl, normalizeImageUrl, addTimestampToUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 interface ImagePreviewProps {
   previewUrl: string | null;
@@ -17,15 +17,20 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Try to normalize the preview URL if it exists
   const normalizedPreviewUrl = previewUrl ? normalizeImageUrl(previewUrl) : null;
-  const displayUrl = normalizedPreviewUrl || getFallbackImageUrl();
+  // Add a timestamp if we've retried loading
+  const displayUrl = retryCount > 0 && normalizedPreviewUrl ? 
+    addTimestampToUrl(normalizedPreviewUrl) : 
+    normalizedPreviewUrl || getFallbackImageUrl();
   
   // Reset error state when previewUrl changes
   useEffect(() => {
     setImageError(false);
     setImageLoaded(false);
+    setRetryCount(0);
   }, [previewUrl]);
   
   const handleImageLoad = () => {
@@ -38,6 +43,17 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     console.error(`[ImagePreview] Error loading preview image: ${previewUrl}`);
     setImageError(true);
     setImageLoaded(false);
+  };
+
+  // Handle retry internally first before calling parent retry
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setImageError(false);
+    
+    // If we've already tried a few times, call the parent's retry handler
+    if (retryCount >= 2) {
+      onRetryLoad();
+    }
   };
 
   return (
@@ -58,7 +74,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
             variant="secondary"
             size="sm"
             className="mt-2"
-            onClick={onRetryLoad}
+            onClick={handleRetry}
           >
             <RefreshCw className="h-4 w-4 mr-1" />
             إعادة المحاولة
