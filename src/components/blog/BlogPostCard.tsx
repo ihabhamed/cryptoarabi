@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { BlogPost } from '@/types/supabase';
 import { Badge } from "@/components/ui/badge";
+import { isValidImageUrl, getFallbackImageUrl, handleImageError } from '@/hooks/blog/utils/blogImageUtils';
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -11,55 +12,43 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   // State to track image loading errors
-  const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  
-  const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
   
   // Extract hashtags if present
   const hashtags = post.hashtags 
     ? post.hashtags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3) 
     : [];
 
-  // Determine the image URL when the component mounts or when post changes
+  // Set the image URL when the component mounts or when post changes
   useEffect(() => {
     console.log(`[BlogPostCard] Initializing for post: ${post.title} (ID: ${post.id})`);
     console.log(`[BlogPostCard] Raw image URL from DB: "${post.image_url || 'NULL'}"`);
     
-    // Always reset image error state when post changes to allow new attempt
-    setImageError(false);
-    
-    // Check if image_url exists and is not null, 'null' string, or empty
-    if (post.image_url && 
-        post.image_url !== 'null' && 
-        post.image_url !== 'undefined' && 
-        post.image_url.trim() !== '') {
+    // Check if image_url exists and is valid
+    if (isValidImageUrl(post.image_url)) {
       console.log(`[BlogPostCard] Using post image: ${post.image_url} for post: ${post.title}`);
       setImageUrl(post.image_url);
     } else {
       // Use fallback image if no valid image exists
       console.log(`[BlogPostCard] No valid image found for post: ${post.title}, using fallback`);
-      setImageUrl(FALLBACK_IMAGE);
+      setImageUrl(getFallbackImageUrl());
     }
   }, [post.id, post.title, post.image_url]);
 
-  const handleImageError = () => {
-    console.error(`[BlogPostCard] Image load error for post ID ${post.id}, URL: ${imageUrl}`);
-    setImageError(true);
-    setImageUrl(FALLBACK_IMAGE);
+  const handleImageLoadError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    handleImageError(e, post.title);
+    setImageUrl(getFallbackImageUrl());
   };
 
   return (
     <div className="bg-crypto-darkGray/50 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:border-crypto-orange/30 h-full flex flex-col">
       <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48">
-        {imageUrl && (
-          <img 
-            src={imageUrl} 
-            alt={post.title} 
-            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-            onError={handleImageError}
-          />
-        )}
+        <img 
+          src={imageUrl || getFallbackImageUrl()} 
+          alt={post.title} 
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          onError={handleImageLoadError}
+        />
       </Link>
       
       <div className="p-5 flex flex-col flex-grow">

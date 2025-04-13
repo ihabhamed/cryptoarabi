@@ -9,22 +9,50 @@ export function useImageValidation() {
       console.log('[useImageValidation] validateImageUrl: URL is invalid or empty');
       return false;
     }
+
+    // Clean the URL by removing any query parameters
+    const cleanUrl = url.includes('?') ? url.split('?')[0] : url;
+    console.log(`[useImageValidation] validateImageUrl: Testing cleaned URL: ${cleanUrl}`);
     
     return new Promise((resolve) => {
       const img = new Image();
+      const timeoutId = setTimeout(() => {
+        console.log(`[useImageValidation] validateImageUrl: Image load timed out: ${cleanUrl}`);
+        resolve(false);
+      }, 10000); // 10 second timeout for slow connections
+      
       img.onload = () => {
-        console.log(`[useImageValidation] validateImageUrl: Image loaded successfully: ${url}`);
+        clearTimeout(timeoutId);
+        console.log(`[useImageValidation] validateImageUrl: Image loaded successfully: ${cleanUrl}`);
         resolve(true);
       };
+      
       img.onerror = () => {
-        console.log(`[useImageValidation] validateImageUrl: Image failed to load: ${url}`);
+        clearTimeout(timeoutId);
+        console.log(`[useImageValidation] validateImageUrl: Image failed to load: ${cleanUrl}`);
         resolve(false);
       };
-      img.src = url;
+      
+      img.src = cleanUrl;
     });
   };
 
+  // Check if a URL is properly formatted
+  const isValidUrl = (url: string): boolean => {
+    if (!url || url === 'null' || url === 'undefined' || url.trim() === '') {
+      return false;
+    }
+    
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return {
-    validateImageUrl
+    validateImageUrl,
+    isValidUrl
   };
 }

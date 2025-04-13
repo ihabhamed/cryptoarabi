@@ -1,9 +1,10 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useBlogFormState } from './blog/useBlogFormState';
 import { useBlogImage } from './blog/useBlogImage';
 import { useBlogApi } from './blog/useBlogApi';
 import { useBlogSubmit } from './blog/useBlogSubmit';
+import { toast } from "@/lib/utils/toast-utils";
 
 interface UseBlogFormProps {
   id?: string;
@@ -11,6 +12,8 @@ interface UseBlogFormProps {
 }
 
 export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
+  const [formLoaded, setFormLoaded] = useState(false);
+  
   const {
     formData,
     setFormData,
@@ -31,7 +34,8 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     handleRemoveImage,
     uploadBlogImage,
     setInitialImagePreview,
-    validateImageUrl
+    validateImageUrl,
+    isValidUrl
   } = useBlogImage();
 
   const {
@@ -56,40 +60,65 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
   useEffect(() => {
     const loadBlogPost = async () => {
       if (isEditMode && id) {
-        setIsLoading(true);
-        const blogData = await fetchBlogPost(id);
-        
-        if (blogData) {
-          console.log("[useBlogForm] Loaded blog data for editing:", blogData);
-          console.log(`[useBlogForm] Original image URL from database: "${blogData.image_url || 'NULL'}"`);
+        try {
+          setIsLoading(true);
+          console.log(`[useBlogForm] Loading blog post for editing with ID: ${id}`);
           
-          setFormData(blogData);
+          const blogData = await fetchBlogPost(id);
           
-          // Set image preview if image_url exists and is valid
-          if (blogData.image_url && 
-              blogData.image_url !== 'null' && 
-              blogData.image_url !== 'undefined' && 
-              blogData.image_url.trim() !== '') {
-            console.log(`[useBlogForm] Setting initial image preview from blogData: ${blogData.image_url}`);
-            setInitialImagePreview(blogData.image_url);
+          if (blogData) {
+            console.log("[useBlogForm] Loaded blog data for editing:", blogData);
+            console.log(`[useBlogForm] Original image URL from database: "${blogData.image_url || 'NULL'}"`);
             
-            // Validate if the image URL is actually loadable
-            validateImageUrl(blogData.image_url).then(isValid => {
-              if (!isValid) {
-                console.log(`[useBlogForm] WARNING: Image URL validation failed for: ${blogData.image_url}`);
-              }
-            });
+            setFormData(blogData);
+            
+            // Set image preview if image_url exists and is valid
+            if (blogData.image_url && isValidUrl(blogData.image_url)) {
+              console.log(`[useBlogForm] Setting initial image preview from blogData: ${blogData.image_url}`);
+              setInitialImagePreview(blogData.image_url);
+              
+              // Validate if the image URL is actually loadable
+              validateImageUrl(blogData.image_url).then(isValid => {
+                if (!isValid) {
+                  console.log(`[useBlogForm] WARNING: Image URL validation failed for: ${blogData.image_url}`);
+                  toast({
+                    variant: "warning",
+                    title: "تحذير",
+                    description: "تعذر تحميل صورة المنشور. يمكنك اختيار صورة أخرى.",
+                  });
+                }
+              });
+            } else {
+              console.log(`[useBlogForm] No valid image URL found in blogData: ${blogData.image_url || 'NULL'}`);
+            }
+            
+            setFormLoaded(true);
           } else {
-            console.log(`[useBlogForm] No valid image URL found in blogData: ${blogData.image_url || 'NULL'}`);
+            console.error(`[useBlogForm] Failed to load blog post with ID: ${id}`);
+            toast({
+              variant: "destructive",
+              title: "خطأ في التحميل",
+              description: "تعذر تحميل بيانات المنشور. يرجى المحاولة مرة أخرى.",
+            });
           }
+        } catch (error) {
+          console.error('[useBlogForm] Error loading blog post:', error);
+          toast({
+            variant: "destructive",
+            title: "خطأ في التحميل",
+            description: "حدث خطأ أثناء تحميل بيانات المنشور.",
+          });
+        } finally {
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
+      } else {
+        // New post mode, no data to load
+        setFormLoaded(true);
       }
     };
     
     loadBlogPost();
-  }, [id, isEditMode, fetchBlogPost, setFormData, setInitialImagePreview, validateImageUrl, setIsLoading]);
+  }, [id, isEditMode, fetchBlogPost, setFormData, setInitialImagePreview, validateImageUrl, setIsLoading, isValidUrl]);
 
   // Debug image URL state when form data changes
   useEffect(() => {
@@ -132,6 +161,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     selectedImage,
     previewUrl,
     isEditMode,
+    formLoaded,
     handleChange,
     handleImageChange,
     handleRemoveImage,

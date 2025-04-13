@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useBlogPosts } from '@/lib/hooks';
 import { BlogPost } from '@/types/supabase';
+import { isValidImageUrl, getFallbackImageUrl, handleImageError } from '@/hooks/blog/utils/blogImageUtils';
 
 const BlogSection = () => {
   const { data: blogPosts = [], isLoading, error } = useBlogPosts();
@@ -96,49 +96,43 @@ const BlogSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestPosts.length > 0 ? (
-            latestPosts.map((post: BlogPost) => (
-              <article key={post.id} className="crypto-card hover:translate-y-[-8px]">
-                <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
-                  {post.image_url && post.image_url !== 'null' && post.image_url !== 'undefined' && post.image_url.trim() !== '' ? (
+            latestPosts.map((post: BlogPost) => {
+              // Check if post has a valid image URL
+              const hasValidImage = isValidImageUrl(post.image_url);
+              const imageSource = hasValidImage ? post.image_url : getFallbackImageUrl();
+
+              return (
+                <article key={post.id} className="crypto-card hover:translate-y-[-8px]">
+                  <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
                     <img 
-                      src={post.image_url} 
+                      src={imageSource} 
                       alt={post.title} 
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      onError={(e) => {
-                        console.error(`[BlogSection] Image error for post ${post.id}`);
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
-                      }}
+                      onError={(e) => handleImageError(e, post.title)}
                     />
-                  ) : (
-                    <img 
-                      src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80" 
-                      alt={post.title} 
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                  )}
-                  <div className="absolute top-3 right-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
-                    {post.category || "عام"}
+                    <div className="absolute top-3 right-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
+                      {post.category || "عام"}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center text-gray-400 text-sm mb-3">
-                  <Calendar className="h-4 w-4 ml-1" />
-                  <span>{post.publish_date ? new Date(post.publish_date).toLocaleDateString('ar-SA') : "بدون تاريخ"}</span>
-                </div>
-                
-                <h3 className="text-xl font-bold mb-3 hover:text-crypto-orange transition-colors">
-                  <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                </h3>
-                
-                <p className="text-gray-400 mb-4 line-clamp-3">{post.excerpt || post.content?.substring(0, 150)}</p>
-                
-                <Link to={`/blog/${post.slug}`} className="inline-flex items-center text-crypto-orange hover:text-crypto-orange/80 font-medium">
-                  اقرأ المزيد
-                  <ArrowLeft className="mr-1 h-4 w-4 rtl-flip" />
-                </Link>
-              </article>
-            ))
+                  
+                  <div className="flex items-center text-gray-400 text-sm mb-3">
+                    <Calendar className="h-4 w-4 ml-1" />
+                    <span>{post.publish_date ? new Date(post.publish_date).toLocaleDateString('ar-SA') : "بدون تاريخ"}</span>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold mb-3 hover:text-crypto-orange transition-colors">
+                    <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                  </h3>
+                  
+                  <p className="text-gray-400 mb-4 line-clamp-3">{post.excerpt || post.content?.substring(0, 150)}</p>
+                  
+                  <Link to={`/blog/${post.slug}`} className="inline-flex items-center text-crypto-orange hover:text-crypto-orange/80 font-medium">
+                    اقرأ المزيد
+                    <ArrowLeft className="mr-1 h-4 w-4 rtl-flip" />
+                  </Link>
+                </article>
+              );
+            })
           ) : (
             <p className="col-span-full text-center text-white/70">لا توجد مقالات متاحة حاليًا.</p>
           )}

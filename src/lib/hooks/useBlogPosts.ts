@@ -2,20 +2,28 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BlogPost } from '@/types/supabase';
+import { cleanImageUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 /**
  * Processes a blog post to ensure all fields are properly typed and handled
  */
 const processBlogPost = (post: any): BlogPost => {
-  // Verify and log image URL for debugging
-  console.log(`[useBlogPosts] Processing post: ${post.id}, Image URL: "${post.image_url || 'NULL'}"`);
+  // Process image URL to ensure it's in the correct format
+  let processedImageUrl = null;
+  
+  if (post.image_url && post.image_url !== 'null' && post.image_url !== 'undefined' && post.image_url.trim() !== '') {
+    processedImageUrl = cleanImageUrl(post.image_url);
+    console.log(`[useBlogPosts] Processing post: ${post.id}, Image URL: "${post.image_url}" -> "${processedImageUrl}"`);
+  } else {
+    console.log(`[useBlogPosts] Processing post: ${post.id}, No valid image URL found`);
+  }
   
   return {
     ...post,
     meta_title: post.meta_title || null,
     meta_description: post.meta_description || null,
     hashtags: post.hashtags || null,
-    image_url: post.image_url || null // Ensure null for empty URLs
+    image_url: processedImageUrl // Ensure null for empty URLs
   };
 };
 
@@ -35,11 +43,6 @@ export function useBlogPosts() {
       }
       
       console.log(`[useBlogPosts] Successfully fetched ${data?.length || 0} blog posts`);
-      
-      // Log image URLs for debugging
-      data?.forEach(post => {
-        console.log(`[useBlogPosts] Post: ${post.id}, Image URL: ${post.image_url || 'NULL'}`);
-      });
       
       // Process posts to ensure consistent typing
       const posts = data?.map(processBlogPost) || [];

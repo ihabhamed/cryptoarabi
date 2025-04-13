@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/utils/toast-utils";
-import { X, Upload } from "lucide-react";
+import { X, Upload, AlertTriangle } from "lucide-react";
 import { validateImageFile } from '@/lib/utils/imageUpload';
+import { isValidImageUrl, getFallbackImageUrl } from '@/hooks/blog/utils/blogImageUtils';
 
 interface ImageUploaderProps {
   previewUrl: string | null;
@@ -24,10 +25,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   isUploading
 }) => {
   const [internalImageUrl, setInternalImageUrl] = useState(imageUrl);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Debug when imageUrl or previewUrl changes
   useEffect(() => {
     console.log(`[ImageUploader] imageUrl prop: "${imageUrl || 'NULL'}", previewUrl: "${previewUrl || 'NULL'}"`);
+    // Reset image error state on new URL
+    setImageError(false);
+    setImageLoaded(false);
   }, [imageUrl, previewUrl]);
 
   // Update internal state when external imageUrl changes
@@ -40,22 +46,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   useEffect(() => {
     if (internalImageUrl && !previewUrl) {
       console.log(`[ImageUploader] Setting image URL from input: "${internalImageUrl}"`);
-      // Only set preview URL if it's a valid image URL and not already set
-      if (internalImageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
-        console.log('[ImageUploader] URL appears to be a valid image, applying change');
+      
+      if (isValidImageUrl(internalImageUrl)) {
+        console.log('[ImageUploader] URL appears to be valid, applying change');
         onImageUrlChange(internalImageUrl);
+        
+        // Reset error state for new URL
+        setImageError(false);
+        setImageLoaded(false);
       } else {
-        console.log('[ImageUploader] URL does not appear to be an image, will validate by loading');
-        // Try to validate the URL by creating an image
-        const img = new Image();
-        img.onload = () => {
-          console.log('[ImageUploader] Image loaded successfully, applying URL');
-          onImageUrlChange(internalImageUrl);
-        };
-        img.onerror = () => {
-          console.log('[ImageUploader] Failed to load image, URL may not be valid');
-        };
-        img.src = internalImageUrl;
+        console.log('[ImageUploader] URL does not appear to be valid, ignoring');
       }
     }
   }, [internalImageUrl, previewUrl, onImageUrlChange]);
@@ -65,8 +65,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const handleVisibilityChange = () => {
       if (!document.hidden && internalImageUrl && !previewUrl) {
         console.log('[ImageUploader] Tab visible again, checking image URL');
-        // Re-apply the image URL when tab becomes visible again
-        if (internalImageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null) {
+        if (isValidImageUrl(internalImageUrl)) {
           onImageUrlChange(internalImageUrl);
         }
       }
@@ -96,6 +95,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     console.log(`[ImageUploader] File selected: ${file.name}`);
     onImageChange(file);
     
+    // Clear errors when new file is selected
+    setImageError(false);
+    setImageLoaded(false);
+    
     // Clear the input value so the same file can be selected again if needed
     e.target.value = '';
   };
@@ -111,8 +114,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     } else {
       console.log(`[ImageUploader] Image URL changed to: "${url}"`);
       
-      // Don't apply the URL change immediately - wait for the useEffect to validate and apply it
-      // This happens in the useEffect watching internalImageUrl
+      // Reset error state for new URL
+      setImageError(false);
+      setImageLoaded(false);
     }
     
     // Store in sessionStorage to persist across tab changes
@@ -120,6 +124,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       sessionStorage.setItem('lastImageUrl', url);
     } else {
       sessionStorage.removeItem('lastImageUrl');
+    }
+  };
+
+  const handleImageLoad = () => {
+    console.log('[ImageUploader] Image loaded successfully');
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    console.error(`[ImageUploader] Error loading preview image: ${previewUrl}`);
+    setImageError(true);
+    setImageLoaded(false);
+    
+    // Only show toast for errors after initial load attempt
+    if (imageLoaded) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في تحميل الصورة",
+        description: "تعذر تحميل الصورة. يرجى التحقق من صحة الرابط.",
+      });
     }
   };
 
@@ -133,16 +158,18 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           <img 
             src={previewUrl} 
             alt="معاينة الصورة" 
-            className="w-full h-auto rounded-md border border-white/20 object-cover aspect-video"
-            onError={() => {
-              console.error(`[ImageUploader] Error loading preview image: ${previewUrl}`);
-              toast({
-                variant: "destructive",
-                title: "خطأ في تحميل الصورة",
-                description: "تعذر تحميل الصورة. يرجى التحقق من صحة الرابط.",
-              });
-            }}
+            className={`w-full h-auto rounded-md border ${imageError ? 'border-red-500' : 'border-white/20'} object-cover aspect-video`}
+            onError={handleImageError}
+            onLoad={handleImageLoad}
           />
+          
+          {imageError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-md">
+              <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+              <p className="text-white text-sm text-center px-4">تعذر تحميل الصورة</p>
+            </div>
+          )}
+          
           <Button
             type="button"
             variant="destructive"

@@ -1,12 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import BlogFormFields from '@/components/admin/blog/BlogFormFields';
 import ImageUploader from '@/components/admin/blog/ImageUploader';
 import { useBlogForm } from '@/hooks/useBlogForm';
+import { toast } from "@/lib/utils/toast-utils";
 
 const AdminBlogForm = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const AdminBlogForm = () => {
     uploadingImage,
     previewUrl,
     isEditMode,
+    formLoaded,
     handleChange,
     handleImageChange,
     handleRemoveImage,
@@ -28,6 +30,27 @@ const AdminBlogForm = () => {
     id,
     onSuccess: () => navigate('/admin')
   });
+  
+  // Check if form has been loaded after a timeout
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isEditMode && !formLoaded && !isLoading) {
+      // If form hasn't loaded after 5 seconds, show an error
+      timeoutId = setTimeout(() => {
+        console.error('[AdminBlogForm] Form data failed to load within timeout period');
+        toast({
+          variant: "destructive",
+          title: "خطأ في التحميل",
+          description: "تعذر تحميل بيانات المنشور في الوقت المحدد. يرجى تحديث الصفحة أو المحاولة مرة أخرى لاحقًا.",
+        });
+      }, 5000);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isEditMode, formLoaded, isLoading]);
   
   // Cancel button handler
   const handleCancel = () => {
@@ -40,6 +63,34 @@ const AdminBlogForm = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-crypto-darkBlue">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-crypto-orange"></div>
+      </div>
+    );
+  }
+  
+  // Show error state if we're in edit mode but form didn't load properly
+  if (isEditMode && !formLoaded && !isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-crypto-darkBlue p-4">
+        <div className="bg-crypto-darkGray/80 backdrop-blur-md border border-white/10 text-white shadow-lg rounded-lg p-8 max-w-md text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+          <h2 className="text-xl font-bold mb-4">تعذر تحميل بيانات المنشور</h2>
+          <p className="mb-6 text-gray-300">حدث خطأ أثناء محاولة تحميل بيانات المنشور. يرجى المحاولة مرة أخرى لاحقًا.</p>
+          <div className="flex justify-center gap-4">
+            <Button 
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10"
+              onClick={() => navigate('/admin')}
+            >
+              العودة للقائمة
+            </Button>
+            <Button 
+              className="bg-crypto-orange hover:bg-crypto-orange/80 text-white"
+              onClick={() => window.location.reload()}
+            >
+              تحديث الصفحة
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

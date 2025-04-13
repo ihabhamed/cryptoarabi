@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from '@/types/supabase';
 import { toast } from "@/lib/utils/toast-utils";
+import { cleanImageUrl } from './utils/blogImageUtils';
 
 /**
  * Hook to fetch blog post data by ID
@@ -29,8 +30,13 @@ export function useBlogFetch() {
       console.log("Fetched blog post data:", data);
       
       if (data) {
-        // Log the image URL specifically for debugging
-        console.log(`Fetched blog post image URL: ${data.image_url}`);
+        // Process the image URL to ensure it's valid
+        let processedImageUrl = data.image_url;
+        if (processedImageUrl) {
+          // Remove any query parameters to prevent caching issues
+          processedImageUrl = cleanImageUrl(processedImageUrl);
+          console.log(`Processed image URL: ${processedImageUrl}`);
+        }
         
         return {
           id: data.id,
@@ -40,7 +46,7 @@ export function useBlogFetch() {
           author: data.author || '',
           category: data.category || '',
           slug: data.slug || '',
-          image_url: data.image_url || '',
+          image_url: processedImageUrl || '',
           publish_date: data.publish_date || new Date().toISOString(),
           meta_title: data.meta_title || '',
           meta_description: data.meta_description || '',
