@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -206,7 +207,7 @@ export type Airdrop = {
   meta_title: string | null;
   meta_description: string | null;
   hashtags: string | null;
-  steps: string | null; // Added this for storing steps as JSON string
+  steps: string | null; // Added steps field
 };
 
 export type NewAirdrop = Omit<Airdrop, 'id' | 'created_at' | 'updated_at'>;
