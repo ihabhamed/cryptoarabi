@@ -15,10 +15,22 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     ? post.hashtags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3) 
     : [];
 
-  // Ensure we have a valid image URL
-  const imageUrl = post.image_url && post.image_url !== 'null' && post.image_url.trim() !== '' 
-    ? post.image_url 
-    : 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+  // Improved function to get a valid image URL with better validation
+  const getValidImageUrl = () => {
+    // Check if image_url exists and is not null, 'null' string, or empty
+    if (post.image_url && 
+        post.image_url !== 'null' && 
+        post.image_url !== 'undefined' && 
+        post.image_url.trim() !== '') {
+      console.log(`Using post image: ${post.image_url} for post: ${post.title} in BlogPostCard`);
+      return post.image_url;
+    }
+    // Return fallback image if no valid image exists
+    console.log(`Using fallback image for post: ${post.title} in BlogPostCard`);
+    return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+  };
+
+  const imageUrl = getValidImageUrl();
 
   return (
     <div className="bg-crypto-darkGray/50 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:border-crypto-orange/30 h-full flex flex-col">
@@ -28,6 +40,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           onError={(e) => {
+            console.error(`Image load error for: ${post.image_url}`);
             const target = e.target as HTMLImageElement;
             target.onerror = null; // Prevent infinite loop
             target.src = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';

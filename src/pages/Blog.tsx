@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useBlogPosts } from '@/lib/hooks';
@@ -20,6 +20,16 @@ const Blog = () => {
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = blogPosts.slice(indexOfFirstPost, indexOfLastPost);
+
+  // Log data to help debug image issues
+  useEffect(() => {
+    if (blogPosts.length > 0) {
+      console.log('Blog posts loaded:', blogPosts.length);
+      blogPosts.forEach(post => {
+        console.log(`Post: ${post.title}, Image URL: ${post.image_url}`);
+      });
+    }
+  }, [blogPosts]);
 
   return (
     <div className="min-h-screen bg-crypto-darkBlue">

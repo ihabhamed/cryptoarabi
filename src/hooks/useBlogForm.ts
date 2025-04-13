@@ -51,9 +51,15 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
         if (blogData) {
           setFormData(blogData);
           
-          // Set image preview if image_url exists
-          if (blogData.image_url) {
+          // Set image preview if image_url exists and is valid
+          if (blogData.image_url && 
+              blogData.image_url !== 'null' && 
+              blogData.image_url !== 'undefined' && 
+              blogData.image_url.trim() !== '') {
+            console.log(`Setting initial image preview: ${blogData.image_url}`);
             setInitialImagePreview(blogData.image_url);
+          } else {
+            console.log(`No valid image URL found: ${blogData.image_url}`);
           }
         }
         
@@ -63,6 +69,13 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     
     loadBlogPost();
   }, [id, isEditMode]);
+
+  // Add a new useEffect to log any image URL changes
+  useEffect(() => {
+    if (formData.image_url) {
+      console.log(`Form data image URL updated: ${formData.image_url}`);
+    }
+  }, [formData.image_url]);
 
   return {
     formData,

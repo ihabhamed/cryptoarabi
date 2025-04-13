@@ -12,11 +12,20 @@ const BlogSection = () => {
   // Show only 3 latest blog posts for homepage
   const latestPosts = blogPosts.slice(0, 3);
 
-  // Function to get a valid image URL with fallback
+  // Improved function to get a valid image URL with proper fallback
   const getValidImageUrl = (post: BlogPost) => {
-    return post.image_url && post.image_url !== 'null' && post.image_url.trim() !== '' 
-      ? post.image_url 
-      : "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+    // Check if image_url exists and is not null, 'null' string, or empty
+    if (post.image_url && 
+        post.image_url !== 'null' && 
+        post.image_url.trim() !== '' &&
+        post.image_url !== 'undefined') {
+      console.log(`Using post image: ${post.image_url} for post: ${post.title}`);
+      return post.image_url;
+    }
+    
+    // Return fallback image if no valid image exists
+    console.log(`Using fallback image for post: ${post.title}`);
+    return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
   };
 
   if (isLoading) {
@@ -102,6 +111,7 @@ const BlogSection = () => {
                     alt={post.title} 
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
+                      console.error(`Image load error for: ${post.image_url}`);
                       const target = e.target as HTMLImageElement;
                       target.onerror = null; // Prevent infinite loop
                       target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";

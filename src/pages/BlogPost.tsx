@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -11,6 +11,23 @@ import { BlogPostTags } from '@/components/blog/BlogPostTags';
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPost(slug);
+
+  // Function to get a valid image URL
+  const getValidImageUrl = () => {
+    if (!post) return null;
+    
+    // Check if image_url exists and is not null, 'null' string, or empty
+    if (post.image_url && 
+        post.image_url !== 'null' && 
+        post.image_url !== 'undefined' && 
+        post.image_url.trim() !== '') {
+      console.log(`Using post image: ${post.image_url} for post: ${post.title} in BlogPost`);
+      return post.image_url;
+    }
+    // Return fallback image if no valid image exists
+    console.log(`Using fallback image for post: ${post?.title} in BlogPost`);
+    return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
+  };
 
   if (isLoading) {
     return (
@@ -90,9 +107,15 @@ const BlogPost = () => {
           {/* Featured Image */}
           <div className="mb-8 rounded-lg overflow-hidden">
             <img 
-              src={post.image_url || "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"} 
+              src={getValidImageUrl()} 
               alt={post.title} 
               className="w-full h-auto object-cover"
+              onError={(e) => {
+                console.error(`Image load error for: ${post.image_url}`);
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loop
+                target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
+              }}
             />
           </div>
 
