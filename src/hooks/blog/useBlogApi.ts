@@ -30,6 +30,9 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
       console.log("Fetched blog post data:", data);
       
       if (data) {
+        // Log the image URL specifically for debugging
+        console.log(`Fetched blog post image URL: ${data.image_url}`);
+        
         return {
           id: data.id,
           title: data.title || '',
@@ -99,8 +102,8 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         console.log("Generated slug for post:", blogData.slug);
       }
 
-      // Debug image URL before saving
-      console.log(`Image URL before saving: ${blogData.image_url}`);
+      // CRITICAL IMAGE URL HANDLING: Log and validate the image URL before saving
+      console.log(`Raw image URL before processing: '${blogData.image_url}'`);
       
       // If image_url is explicitly set to an empty string, null, undefined, or "null"/"undefined" strings, 
       // make sure we set it to null in the database
@@ -111,7 +114,14 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         console.log("Setting image_url to null before saving");
         blogData.image_url = null;
       } else {
-        console.log(`Saving valid image URL: ${blogData.image_url}`);
+        // Remove any query parameters from the URL to prevent caching issues
+        if (typeof blogData.image_url === 'string' && blogData.image_url.includes('?')) {
+          const urlWithoutParams = blogData.image_url.split('?')[0];
+          console.log(`Removing query parameters from image URL: ${blogData.image_url} -> ${urlWithoutParams}`);
+          blogData.image_url = urlWithoutParams;
+        }
+        
+        console.log(`Validated image URL for saving: '${blogData.image_url}'`);
       }
       
       // Create a clean data object with only the fields that exist in the database
@@ -129,17 +139,31 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
         hashtags: blogData.hashtags || null
       };
       
-      console.log("Saving blog post with clean data:", cleanData);
+      // Log the final image URL being saved
+      console.log(`Final image URL being saved to database: '${cleanData.image_url}'`);
+      
+      let result;
       
       if (isEditMode && id) {
-        const { error } = await supabase
+        result = await supabase
           .from('blog_posts')
           .update(cleanData)
           .eq('id', id);
         
-        if (error) {
-          console.error("Supabase update error:", error);
-          throw error;
+        if (result.error) {
+          console.error("Supabase update error:", result.error);
+          throw result.error;
+        }
+        
+        // After successful update, verify the image URL was saved correctly
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('blog_posts')
+          .select('image_url')
+          .eq('id', id)
+          .single();
+          
+        if (!verifyError && verifyData) {
+          console.log(`Verified saved image URL in database: '${verifyData.image_url}'`);
         }
         
         toast({
@@ -147,13 +171,13 @@ export function useBlogApi({ id, onSuccess }: UseBlogApiProps = {}) {
           description: "تم تحديث المنشور بنجاح",
         });
       } else {
-        const { error } = await supabase
+        result = await supabase
           .from('blog_posts')
           .insert(cleanData);
         
-        if (error) {
-          console.error("Supabase insert error:", error);
-          throw error;
+        if (result.error) {
+          console.error("Supabase insert error:", result.error);
+          throw result.error;
         }
         
         toast({

@@ -8,11 +8,6 @@ export function useBlogImage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
-  // Add storage key for image persistence
-  const getStorageKey = (id?: string) => {
-    return id ? `blogImage_${id}` : 'blogImage_new';
-  };
-
   // Store image data in sessionStorage to persist across tab switches
   const persistImageData = (imageUrl: string | null, isFile: boolean = false) => {
     if (imageUrl) {
@@ -72,10 +67,13 @@ export function useBlogImage() {
       
       console.log(`Image uploaded successfully: ${imageUrl}`);
       
-      // Persist the permanent URL
-      persistImageData(imageUrl);
+      // Remove any query parameters from the URL to prevent caching issues
+      const cleanImageUrl = imageUrl.includes('?') ? imageUrl.split('?')[0] : imageUrl;
       
-      return imageUrl;
+      // Persist the permanent URL
+      persistImageData(cleanImageUrl);
+      
+      return cleanImageUrl;
     } catch (error) {
       console.error("Error uploading blog image:", error);
       return null;
@@ -85,12 +83,18 @@ export function useBlogImage() {
   };
 
   const setInitialImagePreview = (url: string | null) => {
-    if (url) {
+    if (url && url !== 'null' && url !== 'undefined' && url.trim() !== '') {
       console.log(`Setting initial image preview: ${url}`);
-      setPreviewUrl(url);
+      
+      // Remove any query parameters to prevent caching issues
+      const cleanUrl = url.includes('?') ? url.split('?')[0] : url;
+      
+      setPreviewUrl(cleanUrl);
       
       // Persist in session storage
-      persistImageData(url);
+      persistImageData(cleanUrl);
+    } else {
+      console.log(`Invalid URL provided to setInitialImagePreview: ${url}`);
     }
   };
 
@@ -103,16 +107,9 @@ export function useBlogImage() {
         
         if (savedImageUrl && !previewUrl) {
           console.log(`Restoring image from sessionStorage: ${savedImageUrl}`);
-          // If it's a file URL (object URL), we can't restore the actual file,
-          // but we can show the image and mark it for upload later
-          if (isFile) {
-            // For file URLs from previous sessions, we can't restore them directly
-            // We'll just restore the external URL if it's available
-            setPreviewUrl(savedImageUrl);
-          } else {
-            // For normal URLs (already uploaded), just restore
-            setPreviewUrl(savedImageUrl);
-          }
+          
+          // For both file URLs and normal URLs, restore the preview
+          setPreviewUrl(savedImageUrl);
         }
       }
     };

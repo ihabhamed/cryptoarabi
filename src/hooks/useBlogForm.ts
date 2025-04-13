@@ -50,6 +50,8 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
         
         if (blogData) {
           console.log("Loaded blog data for editing:", blogData);
+          console.log(`Original image URL from database: ${blogData.image_url}`);
+          
           setFormData(blogData);
           
           // Set image preview if image_url exists and is valid
@@ -57,10 +59,10 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
               blogData.image_url !== 'null' && 
               blogData.image_url !== 'undefined' && 
               blogData.image_url.trim() !== '') {
-            console.log(`Setting initial image preview: ${blogData.image_url}`);
+            console.log(`Setting initial image preview from blogData: ${blogData.image_url}`);
             setInitialImagePreview(blogData.image_url);
           } else {
-            console.log(`No valid image URL found: ${blogData.image_url}`);
+            console.log(`No valid image URL found in blogData: ${blogData.image_url}`);
           }
         }
         
@@ -71,7 +73,7 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     loadBlogPost();
   }, [id, isEditMode]);
 
-  // Add a useEffect to specifically update image URL when form data changes
+  // Add a useEffect to update image URL when form data changes
   useEffect(() => {
     if (formData.image_url && !previewUrl) {
       // Only if image URL is valid and preview is not set yet
@@ -84,12 +86,23 @@ export const useBlogForm = ({ id, onSuccess }: UseBlogFormProps) => {
     }
   }, [formData.image_url, previewUrl]);
 
-  // Add a new useEffect to log any image URL changes
+  // Add a debug useEffect to log any image URL changes
   useEffect(() => {
     if (formData.image_url) {
       console.log(`Form data image URL updated: ${formData.image_url}`);
     }
   }, [formData.image_url]);
+
+  // Clear blogImageUrl from sessionStorage when component unmounts
+  useEffect(() => {
+    return () => {
+      if (!isEditMode) {
+        console.log('Cleaning up image data from sessionStorage on unmount');
+        sessionStorage.removeItem('blogImageUrl');
+        sessionStorage.removeItem('blogImageIsFile');
+      }
+    };
+  }, [isEditMode]);
 
   return {
     formData,

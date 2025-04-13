@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { BlogPost } from '@/types/supabase';
@@ -12,17 +12,19 @@ interface BlogPostCardProps {
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   // State to track image loading errors
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   
   // Extract hashtags if present
   const hashtags = post.hashtags 
     ? post.hashtags.split(',').map(tag => tag.trim()).filter(Boolean).slice(0, 3) 
     : [];
 
-  // Improved function to get a valid image URL with better validation
-  const getValidImageUrl = () => {
-    // If image has already errored, use fallback immediately
+  // Determine the image URL when the component mounts or when post changes
+  useEffect(() => {
     if (imageError) {
-      return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+      // If we've already had an error, use fallback
+      setImageUrl('https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80');
+      return;
     }
     
     // Check if image_url exists and is not null, 'null' string, or empty
@@ -30,30 +32,32 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         post.image_url !== 'null' && 
         post.image_url !== 'undefined' && 
         post.image_url.trim() !== '') {
-      console.log(`Using post image: ${post.image_url} for post: ${post.title} in BlogPostCard`);
-      return post.image_url;
+      console.log(`Using post image: ${post.image_url} for post: ${post.title} (ID: ${post.id}) in BlogPostCard`);
+      setImageUrl(post.image_url);
+    } else {
+      // Use fallback image if no valid image exists
+      console.log(`Using fallback image for post: ${post.title} (ID: ${post.id}) in BlogPostCard`);
+      setImageUrl('https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80');
     }
-    
-    // Return fallback image if no valid image exists
-    console.log(`Using fallback image for post: ${post.title} in BlogPostCard`);
-    return 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
+  }, [post, imageError]);
+
+  const handleImageError = () => {
+    console.error(`Image load error for post ID ${post.id}, URL: ${post.image_url}`);
+    setImageError(true);
+    // This will trigger the useEffect to set the fallback URL
   };
 
   return (
     <div className="bg-crypto-darkGray/50 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:border-crypto-orange/30 h-full flex flex-col">
       <Link to={`/blog/${post.slug}`} className="block overflow-hidden h-48">
-        <img 
-          src={getValidImageUrl()} 
-          alt={post.title} 
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-          onError={(e) => {
-            console.error(`Image load error for: ${post.image_url}`);
-            setImageError(true);
-            const target = e.target as HTMLImageElement;
-            target.onerror = null; // Prevent infinite loop
-            target.src = 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=640&q=80';
-          }}
-        />
+        {imageUrl && (
+          <img 
+            src={imageUrl} 
+            alt={post.title} 
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            onError={handleImageError}
+          />
+        )}
       </Link>
       
       <div className="p-5 flex flex-col flex-grow">

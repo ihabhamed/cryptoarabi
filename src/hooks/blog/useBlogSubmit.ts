@@ -15,7 +15,7 @@ interface UseBlogSubmitProps {
 export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { formData, setFormData, generateSlug, clearFormData } = useBlogFormState({ id });
-  const { uploadingImage, selectedImage, uploadBlogImage } = useBlogImage();
+  const { uploadingImage, selectedImage, uploadBlogImage, previewUrl } = useBlogImage();
   const { saveBlogPost } = useBlogApi({ id, onSuccess });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -41,30 +41,23 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       
       // CRITICAL: Always ensure we have a valid slug before saving
       if (!finalFormData.slug || finalFormData.slug === 'null' || finalFormData.slug.trim() === '') {
-        // Generate a timestamp-based slug for uniqueness
         const timestamp = new Date().getTime().toString().slice(-6);
         
-        // Check if title contains Arabic characters
         if (finalFormData.title && /[\u0600-\u06FF]/.test(finalFormData.title)) {
-          // For Arabic titles, create a generic slug with timestamp
           finalFormData.slug = `post-${timestamp}`;
         } else if (finalFormData.title) {
-          // For non-Arabic titles, create a slug from the title
           finalFormData.slug = finalFormData.title
             .toLowerCase()
-            .replace(/[^\w\s-]/g, '') // Remove special characters
-            .replace(/\s+/g, '-')     // Replace spaces with hyphens
-            .replace(/-+/g, '-')      // Replace multiple hyphens with a single one
-            .replace(/^-+|-+$/g, '')  // Remove hyphens from start and end
-            .concat(`-${timestamp}`);  // Add timestamp for uniqueness
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .concat(`-${timestamp}`);
         } else {
-          // Fallback for no title
           finalFormData.slug = `post-${timestamp}`;
         }
         
         console.log("Generated slug for submission:", finalFormData.slug);
-        
-        // Update the form data with the new slug
         setFormData(prev => ({ ...prev, slug: finalFormData.slug }));
       }
       
@@ -85,7 +78,6 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
           }
         } catch (error) {
           console.error("Error generating meta tags:", error);
-          // Continue with submission even if meta generation fails
         }
       }
       
@@ -97,12 +89,7 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
           
           if (imageUrl) {
             console.log("Successfully uploaded image, setting image_url to:", imageUrl);
-            finalFormData = { 
-              ...finalFormData, 
-              image_url: imageUrl 
-            };
-            
-            // Update the form data with the new image URL
+            finalFormData.image_url = imageUrl;
             setFormData(prev => ({ ...prev, image_url: imageUrl }));
           } else {
             toast({
@@ -123,23 +110,39 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
           setIsSaving(false);
           return;
         }
-      } else if (formData.image_url) {
-        // If we have an image URL but no selected image, ensure it's properly set
-        console.log("Using existing image URL:", formData.image_url);
-        finalFormData.image_url = formData.image_url;
-      } else {
-        console.log("No image selected or URL provided");
+      } else if (previewUrl && !selectedImage) {
+        // If we have a preview URL but no selected image, it means we're using an existing or external URL
+        console.log("Using existing preview URL as image:", previewUrl);
+        
+        // Make sure the image_url is set to the previewUrl if it's a valid URL
+        if (previewUrl && 
+            previewUrl !== 'null' && 
+            previewUrl !== 'undefined' && 
+            previewUrl.trim() !== '') {
+          finalFormData.image_url = previewUrl;
+          console.log("Setting final image_url from previewUrl:", previewUrl);
+        }
       }
       
-      // Process hashtags - ensure it's a properly formatted string
+      // CRITICAL: Ensure image_url is properly set or cleared
+      // If we still have no image URL but form data has one, preserve it
+      if (!finalFormData.image_url && formData.image_url) {
+        if (formData.image_url !== 'null' && 
+            formData.image_url !== 'undefined' && 
+            formData.image_url.trim() !== '') {
+          console.log("Using existing form data image URL:", formData.image_url);
+          finalFormData.image_url = formData.image_url;
+        } else {
+          console.log("No valid image URL found, setting to null");
+          finalFormData.image_url = null;
+        }
+      }
+      
+      // Process hashtags
       if (finalFormData.hashtags) {
-        // If hashtags is an array, join it into a comma-separated string
         if (Array.isArray(finalFormData.hashtags)) {
           finalFormData.hashtags = finalFormData.hashtags.join(', ');
-        } 
-        // Ensure hashtags is a trimmed string with no empty elements
-        else if (typeof finalFormData.hashtags === 'string') {
-          // Clean up hashtags - split by comma, trim each tag, filter out empty ones, join back
+        } else if (typeof finalFormData.hashtags === 'string') {
           const cleanedTags = finalFormData.hashtags
             .split(',')
             .map(tag => tag.trim())
@@ -147,14 +150,13 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
             .join(', ');
           
           finalFormData.hashtags = cleanedTags || null;
-        } 
-        // If it's neither a string nor array, set to null
-        else {
+        } else {
           finalFormData.hashtags = null;
         }
       }
       
       console.log("Final form data before save:", finalFormData);
+      console.log("Final image URL being saved:", finalFormData.image_url);
       
       // Double verify that we have a slug before saving
       if (!finalFormData.slug || finalFormData.slug === 'null' || finalFormData.slug === '') {
@@ -165,8 +167,10 @@ export function useBlogSubmit({ id, onSuccess }: UseBlogSubmitProps) {
       const success = await saveBlogPost(finalFormData);
       
       if (success) {
-        // Clear form data after successful submission
+        // Clear form data and session storage after successful submission
         clearFormData();
+        sessionStorage.removeItem('blogImageUrl');
+        sessionStorage.removeItem('blogImageIsFile');
       }
     } catch (error) {
       console.error("Error in blog submission:", error);

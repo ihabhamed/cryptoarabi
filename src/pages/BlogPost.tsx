@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -12,35 +13,40 @@ const BlogPost = () => {
   const { data: post, isLoading, error } = useBlogPost(slug);
   // Track image loading errors
   const [imageError, setImageError] = useState(false);
+  // State for the determined image URL
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  // Log post data to help debug image issues
+  // Log post data and set the image URL when post data is loaded
   useEffect(() => {
     if (post) {
-      console.log(`Blog post loaded: ${post.title}`);
+      console.log(`Blog post loaded: ${post.title} (ID: ${post.id})`);
       console.log(`Image URL from database: ${post.image_url}`);
+      
+      if (imageError) {
+        // If we've already had an error, use fallback
+        setImageUrl("https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
+        return;
+      }
+      
+      // Check if image_url exists and is valid
+      if (post.image_url && 
+          post.image_url !== 'null' && 
+          post.image_url !== 'undefined' && 
+          post.image_url.trim() !== '') {
+        console.log(`Using post image in BlogPost: ${post.image_url} for post: ${post.title} (ID: ${post.id})`);
+        setImageUrl(post.image_url);
+      } else {
+        // Use fallback image if no valid image exists
+        console.log(`Using fallback image in BlogPost for post: ${post.title} (ID: ${post.id})`);
+        setImageUrl("https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
+      }
     }
-  }, [post]);
+  }, [post, imageError]);
 
-  // Function to get a valid image URL
-  const getValidImageUrl = () => {
-    if (!post) return null;
-    
-    // If image has already errored, use fallback immediately
-    if (imageError) {
-      return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
-    }
-    
-    // Check if image_url exists and is not null, 'null' string, or empty
-    if (post.image_url && 
-        post.image_url !== 'null' && 
-        post.image_url !== 'undefined' && 
-        post.image_url.trim() !== '') {
-      console.log(`Using post image: ${post.image_url} for post: ${post.title} in BlogPost`);
-      return post.image_url;
-    }
-    // Return fallback image if no valid image exists
-    console.log(`Using fallback image for post: ${post?.title} in BlogPost`);
-    return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
+  const handleImageError = () => {
+    console.error(`Image load error in BlogPost for: ${post?.image_url}`);
+    setImageError(true);
+    setImageUrl("https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80");
   };
 
   if (isLoading) {
@@ -120,18 +126,14 @@ const BlogPost = () => {
 
           {/* Featured Image */}
           <div className="mb-8 rounded-lg overflow-hidden">
-            <img 
-              src={getValidImageUrl()} 
-              alt={post.title} 
-              className="w-full h-auto object-cover"
-              onError={(e) => {
-                console.error(`Image load error for: ${post.image_url}`);
-                setImageError(true);
-                const target = e.target as HTMLImageElement;
-                target.onerror = null; // Prevent infinite loop
-                target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80";
-              }}
-            />
+            {imageUrl && (
+              <img 
+                src={imageUrl} 
+                alt={post.title} 
+                className="w-full h-auto object-cover"
+                onError={handleImageError}
+              />
+            )}
           </div>
 
           {/* Blog Post Content */}

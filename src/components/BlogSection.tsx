@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -7,32 +8,43 @@ import { BlogPost } from '@/types/supabase';
 
 const BlogSection = () => {
   const { data: blogPosts = [], isLoading, error } = useBlogPosts();
-  // Track image loading errors for each post
+  // Track image loading errors for each post by ID
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  // Track image URLs for each post 
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   
   // Show only 3 latest blog posts for homepage
   const latestPosts = blogPosts.slice(0, 3);
 
-  // Improved function to get a valid image URL with proper fallback
-  const getValidImageUrl = (post: BlogPost) => {
-    // If this specific image has already errored, use fallback immediately
-    if (imageErrors[post.id]) {
-      return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+  // Determine image URLs for all posts when they load
+  useEffect(() => {
+    if (latestPosts.length > 0) {
+      const newImageUrls: Record<string, string> = {};
+      
+      latestPosts.forEach(post => {
+        // If we already know this image errors, use fallback
+        if (imageErrors[post.id]) {
+          newImageUrls[post.id] = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+          return;
+        }
+        
+        // Check if image_url exists and is valid
+        if (post.image_url && 
+            post.image_url !== 'null' && 
+            post.image_url !== 'undefined' && 
+            post.image_url.trim() !== '') {
+          console.log(`Using post image in BlogSection: ${post.image_url} for post: ${post.title} (ID: ${post.id})`);
+          newImageUrls[post.id] = post.image_url;
+        } else {
+          // Use fallback image if no valid image exists
+          console.log(`Using fallback image in BlogSection for post: ${post.title} (ID: ${post.id})`);
+          newImageUrls[post.id] = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
+        }
+      });
+      
+      setImageUrls(newImageUrls);
     }
-    
-    // Check if image_url exists and is not null, 'null' string, or empty
-    if (post.image_url && 
-        post.image_url !== 'null' && 
-        post.image_url.trim() !== '' &&
-        post.image_url !== 'undefined') {
-      console.log(`Using post image: ${post.image_url} for post: ${post.title}`);
-      return post.image_url;
-    }
-    
-    // Return fallback image if no valid image exists
-    console.log(`Using fallback image for post: ${post.title}`);
-    return "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
-  };
+  }, [latestPosts, imageErrors]);
 
   // Handle image loading errors
   const handleImageError = (postId: string) => {
@@ -40,6 +52,12 @@ const BlogSection = () => {
     setImageErrors(prev => ({
       ...prev,
       [postId]: true
+    }));
+    
+    // This will trigger the useEffect to update the image URL to the fallback
+    setImageUrls(prev => ({
+      ...prev,
+      [postId]: "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
     }));
   };
 
@@ -121,17 +139,14 @@ const BlogSection = () => {
             latestPosts.map((post: BlogPost) => (
               <article key={post.id} className="crypto-card hover:translate-y-[-8px]">
                 <div className="relative mb-4 overflow-hidden rounded-lg aspect-video">
-                  <img 
-                    src={getValidImageUrl(post)} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      handleImageError(post.id);
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null; // Prevent infinite loop
-                      target.src = "https://images.unsplash.com/photo-1621504450181-5d356f61d307?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80";
-                    }}
-                  />
+                  {imageUrls[post.id] && (
+                    <img 
+                      src={imageUrls[post.id]} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      onError={() => handleImageError(post.id)}
+                    />
+                  )}
                   <div className="absolute top-3 right-3 bg-crypto-orange text-white text-xs font-medium py-1 px-2 rounded">
                     {post.category || "عام"}
                   </div>
